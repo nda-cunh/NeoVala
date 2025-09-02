@@ -23,7 +23,7 @@ include:
   # Use the image from the last stable runtime that includes 25.08 sdk
   image: 'quay.io/gnome_infrastructure/gnome-runtime-images:gnome-master'
   variables:
-    BRANCH: "25.08beta"
+    BRANCH: "25.08"
   before_script:
     - sed -i "s/24.08/$BRANCH/g" $MANIFEST_PATH
 
