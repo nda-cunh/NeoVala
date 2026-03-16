@@ -16,12 +16,8 @@ valagee_lib = static_library(
 	'valagee',
 	valagee_sources,
 	dependencies: [gobject_dep],
-	install: [ false, true, false ],
-	install_dir: [
-		false,
-		join_paths (get_option('includedir'), 'vala@0@'.format (vala_version_suffix)),
-		false
-	],
+	install: true,
+	install_dir: join_paths (get_option('includedir'), 'vala@0@'.format (vala_version_suffix)),
 	vala_header: 'valagee.h',
 	vala_vapi: 'gee.vapi',
 )
