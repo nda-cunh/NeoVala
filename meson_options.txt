@@ -1,9 +1,9 @@
 # Optional dependencies
-option('valadoc', type: 'boolean', value : 'true',
+option('valadoc', type: 'boolean', value : true,
 	description : 'Enable build of libvaladoc and valadoc')
 
 # Documentation
-option('documentation', type: 'boolean', value: 'false',
+option('documentation', type: 'boolean', value: false,
 	description : 'Build API reference and tools documentation')
-option('manpages', type: 'boolean', value: 'false',
+option('manpages', type: 'boolean', value: false,
 	description : 'Build man pages for installed tools')
