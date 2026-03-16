@@ -138,9 +138,12 @@ if valac.version().version_compare('>= @0@'.format(vala_version))
 endif
 
 add_project_arguments([
-		'-Wno-discarded-qualifiers',
-		'-Wno-incompatible-pointer-types',
-		'-Wno-unused',
+		cc.get_supported_arguments([
+			'-Wno-discarded-qualifiers',
+			'-Wno-ignored-qualifiers',
+			'-Wno-incompatible-pointer-types',
+			'-Wno-unused',
+		]),
 		'-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_48',
 		'-DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_48',
 	],
