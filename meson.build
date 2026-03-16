@@ -201,6 +201,9 @@ if valadoc_enabled
 endif
 
 subdir('doc')
-subdir('tests')
+
+if get_option('tests')
+	subdir('tests')
+endif
 
 install_data('vala.m4', install_dir: join_paths('share', 'aclocal'))
