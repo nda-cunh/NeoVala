@@ -39,7 +39,7 @@ valacodegen_lib = library(
 	dependencies: [gobject_dep, valacore_dep, valaccode_dep],
 	install_rpath: pkglibdir,
 	install_dir: pkglibdir,
-	install: [ true, false, false ],
+	install: true,
 	vala_header: 'valacodegen.h',
 	vala_vapi: 'valacodegen.vapi',
 )
