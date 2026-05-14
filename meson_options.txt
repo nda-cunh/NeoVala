@@ -7,3 +7,7 @@ option('documentation', type: 'boolean', value: 'false',
 	description : 'Build API reference and tools documentation')
 option('manpages', type: 'boolean', value: 'false',
 	description : 'Build man pages for installed tools')
+
+# Tests
+option('tests', type: 'boolean', value: 'false',
+	description : 'Build tests')
