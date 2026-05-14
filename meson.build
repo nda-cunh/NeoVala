@@ -137,13 +137,14 @@ if valac.version().version_compare('>= @0@'.format(vala_version))
 	#add_project_arguments(supported_test_cflags, language: 'c')
 endif
 
-add_project_arguments([
+add_project_arguments(cc.get_supported_arguments([
 		'-Wno-discarded-qualifiers',
+		'-Wno-ignored-qualifiers',
 		'-Wno-incompatible-pointer-types',
 		'-Wno-unused',
 		'-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_48',
 		'-DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_48',
-	],
+	]),
 	language: 'c',
 )
 
