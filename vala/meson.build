@@ -182,11 +182,6 @@ valacore_lib = library(
 	install: true,
 	vala_header: 'vala.h',
 	vala_vapi: 'vala.vapi',
-	install_dir: [
-		true,
-		join_paths (get_option('includedir'), 'vala@0@'.format (vala_version_suffix)),
-		false
-	],
 )
 
 valacore_dep = declare_dependency(
@@ -207,4 +202,9 @@ custom_target(
 	install: true,
 	install_dir: join_paths('share', 'vala', 'vapi'),
 	output: 'libvala@0@.vapi'.format(vala_version_suffix),
+)
+
+install_headers(
+	valacore_lib.vala_header(),
+	subdir: 'vala@0@'.format (vala_version_suffix),
 )
