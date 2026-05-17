@@ -8,28 +8,22 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 
 	public override bool generate_method_declaration (Method m, CCodeFile decl_space) {
-		// Spécial SupraKlass: générer les bons prototypes
 		var cl = m.parent_symbol as Class;
 		if (cl != null && cl.is_supraklass) {
-			// Méthode de création
 			if (m is CreationMethod) {
 				var func = new CCodeFunction(get_ccode_name(m), get_ccode_name(cl) + "*");
-				func.add_parameter(new CCodeParameter("void", "")); // pas de paramètres pour la méthode de création
+				func.add_parameter(new CCodeParameter("void", ""));
 				decl_space.add_function_declaration(func);
 				return true;
 			}
-			// Méthode normale (instance)
 			if (m.binding == MemberBinding.INSTANCE) {
 				var func = new CCodeFunction(get_ccode_name(m), "void");
 				func.add_parameter(new CCodeParameter("self", get_ccode_name(cl) + "*"));
 				decl_space.add_function_declaration(func);
 				return true;
 			}
-			// Méthode de classe/static/autres cas...
-			// ...
 			return true;
 		}
-		// Sinon, comportement par défaut
 		return base.generate_method_declaration(m, decl_space);
 	}
 
@@ -51,6 +45,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		cl.accept_children (this);
 
+
 		generate_supra_vtable_and_init (cl);
 
 		pop_line ();
@@ -67,8 +62,63 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			return;
 		}
 
-		// Todo pour les class virtual  ( le fat pointef)
-		base.visit_method (m);
+		if ((m.is_virtual || m.is_abstract) && !m.overrides) {
+			generate_supra_virtual_wrapper(m);
+		}
+
+		if (m.body != null) {
+			generate_supra_real_method(m);
+			return;
+		}
+	}
+	private void generate_supra_real_method (Method m) {
+		unowned Class cl = (Class) m.parent_symbol;
+		string real_name = get_ccode_real_name(m);
+
+		var func_wrapper = new CCodeFunction (real_name, get_ccode_name (m.return_type));
+		func_wrapper.add_parameter (new CCodeParameter ("self", "%s*".printf (get_ccode_name (cl))));
+		cfile.add_function_declaration (func_wrapper);
+
+		push_function (func_wrapper);
+
+		if (m.body != null) {
+			m.body.accept (this);
+		}
+
+		pop_function ();
+		cfile.add_function (func_wrapper);
+	}
+
+	private void generate_supra_virtual_wrapper (Method m) {
+		unowned Class cl = (Class) m.parent_symbol;
+		string real_name = get_ccode_real_name(m);
+		string cname = get_ccode_name (m);
+
+		var wrapper_func = new CCodeFunction (cname, get_ccode_name (m.return_type));
+		wrapper_func.add_parameter (new CCodeParameter ("base", "%s*".printf (get_ccode_name (cl))));
+		foreach (Parameter param in m.get_parameters ()) {
+			wrapper_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+		}
+		cfile.add_function_declaration (wrapper_func);
+
+		push_function (wrapper_func);
+
+		var vtable_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("base"), "vptr");
+		var method_ptr = new CCodeMemberAccess.pointer (vtable_access, get_ccode_vfunc_name (m));
+
+		var vcall = new CCodeFunctionCall (method_ptr);
+		vcall.add_argument (new CCodeIdentifier ("base"));
+
+		if (m.return_type is VoidType) {
+			ccode.add_expression (vcall);
+		} else {
+			ccode.add_return (vcall);
+		}
+		pop_function ();
+		cfile.add_function (wrapper_func);
+
+
+
 	}
 
 	public override void visit_property (Property prop) {
@@ -193,7 +243,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			push_line(m.source_reference);
 
 			string cname = get_ccode_name(cl);
-			string real_cname = get_ccode_name(m); // ex: mario_new
+			string real_cname = get_ccode_name(m);
 
 			var vfunc = new CCodeFunction(real_cname, "%s*".printf(cname));
 
@@ -234,25 +284,32 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 	private void generate_supra_vtable_and_init (Class cl) {
 		generate_supra_vtable_struct (cl);
 		generate_supra_vtable_var (cl);
-		generate_supra_unref_func (cl);        // génère void ma_classe_unref (MaClasse* self) { ... }
+		generate_supra_unref_func (cl); 
 	}
 
 	private void generate_supra_vtable_struct (Class cl) {
 		string cname = get_ccode_name (cl);
 		var vtable_struct = new CCodeStruct ("s_%sVtable".printf (cname));
+
 		vtable_struct.add_field ("void", "(*finalize)(void*)");
 
-		foreach (Method m in cl.get_methods ()) {
-			if (m.is_virtual || m.is_abstract || m.overrides) {
-				vtable_struct.add_field ("void", "(*%s)(void*)".printf (get_ccode_name (m)));
+		unowned Class root_cl = cl;
+		while (root_cl.base_class != null) {
+			root_cl = root_cl.base_class;
+		}
+
+		foreach (Method m in root_cl.get_methods ()) {
+			if (m.is_virtual || m.is_abstract) {
+				string field_name = get_ccode_vfunc_name (m);
+				vtable_struct.add_field ("void", "(*%s)(void*)".printf (field_name));
 			}
 		}
+
 		cfile.add_type_declaration (new CCodeTypeDefinition (
 					"struct s_%sVtable".printf (cname),
 					new CCodeVariableDeclarator ("t_%sVtable".printf (cname))));
 		cfile.add_type_definition (vtable_struct);
 	}
-
 
 	private void generate_supra_vtable_var (Class cl) {
 		string cname = get_ccode_name (cl);
@@ -261,20 +318,46 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		var membres = new StringBuilder ();
 
+		membres.append (".finalize = ");
 		if (cl.destructor != null) {
 			membres.append ("(void (*)(void*)) %s_finalize".printf (cname_lower));
+		} else if (cl.base_class != null) {
+			membres.append ("(void (*)(void*)) %s_finalize".printf (get_ccode_lower_case_name (cl.base_class)));
 		} else {
 			membres.append ("NULL");
 		}
 
-		foreach (Method m in cl.get_methods ()) {
-			if (m.is_virtual || m.is_abstract || m.overrides) {
-				membres.append (", "); // séparateur C
-				membres.append ("(void (*)(void*)) %s".printf (get_ccode_name (m)));
+		unowned Class root_cl = cl;
+		while (root_cl.base_class != null) {
+			root_cl = root_cl.base_class;
+		}
+
+		foreach (Method m_base in root_cl.get_methods ()) {
+			if (m_base.is_virtual || m_base.is_abstract) {
+				membres.append (",\n\t\t");
+
+				string field_name = get_ccode_vfunc_name (m_base);
+				membres.append (".%s = ".printf (field_name));
+
+				Method? implementation = null;
+				foreach (Method m_target in cl.get_methods()) {
+					if (m_target.overrides && m_target.base_method == m_base) {
+						implementation = m_target;
+						break;
+					}
+				}
+
+				if (implementation != null) {
+					membres.append ("(void (*)(void*)) %s".printf(get_ccode_real_name(implementation)));
+				} else if (m_base.is_abstract) {
+					membres.append ("NULL");
+				} else {
+					membres.append ("(void (*)(void*)) %s".printf(get_ccode_real_name(m_base)));
+				}
 			}
 		}
 
-		string ligne_vtable = "static const t_%sVtable %s = { %s };".printf (
+		string ligne_vtable = "static const t_%sVtable %s = {\n\t\t%s\n};".printf (
 				cname,
 				vtable_var_name,
 				membres.str
@@ -287,35 +370,26 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		string cname = get_ccode_name (cl);
 		string vtable_var_name = "%s_VTABLE".printf (get_ccode_upper_case_name (cl));
 
-		// 1. On crée un contexte d'émission pour capturer tout le code généré
 		var init_context = new EmitContext (m);
 		push_context (init_context);
 
-		// 2. Définition de la fonction init_NomClasse
 		var init_func = new CCodeFunction ("init_%s".printf (cname), "void");
 		init_func.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
 
-		// On propage les paramètres du constructeur Vala vers la fonction C
 		foreach (Parameter param in m.get_parameters ()) {
 			init_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 		}
 
-		// On déclare le prototype dans le header/cfile
 		cfile.add_function_declaration (init_func);
 		push_function (init_func);
 
-		// 4. Chaînage vers l'init du parent (remplace le perso_construct)
 		if (cl.base_class != null) {
 			var base_init_call = new CCodeFunctionCall (new CCodeIdentifier ("init_%s".printf (get_ccode_name (cl.base_class))));
 			base_init_call.add_argument (new CCodeCastExpression (new CCodeIdentifier ("self"), "%s*".printf (get_ccode_name (cl.base_class))));
 
-			// Si ton constructeur Vala appelle base(args), il faudrait extraire les arguments ici.
-			// Pour l'instant, on fait un appel simple.
 			ccode.add_expression (base_init_call);
 		}
 
-		// 3. Assignation de la VTable (vptr)
-		// On cast en Perso* pour accéder au champ vptr commun
 		string base_class_name = cl.base_class != null ? get_ccode_name (cl.base_class) : "Perso";
 		var vptr_access = new CCodeMemberAccess.pointer (new CCodeCastExpression (new CCodeIdentifier ("self"), "Perso*"), "vptr");
 
@@ -328,7 +402,6 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 				);
 
 
-		// 5. Initialisation par défaut des champs à 0
 		foreach (Field f in cl.get_fields ()) {
 			if (f.binding == MemberBinding.INSTANCE) {
 				var field_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), get_ccode_name (f));
@@ -356,6 +429,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		pop_context ();
 	}
+
 	public override void generate_class_struct_declaration (Class cl, CCodeFile decl_space) {
 		if (cl.get_attribute ("SupraKlass") == null) {
 			base.generate_class_struct_declaration (cl, decl_space);
@@ -384,8 +458,9 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		ccode.close ();
 
 		if (cl.destructor != null) {
-			// call the vtable.finalize if it exists (cast to Base class to access the vptr)
-			string base_class_name = cl.base_class != null ? get_ccode_name (cl.base_class) : cname;
+			unowned Vala.Class root_cl = get_root_class (cl);
+			string base_class_name = get_ccode_name (root_cl);
+
 			var finalize_call = new CCodeFunctionCall (new CCodeMemberAccess.pointer (new CCodeIdentifier ("((%s*)self)".printf (base_class_name)), "vptr->finalize"));
 			finalize_call.add_argument (new CCodeIdentifier ("self"));
 			ccode.add_expression (finalize_call);
@@ -398,4 +473,14 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		pop_function ();
 		cfile.add_function (unref_func);
 	}
+
+}
+
+
+private unowned Vala.Class get_root_class (Vala.Class cl) {
+	unowned Vala.Class root = cl;
+	while (root.base_class != null) {
+		root = root.base_class;
+	}
+	return root;
 }
