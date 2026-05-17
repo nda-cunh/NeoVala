@@ -6,27 +6,18 @@ using GLib;
 
 public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
-
-	public override bool generate_method_declaration (Method m, CCodeFile decl_space) {
-		var cl = m.parent_symbol as Class;
-		if (cl != null && cl.is_supraklass) {
-			if (m is CreationMethod) {
-				var func = new CCodeFunction(get_ccode_name(m), get_ccode_name(cl) + "*");
-				func.add_parameter(new CCodeParameter("void", ""));
-				decl_space.add_function_declaration(func);
-				return true;
-			}
-			if (m.binding == MemberBinding.INSTANCE) {
-				var func = new CCodeFunction(get_ccode_name(m), "void");
-				func.add_parameter(new CCodeParameter("self", get_ccode_name(cl) + "*"));
-				decl_space.add_function_declaration(func);
-				return true;
-			}
-			return true;
-		}
-		return base.generate_method_declaration(m, decl_space);
+	public override void visit_cast_expression (CastExpression expr) {
+		var sym = expr.target_type.type_symbol;
+		var to_type = get_ccode_upper_case_name (sym);
+		var name = get_ccode_name (sym);
+		expr.inner.accept(this);
+		var is_macro = new CCodeIdentifier("IS_%s".printf(to_type));
+		var condition = new CCodeFunctionCall(is_macro);
+		condition.add_argument(get_cvalue(expr.inner));
+		var cast_expr = new CCodeCastExpression(get_cvalue(expr.inner), "%s*".printf(name));
+		var ternary = new CCodeConditionalExpression(condition, cast_expr, new CCodeConstant("NULL"));
+		set_cvalue(expr, ternary);
 	}
-
 
 	public override void visit_class (Class cl) {
 		if (!cl.is_supraklass) {
@@ -34,6 +25,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			return;
 		}
 		cfile.add_include ("stdlib.h");
+		cfile.add_include ("stdbool.h");
 
 		push_context (new EmitContext (cl));
 		push_line (cl.source_reference);
@@ -46,10 +38,81 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		cl.accept_children (this);
 
 
+		if (cl.base_class == null) {
+			generate_is_method_base (cl);
+			generate_is_method (cl);
+		}
+		else {
+			generate_is_method (cl);
+		}
+
 		generate_supra_vtable_and_init (cl);
 
 		pop_line ();
 		pop_context ();
+	}
+
+	private void generate_is_method (Class cl) {
+		var root_cl = get_root_class (cl);
+		string macro = "#define IS_%s(obj) (%s_is_a((void*) (obj), (const void*) &%s_VTABLE))\n".printf (
+				get_ccode_upper_case_name (cl),
+				get_ccode_name (root_cl),
+				get_ccode_upper_case_name (cl)
+				);
+		cfile.add_type_member_declaration (new CCodeIdentifier (macro));
+		header_file.add_type_member_declaration (new CCodeIdentifier (macro));
+	}
+
+	private void generate_is_method_base (Class cl) {
+		var cname = get_ccode_name (cl);
+		var vtable_type = "t_%sVtable".printf (cname);
+
+		var vfunc = new CCodeFunction ("%s_is_a".printf(cname), "bool");
+		vfunc.add_parameter (new CCodeParameter ("obj", "void*"));
+		vfunc.add_parameter (new CCodeParameter ("target", "const void*"));
+
+		cfile.add_function_declaration (vfunc);
+		push_function (vfunc);
+
+		var cond_null = new CCodeBinaryExpression(
+				CCodeBinaryOperator.EQUALITY,
+				new CCodeIdentifier("obj"),
+				new CCodeConstant("NULL")
+				);
+		var if_null = new CCodeIfStatement(cond_null, new CCodeReturnStatement(new CCodeConstant("false")));
+		ccode.add_statement(if_null);
+
+		var cast_to_class = new CCodeCastExpression(new CCodeIdentifier("obj"), "%s*".printf(cname));
+		var vptr_access = new CCodeMemberAccess.pointer(cast_to_class, "vptr");
+		ccode.add_declaration(
+				"const %s*".printf(vtable_type),
+				new CCodeVariableDeclarator("current", vptr_access)
+				);
+
+		var while_cond = new CCodeBinaryExpression(
+				CCodeBinaryOperator.INEQUALITY,
+				new CCodeIdentifier("current"),
+				new CCodeConstant("NULL")
+				);
+		ccode.open_while(while_cond);
+
+		var cond_found = new CCodeBinaryExpression(
+				CCodeBinaryOperator.EQUALITY,
+				new CCodeIdentifier("current"),
+				new CCodeIdentifier("target")
+				);
+		var if_found = new CCodeIfStatement(cond_found, new CCodeReturnStatement(new CCodeConstant("true")));
+		ccode.add_statement(if_found);
+
+		var next_parent = new CCodeMemberAccess.pointer(new CCodeIdentifier("current"), "_vala_parent");
+		ccode.add_assignment(new CCodeIdentifier("current"), next_parent);
+
+		ccode.close();
+
+		ccode.add_return(new CCodeConstant("false"));
+
+		pop_function();
+		cfile.add_function(vfunc);
 	}
 
 	public override void visit_typeof_expression (TypeofExpression expr) {
@@ -71,6 +134,27 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			return;
 		}
 	}
+
+	public override bool generate_method_declaration (Method m, CCodeFile decl_space) {
+		var cl = m.parent_symbol as Class;
+		if (cl != null && cl.is_supraklass) {
+			if (m is CreationMethod) {
+				var func = new CCodeFunction(get_ccode_name(m), get_ccode_name(cl) + "*");
+				func.add_parameter(new CCodeParameter("void", ""));
+				decl_space.add_function_declaration(func);
+				return true;
+			}
+			if (m.binding == MemberBinding.INSTANCE) {
+				var func = new CCodeFunction(get_ccode_name(m), "void");
+				func.add_parameter(new CCodeParameter("self", get_ccode_name(cl) + "*"));
+				decl_space.add_function_declaration(func);
+				return true;
+			}
+			return true;
+		}
+		return base.generate_method_declaration(m, decl_space);
+	}
+
 	private void generate_supra_real_method (Method m) {
 		unowned Class cl = (Class) m.parent_symbol;
 		string real_name = get_ccode_real_name(m);
@@ -292,6 +376,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		var vtable_struct = new CCodeStruct ("s_%sVtable".printf (cname));
 
 		vtable_struct.add_field ("void", "(*finalize)(void*)");
+		vtable_struct.add_field ("const void*", "_vala_parent");
 
 		unowned Class root_cl = cl;
 		while (root_cl.base_class != null) {
@@ -326,6 +411,19 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		} else {
 			membres.append ("NULL");
 		}
+		membres.append (",\n\t\t");
+
+		// Dans ta boucle de génération de la variable static const
+		if (cl.base_class != null) {
+			membres.append ("._vala_parent = (const t_PersoVtable*) &%s_VTABLE".printf (
+						get_ccode_upper_case_name (cl.base_class)
+						));
+		} else {
+			membres.append ("._vala_parent = NULL");
+		}
+
+
+
 
 		unowned Class root_cl = cl;
 		while (root_cl.base_class != null) {
@@ -474,7 +572,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		cfile.add_function (unref_func);
 	}
 
-}
+	}
 
 
 private unowned Vala.Class get_root_class (Vala.Class cl) {
