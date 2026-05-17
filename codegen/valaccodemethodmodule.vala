@@ -1353,7 +1353,7 @@ public abstract class Vala.CCodeMethodModule : CCodeStructModule {
 		}
 
 		// do not generate _new functions for creation methods of abstract classes
-		if (current_type_symbol is Class && !current_class.is_compact && !current_class.is_abstract) {
+		if (current_type_symbol is Class && !current_class.is_compact && !current_class.is_abstract && context.profile == GOBJECT) {
 			// _new function
 			create_aux_constructor (m, get_ccode_name (m), false);
 
