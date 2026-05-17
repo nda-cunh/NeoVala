@@ -46,6 +46,11 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			generate_is_method (cl);
 		}
 
+		// generate default destructor
+		if (cl.destructor == null) {
+			generate_destructor_function (cl, null);
+		}
+
 		generate_supra_vtable_and_init (cl);
 
 		pop_line ();
@@ -175,7 +180,6 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 	private void generate_supra_virtual_wrapper (Method m) {
 		unowned Class cl = (Class) m.parent_symbol;
-		string real_name = get_ccode_real_name(m);
 		string cname = get_ccode_name (m);
 
 		var wrapper_func = new CCodeFunction (cname, get_ccode_name (m.return_type));
@@ -290,8 +294,14 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			base.visit_destructor (d);
 			return;
 		}
-
 		push_line (d.source_reference);
+
+		generate_destructor_function (cl, d);
+
+		pop_line ();
+	}
+
+	private void generate_destructor_function (Class cl, Destructor? d) {
 		string cname = get_ccode_name (cl);
 		string cname_lower = get_ccode_lower_case_name (cl);
 
@@ -302,7 +312,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		push_function (finalize_func);
 
-		if (d.body != null) {
+		if (d?.body != null) {
 			d.body.accept (this);
 		}
 
@@ -315,7 +325,6 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		pop_function ();
 		cfile.add_function (finalize_func);
-		pop_line ();
 	}
 
 
@@ -404,19 +413,16 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		var membres = new StringBuilder ();
 
 		membres.append (".finalize = ");
-		if (cl.destructor != null) {
-			membres.append ("(void (*)(void*)) %s_finalize".printf (cname_lower));
-		} else if (cl.base_class != null) {
-			membres.append ("(void (*)(void*)) %s_finalize".printf (get_ccode_lower_case_name (cl.base_class)));
-		} else {
-			membres.append ("NULL");
-		}
+		membres.append ("(void (*)(void*)) %s_finalize".printf (cname_lower));
 		membres.append (",\n\t\t");
 
+		var base_name_upper = cl.base_class != null ? get_ccode_upper_case_name (cl.base_class) : get_ccode_upper_case_name (cl);
+		var base_name = cl.base_class != null ? get_ccode_name (cl.base_class) : get_ccode_name (cl);
 		// Dans ta boucle de génération de la variable static const
 		if (cl.base_class != null) {
-			membres.append ("._vala_parent = (const t_PersoVtable*) &%s_VTABLE".printf (
-						get_ccode_upper_case_name (cl.base_class)
+			membres.append ("._vala_parent = (const t_%sVtable*) &%s_VTABLE".printf (
+						base_name,
+						base_name_upper
 						));
 		} else {
 			membres.append ("._vala_parent = NULL");
@@ -487,15 +493,16 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 			ccode.add_expression (base_init_call);
 		}
+		var root_cl = get_root_class (cl);
+		var name_root_cl = get_ccode_name (root_cl);
 
-		string base_class_name = cl.base_class != null ? get_ccode_name (cl.base_class) : "Perso";
-		var vptr_access = new CCodeMemberAccess.pointer (new CCodeCastExpression (new CCodeIdentifier ("self"), "Perso*"), "vptr");
+		var vptr_access = new CCodeMemberAccess.pointer (new CCodeCastExpression (new CCodeIdentifier ("self"), "%s*".printf(name_root_cl)), "vptr");
 
 		ccode.add_assignment (
 				vptr_access,
 				new CCodeCastExpression (
 					new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeIdentifier (vtable_var_name)),
-					"const t_PersoVtable*"
+					"const t_%sVtable*".printf (name_root_cl)
 					)
 				);
 
@@ -540,7 +547,6 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 	}
 
 	private void generate_supra_unref_func (Class cl) {
-		string cname = get_ccode_name (cl);
 		string cname_lower = get_ccode_lower_case_name (cl);
 
 		var unref_func = new CCodeFunction ("%s_unref".printf (cname_lower), "void");
@@ -555,15 +561,13 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		ccode.add_return ();
 		ccode.close ();
 
-		if (cl.destructor != null) {
-			unowned Vala.Class root_cl = get_root_class (cl);
-			string base_class_name = get_ccode_name (root_cl);
+		unowned Vala.Class root_cl = get_root_class (cl);
+		string base_class_name = get_ccode_name (root_cl);
 
-			var finalize_call = new CCodeFunctionCall (new CCodeMemberAccess.pointer (new CCodeIdentifier ("((%s*)self)".printf (base_class_name)), "vptr->finalize"));
-			finalize_call.add_argument (new CCodeIdentifier ("self"));
-			ccode.add_expression (finalize_call);
+		var finalize_call = new CCodeFunctionCall (new CCodeMemberAccess.pointer (new CCodeIdentifier ("((%s*)self)".printf (base_class_name)), "vptr->finalize"));
+		finalize_call.add_argument (new CCodeIdentifier ("self"));
+		ccode.add_expression (finalize_call);
 
-		}
 		var free_call = new CCodeFunctionCall (new CCodeIdentifier ("free"));
 		free_call.add_argument (new CCodeIdentifier ("self"));
 		ccode.add_expression (free_call);
