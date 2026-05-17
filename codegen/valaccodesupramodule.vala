@@ -544,7 +544,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		string cname_lower = get_ccode_lower_case_name (cl);
 
 		var unref_func = new CCodeFunction ("%s_unref".printf (cname_lower), "void");
-		unref_func.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
+		unref_func.add_parameter (new CCodeParameter ("self", "void*"));
 		push_function (unref_func);
 		var self_null = new CCodeBinaryExpression (
 				CCodeBinaryOperator.EQUALITY,
@@ -572,7 +572,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		cfile.add_function (unref_func);
 	}
 
-	}
+}
 
 
 private unowned Vala.Class get_root_class (Vala.Class cl) {
