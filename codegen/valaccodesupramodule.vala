@@ -58,88 +58,64 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		pop_context ();
 	}
 
-	public override void visit_expression (Expression expr) {
-		stderr.printf ("expr: %s\n", expr.type_name);
-		base.visit_expression (expr);
-	}
 
-private void generate_ref_function (Class cl) {
-	string cname = get_ccode_name (cl);
-	string cname_lower = get_ccode_lower_case_name (cl);
 
-	var ref_func = new CCodeFunction (
-		"%s_ref".printf (cname_lower),
-		"void*"
-	);
 
-	ref_func.add_parameter (new CCodeParameter ("self", "void*"));
-	ref_func.modifiers = CCodeModifiers.STATIC;
 
-	cfile.add_function_declaration (ref_func);
 
-	push_function (ref_func);
+	private void generate_ref_function (Class cl) {
+		string cname = get_ccode_name (cl);
+		string cname_lower = get_ccode_lower_case_name (cl);
 
-	var null_check = new CCodeBinaryExpression (
-		CCodeBinaryOperator.EQUALITY,
-		new CCodeIdentifier ("self"),
-		new CCodeConstant ("NULL")
-	);
+		var ref_func = new CCodeFunction (
+				"%s_ref".printf (cname_lower),
+				"void*"
+				);
 
-	ccode.open_if (null_check);
-	ccode.add_return (new CCodeConstant ("NULL"));
-	ccode.close ();
+		ref_func.add_parameter (new CCodeParameter ("self", "void*"));
+		ref_func.modifiers = CCodeModifiers.STATIC;
 
-	ccode.add_declaration (
-		"%s*".printf (cname),
-		new CCodeVariableDeclarator (
-			"_self",
-			new CCodeCastExpression (
+		cfile.add_function_declaration (ref_func);
+
+		push_function (ref_func);
+
+		var null_check = new CCodeBinaryExpression (
+				CCodeBinaryOperator.EQUALITY,
 				new CCodeIdentifier ("self"),
-				"%s*".printf (cname)
-			)
-		)
-	);
+				new CCodeConstant ("NULL")
+				);
 
-	var inc = new CCodeUnaryExpression (
-		CCodeUnaryOperator.POSTFIX_INCREMENT,
-		new CCodeMemberAccess.pointer (
-			new CCodeIdentifier ("_self"),
-			"ref_count"
-		)
-	);
+		ccode.open_if (null_check);
+		ccode.add_return (new CCodeConstant ("NULL"));
+		ccode.close ();
 
-	ccode.add_expression (inc);
+		ccode.add_declaration (
+				"%s*".printf (cname),
+				new CCodeVariableDeclarator (
+					"_self",
+					new CCodeCastExpression (
+						new CCodeIdentifier ("self"),
+						"%s*".printf (cname)
+						)
+					)
+				);
 
-	ccode.add_return (new CCodeIdentifier ("self"));
+		var inc = new CCodeUnaryExpression (
+				CCodeUnaryOperator.POSTFIX_INCREMENT,
+				new CCodeMemberAccess.pointer (
+					new CCodeIdentifier ("_self"),
+					"ref_count"
+					)
+				);
 
-	pop_function ();
+		ccode.add_expression (inc);
 
-	cfile.add_function (ref_func);
-}
-	public override void visit_assignment (Assignment expr) {
-		stderr.printf ("SUPRA assignment %s\n", expr.to_string ());
-		expr.left.accept (this);
-		expr.right.accept (this);
+		ccode.add_return (new CCodeIdentifier ("self"));
 
-		var left = get_cvalue (expr.left);
-		CCodeExpression right = get_cvalue (expr.right);
+		pop_function ();
 
-		unowned Class? cl = null;
-		if (expr.left.value_type != null) {
-			cl = expr.left.value_type.type_symbol as Class;
-		}
-
-		if (cl != null && cl.is_supraklass) {
-			var ref_call = new CCodeFunctionCall (
-					new CCodeIdentifier ("%s_ref".printf (get_ccode_lower_case_name (cl)))
-					);
-			ref_call.add_argument (right);
-			right = ref_call;
-		}
-
-		ccode.add_assignment (left, right);
+		cfile.add_function (ref_func);
 	}
-
 
 	private void generate_is_method (Class cl) {
 		var root_cl = get_root_class (cl);
@@ -290,10 +266,6 @@ private void generate_ref_function (Class cl) {
 		cfile.add_function (wrapper_func);
 
 
-
-	}
-
-	public override void visit_property (Property prop) {
 
 	}
 
