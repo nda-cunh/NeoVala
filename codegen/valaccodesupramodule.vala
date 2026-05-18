@@ -625,6 +625,41 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		cfile.add_function (unref_func);
 	}
 
+
+	public override void visit_method_call (MethodCall expr) {
+		var member_access = expr.call as MemberAccess;
+		if (member_access != null && member_access.inner is BaseAccess) {
+			unowned Method? method = member_access.symbol_reference as Method;
+			if (method != null) {
+				unowned Class? cl = method.parent_symbol as Class;
+				if (cl != null && cl.is_supraklass) {
+					string cname = "%s_real_%s".printf(
+							get_ccode_lower_case_name(method.parent_symbol),
+							method.name
+							);
+					var ccall = new CCodeFunctionCall(new CCodeIdentifier(cname));
+					var self_cast = new CCodeCastExpression(
+							new CCodeIdentifier("self"),
+							"%s*".printf(get_ccode_name(method.parent_symbol))
+							);
+					ccall.add_argument(self_cast);
+
+					foreach (var arg in expr.get_argument_list()) {
+						arg.accept(this);
+						var arg_c = get_cvalue(arg);
+						if (arg_c != null) ccall.add_argument(arg_c);
+					}
+
+					ccode.add_expression(ccall);
+					set_cvalue(expr, ccall);
+					return;
+				}
+			}
+		}
+		base.visit_method_call(expr);
+	}
+
+
 }
 
 
