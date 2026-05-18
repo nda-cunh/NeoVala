@@ -212,6 +212,9 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			if (m.binding == MemberBinding.INSTANCE) {
 				var func = new CCodeFunction(get_ccode_name(m), "void");
 				func.add_parameter(new CCodeParameter("self", get_ccode_name(cl) + "*"));
+				foreach (Parameter param in m.get_parameters()) {
+					func.add_parameter(new CCodeParameter(param.name, get_ccode_name(param.variable_type)));
+				}
 				decl_space.add_function_declaration(func);
 				return true;
 			}
@@ -226,7 +229,13 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		var func_wrapper = new CCodeFunction (real_name, get_ccode_name (m.return_type));
 		func_wrapper.add_parameter (new CCodeParameter ("self", "%s*".printf (get_ccode_name (cl))));
+
+		foreach (Parameter param in m.get_parameters ()) {
+			func_wrapper.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+		}
+	
 		cfile.add_function_declaration (func_wrapper);
+
 
 		push_function (func_wrapper);
 
@@ -256,6 +265,10 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		var vcall = new CCodeFunctionCall (method_ptr);
 		vcall.add_argument (new CCodeIdentifier ("base"));
+
+		foreach (Parameter param in m.get_parameters ()) {
+			vcall.add_argument (new CCodeIdentifier (param.name));
+		}
 
 		if (m.return_type is VoidType) {
 			ccode.add_expression (vcall);
@@ -300,11 +313,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 	public override void visit_object_creation_expression (ObjectCreationExpression expr) {
 		unowned Class? cl = expr.type_reference.type_symbol as Class;
 		if (cl != null && cl.is_supraklass) {
-			string cname = get_ccode_name (cl);
 			string cname_lower = get_ccode_lower_case_name (cl);
-
-			var new_proto = new CCodeFunction ("%s_new".printf (cname_lower), "%s*".printf (cname));
-			cfile.add_function_declaration (new_proto);
 
 			var new_call = new CCodeFunctionCall (new CCodeIdentifier ("%s_new".printf (cname_lower)));
 
@@ -428,7 +437,16 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		foreach (Method m in root_cl.get_methods ()) {
 			if (m.is_virtual || m.is_abstract) {
 				string field_name = get_ccode_vfunc_name (m);
-				vtable_struct.add_field ("void", "(*%s)(void*)".printf (field_name));
+
+				// Construire la signature complète avec les paramètres
+				var sig = new StringBuilder ();
+				sig.append ("void*");
+				foreach (Parameter param in m.get_parameters ()) {
+					sig.append (", ");
+					sig.append (get_ccode_name (param.variable_type));
+				}
+
+				vtable_struct.add_field ("void", "(*%s)(%s)".printf (field_name, sig.str));
 			}
 		}
 
@@ -523,6 +541,9 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		if (cl.base_class != null) {
 			var base_init_call = new CCodeFunctionCall (new CCodeIdentifier ("init_%s".printf (get_ccode_name (cl.base_class))));
 			base_init_call.add_argument (new CCodeCastExpression (new CCodeIdentifier ("self"), "%s*".printf (get_ccode_name (cl.base_class))));
+			foreach (Parameter param in m.get_parameters ()) {
+				base_init_call.add_argument (new CCodeIdentifier (param.name));
+			}	
 
 			ccode.add_expression (base_init_call);
 		}
