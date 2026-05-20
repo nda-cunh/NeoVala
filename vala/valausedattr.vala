@@ -42,6 +42,7 @@ public class Vala.UsedAttr : CodeVisitor {
 		"array_length_pos", "delegate_target_pos", "destroy_notify_pos", "ctype", "has_new_function", "notify", "finish_instance",
 		"use_inplace", "feature_test_macro", "default_value_on_error", "async_result_pos", "error_pos", "destroy_notify_cname", "",
 
+		"SupraKlass", "",
 		"Immutable", "",
 		"SingleInstance", "",
 		"Compact", "opaque", "",

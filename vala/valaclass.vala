@@ -77,6 +77,21 @@ public class Vala.Class : ObjectTypeSymbol {
 	}
 
 	/**
+	 * SupraKlass is the default posix class 
+	 */
+	public bool is_supraklass {
+		get {
+			if (_is_supraklass == null) {
+				_is_supraklass = has_attribute ("SupraKlass");
+			}
+			return _is_supraklass;
+		}
+		set {
+			_is_supraklass = value;
+		}
+	}
+
+	/**
 	 * Instances of immutable classes are immutable after construction.
 	 */
 	public bool is_immutable {
@@ -115,6 +130,7 @@ public class Vala.Class : ObjectTypeSymbol {
 	public bool has_class_private_fields { get; private set; }
 
 	private bool? _is_compact;
+	private bool? _is_supraklass;
 	private bool? _is_opaque;
 	private bool? _is_immutable;
 	private bool? _is_singleton;
@@ -522,6 +538,8 @@ public class Vala.Class : ObjectTypeSymbol {
 	}
 
 	public override bool check (CodeContext context) {
+		if (context.profile == Profile.POSIX)
+		is_supraklass = true;
 		if (checked) {
 			return !error;
 		}
@@ -858,5 +876,3 @@ public class Vala.Class : ObjectTypeSymbol {
 		return !error;
 	}
 }
-
-// vim:sw=8 noet
