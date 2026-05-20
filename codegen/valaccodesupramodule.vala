@@ -6,6 +6,44 @@ using Vala;
 
 public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
+	public override void visit_class (Class cl) {
+		if (context.profile == Profile.POSIX) {
+			cl.set_attribute ("SupraKlass", true);
+			cl.is_supraklass = true;
+		}
+
+		if (!cl.is_supraklass) {
+			base.visit_class (cl);
+			return;
+		}
+
+		CCodeFile decl_space;
+		if (context.header_filename == null)
+			decl_space = cfile;
+		else
+			decl_space = header_file;
+
+		decl_space.add_include ("stdlib.h");
+		decl_space.add_include ("stdbool.h");
+
+		generate_supra_struct_declaration (cl, decl_space);
+
+		cl.accept_children (this);
+
+		if (cl.base_class == null) {
+			generate_is_method_base (cl, decl_space);
+			generate_unref_func (cl, decl_space); 
+			generate_ref_function(cl, decl_space);
+		}
+		generate_is_object_macro (cl, decl_space);
+
+		if (cl.destructor == null) {
+			generate_destructor_function (cl, null);
+		}
+
+		generate_supra_vtable_and_init (cl, decl_space);
+	}
+
 	public override void visit_cast_expression (CastExpression expr) {
 		var sym = expr.target_type.type_symbol;
 		var to_type = get_ccode_upper_case_name (sym);
@@ -19,51 +57,8 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		set_cvalue(expr, ternary);
 	}
 
-	public override void visit_class (Class cl) {
-		if (!cl.is_supraklass) {
-			base.visit_class (cl);
-			return;
-		}
-		cfile.add_include ("stdlib.h");
-		cfile.add_include ("stdbool.h");
 
-		push_context (new EmitContext (cl));
-		push_line (cl.source_reference);
-
-		generate_supra_struct_declaration (cl, cfile);
-		if (!cl.is_internal_symbol ()) {
-			generate_supra_struct_declaration (cl, header_file);
-		}
-
-		cl.accept_children (this);
-
-
-		if (cl.base_class == null) {
-			generate_ref_function(cl);
-			generate_is_method_base (cl);
-			generate_is_method (cl);
-		}
-		else {
-			generate_is_method (cl);
-		}
-
-		if (cl.destructor == null) {
-			generate_destructor_function (cl, null);
-		}
-
-
-		generate_supra_vtable_and_init (cl);
-
-		pop_line ();
-		pop_context ();
-	}
-
-
-
-
-
-
-	private void generate_ref_function (Class cl) {
+	private void generate_ref_function (Class cl, CCodeFile decl_space) {
 		string cname = get_ccode_name (cl);
 		string cname_lower = get_ccode_lower_case_name (cl);
 
@@ -73,9 +68,6 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 				);
 
 		ref_func.add_parameter (new CCodeParameter ("self", "void*"));
-		ref_func.modifiers = CCodeModifiers.STATIC;
-
-		cfile.add_function_declaration (ref_func);
 
 		push_function (ref_func);
 
@@ -109,26 +101,25 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 				);
 
 		ccode.add_expression (inc);
-
 		ccode.add_return (new CCodeIdentifier ("self"));
 
 		pop_function ();
 
-		cfile.add_function (ref_func);
+		decl_space.add_function_declaration (ref_func);
+		decl_space.add_function (ref_func);
 	}
 
-	private void generate_is_method (Class cl) {
+	private void generate_is_object_macro (Class cl, CCodeFile decl_space) {
 		var root_cl = get_root_class (cl);
 		string macro = "#define IS_%s(obj) (%s_is_a((void*) (obj), (const void*) &%s_VTABLE))\n".printf (
 				get_ccode_upper_case_name (cl),
 				get_ccode_name (root_cl),
 				get_ccode_upper_case_name (cl)
 				);
-		cfile.add_type_member_declaration (new CCodeIdentifier (macro));
-		header_file.add_type_member_declaration (new CCodeIdentifier (macro));
+		decl_space.add_type_member_declaration (new CCodeIdentifier (macro));
 	}
 
-	private void generate_is_method_base (Class cl) {
+	private void generate_is_method_base (Class cl, CCodeFile decl_space) {
 		var cname = get_ccode_name (cl);
 		var vtable_type = "t_%sVtable".printf (cname);
 
@@ -136,7 +127,6 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		vfunc.add_parameter (new CCodeParameter ("obj", "void*"));
 		vfunc.add_parameter (new CCodeParameter ("target", "const void*"));
 
-		cfile.add_function_declaration (vfunc);
 		push_function (vfunc);
 
 		var cond_null = new CCodeBinaryExpression(
@@ -177,6 +167,8 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		ccode.add_return(new CCodeConstant("false"));
 
 		pop_function();
+
+		decl_space.add_function_declaration (vfunc);
 		cfile.add_function(vfunc);
 	}
 
@@ -256,7 +248,6 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		foreach (Parameter param in m.get_parameters ()) {
 			wrapper_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 		}
-		cfile.add_function_declaration (wrapper_func);
 
 		push_function (wrapper_func);
 
@@ -276,9 +267,11 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			ccode.add_return (vcall);
 		}
 		pop_function ();
+
+
+		// TODO to decl_space
+		cfile.add_function_declaration (wrapper_func);
 		cfile.add_function (wrapper_func);
-
-
 
 	}
 
@@ -289,46 +282,52 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		string cname = get_ccode_name (cl);
 
-		decl_space.add_type_declaration (new CCodeTypeDefinition ("struct _%s".printf (cname), new CCodeVariableDeclarator (cname)));
-
-		var instance_struct = new CCodeStruct ("_%s".printf (cname));
-
-		if (cl.base_class == null) {
-			instance_struct.add_field ("const t_%sVtable*".printf (cname), "vptr");
-			instance_struct.add_field ("size_t", "ref_count");
-		} else {
-			instance_struct.add_field (get_ccode_name (cl.base_class), "parent");
-		}
-
-		foreach (Field f in cl.get_fields ()) {
-			if (f.binding == MemberBinding.INSTANCE) {
-				instance_struct.add_field (get_ccode_name (f.variable_type), get_ccode_name (f));
-			}
-		}
-
-		decl_space.add_type_definition (instance_struct);
-	}
-
-
-	public override void visit_object_creation_expression (ObjectCreationExpression expr) {
-		unowned Class? cl = expr.type_reference.type_symbol as Class;
-		if (cl != null && cl.is_supraklass) {
-			string cname_lower = get_ccode_lower_case_name (cl);
-
-			var new_call = new CCodeFunctionCall (new CCodeIdentifier ("%s_new".printf (cname_lower)));
-
-			foreach (Expression arg in expr.get_argument_list ()) {
-				arg.accept (this);
-				new_call.add_argument (get_cvalue (arg));
+		// private struct
+		if (cl.has_private_fields == true) {
+			var private_struct = new CCodeStruct ("s_%sPrivate".printf (cname));
+			foreach (Field f in cl.get_fields ()) {
+				if (f.is_private_symbol ()) {
+					private_struct.add_field (get_ccode_name (f.variable_type), get_ccode_name (f));
+				}
 			}
 
-			set_cvalue (expr, new_call);
-
-			return;
+			decl_space.add_type_declaration (new CCodeTypeDefinition ("struct s_%sPrivate".printf (cname), new CCodeVariableDeclarator ("t_%sPrivate".printf (cname))));
+			cfile.add_type_definition (private_struct);
 		}
-		else
-			base.visit_object_creation_expression (expr);
+
+		// public struct
+		{
+			var struct_public = new CCodeStruct ("_%s".printf (cname));
+
+			if (cl.base_class == null) {
+				struct_public.add_field ("const t_%sVtable*".printf (cname), "vptr");
+				struct_public.add_field ("size_t", "ref_count");
+			} else {
+				struct_public.add_field (get_ccode_name (cl.base_class), "parent");
+			}
+
+			foreach (Field f in cl.get_fields ()) {
+				if (f.binding == MemberBinding.INSTANCE && !f.is_private_symbol ()) {
+					struct_public.add_field (get_ccode_name (f.variable_type), get_ccode_name (f));
+				}
+			}
+			if (cl.has_private_fields) {
+				StringBuilder sb = new StringBuilder();
+				sb.append("struct {");
+				foreach (Field f in cl.get_fields ()) {
+					if (f.is_private_symbol ()) {
+						sb.append_printf("%s %s;", get_ccode_name (f.variable_type), get_ccode_name (f));
+					}
+				}
+				sb.append("}");
+				struct_public.add_field ("struct s_%sPrivate*".printf(cname), "priv");
+				struct_public.add_field ("char", "_priv[sizeof(%s)]".printf(sb.str));
+			}
+			decl_space.add_type_declaration (new CCodeTypeDefinition ("struct _%s".printf (cname), new CCodeVariableDeclarator (cname)));
+			decl_space.add_type_definition (struct_public);
+		}
 	}
+
 
 	public override void visit_destructor (Destructor d) {
 		unowned Class? cl = d.parent_symbol as Class;
@@ -369,60 +368,176 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		cfile.add_function (finalize_func);
 	}
 
+	// public override void visit_constructor (Constructor ctor) {
+		// print ("Constructor %s\n", ctor.to_string ());
+		// base.visit_constructor (ctor);
+	// }
 
 	public override void visit_creation_method (CreationMethod m) {
 		unowned Class? cl = m.parent_symbol as Class;
 
-		if (cl != null && cl.is_supraklass) {
+		if (cl == null && cl.is_supraklass == false) {
+			base.visit_creation_method (m);
+			return;
+		}
 
-			push_line(m.source_reference);
+		string prefix = get_ccode_lower_case_name (cl);
+		string method_suffix = (m.name == ".new") ? "" : "_" + m.name;
+		string new_func_name = get_ccode_name (m); // Garde "foo_new" ou "foo_new_other"
+		string init_func_name = "%s_init%s".printf (prefix, method_suffix);
 
-			string cname = get_ccode_name(cl);
-			string real_cname = get_ccode_name(m);
 
-			var vfunc = new CCodeFunction(real_cname, "%s*".printf(cname));
+		CCodeFile decl_space = (context.header_filename == null) ? cfile : header_file;
 
-			foreach (var param in m.get_parameters()) {
-				vfunc.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
-			}
+		push_line(m.source_reference);
 
-			push_function(vfunc);
+		string cname = get_ccode_name(cl);
 
+		var function_new = new CCodeFunction(new_func_name, "%s*".printf(cname));
+
+		foreach (var param in m.get_parameters()) {
+			function_new.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+		}
+
+		push_function(function_new);
 			var alloc_call = new CCodeFunctionCall(new CCodeIdentifier("malloc"));
 			alloc_call.add_argument(new CCodeIdentifier("sizeof (%s)".printf(cname)));
 			ccode.add_declaration("%s*".printf(cname), new CCodeVariableDeclarator("self"));
 			ccode.add_assignment(new CCodeIdentifier("self"), new CCodeCastExpression(alloc_call, "%s*".printf(cname)));
 
-			var init_call = new CCodeFunctionCall(new CCodeIdentifier("init_%s".printf(cname)));
+			var init_call = new CCodeFunctionCall(new CCodeIdentifier(init_func_name));
 			init_call.add_argument(new CCodeIdentifier("self"));
 			foreach (var param in m.get_parameters()) {
 				init_call.add_argument (new CCodeIdentifier (param.name));
 			}
 			ccode.add_expression(init_call);
-
 			ccode.add_return(new CCodeIdentifier("self"));
+		pop_function();
 
-			pop_function();
-			cfile.add_function(vfunc);
-			cfile.add_function_declaration(vfunc);
 
-			generate_supra_init_func (cl, m);
+		var init_context = new EmitContext (m);
+		push_context (init_context);
 
-			pop_line();
-			return; 
+		var function_init = new CCodeFunction (init_func_name, "void");
+		function_init.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
+
+		foreach (Parameter param in m.get_parameters ()) {
+			function_init.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 		}
 
-		base.visit_creation_method(m);
+		push_function (function_init);
+			var root_cl = get_root_class (cl);
+			var name_root_cl = get_ccode_name (root_cl);
+
+
+
+			// set ref_count to 1
+			if (cl.base_class == null) {
+				var ref_count_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "ref_count");
+				ccode.add_assignment (ref_count_access, new CCodeConstant ("1"));
+			}
+			// priv-> point to the buffer in the struct
+			if (cl.has_private_fields) {
+				var priv_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv");
+				ccode.add_assignment (priv_access, new CCodeCastExpression (new CCodeIdentifier ("self->_priv"), "struct s_%sPrivate*".printf(cname)));
+			}
+
+
+		print ("\033[36mGenerating init function %s for class %s\n\033[0m", function_init.name, cname);
+		if (m.body != null) {
+			var it = m.body.get_statements ().iterator();
+			it.next ();
+			Statement first_stat = it.get ();
+			bool is_chain_call = false;
+
+			if (first_stat is ExpressionStatement) {
+				var expr = ((ExpressionStatement) first_stat).expression;
+
+				// 1. C'est un appel (MethodCall)
+				if (expr is MethodCall) {
+					var mcall = (MethodCall) expr;
+					// 2. Dont la cible (symbol_reference) est une CreationMethod
+					if (mcall.is_chainup) {
+						is_chain_call = true;
+					}
+					else {
+						print ("\033[31mFirst statement is not a creation method call: %s\n\033[0m", expr.to_string ());
+					}
+				}
+				else {
+					print ("\033[31mFirst statement is not a method call: %s\n\033[0m", first_stat.to_string ());
+				}
+			}
+			else {
+				print ("\033[34mFirst statement is not an expression statement: %s\n\033[0m", first_stat.to_string ());
+			}
+
+			// Si c'est un appel au constructeur parent, on l'émet
+			if (cl.base_class != null && is_chain_call) {
+				first_stat.emit (this);
+				init_field_and_vtable (cl, name_root_cl);
+			}
+			else {
+				init_field_and_vtable (cl, name_root_cl);
+				first_stat.emit (this);
+			}
+
+			// On émet tout le reste du corps
+			while (it.next ()) {
+				it.get ().emit (this);
+			}
+		}
+		else {
+		}
+
+		pop_function ();
+		pop_context ();
+
+		pop_line();
+
+		cfile.add_function (function_init);
+		cfile.add_function (function_new);
+		decl_space.add_function_declaration (function_init);
+		decl_space.add_function_declaration (function_new);
+	}
+
+	private void init_field_and_vtable (Class cl, string name_root_cl) {
+		string vtable_var_name = "%s_VTABLE".printf (get_ccode_upper_case_name (cl));
+
+		var vptr_access = new CCodeMemberAccess.pointer (new CCodeCastExpression (new CCodeIdentifier ("self"), "%s*".printf(name_root_cl)), "vptr");
+		ccode.add_assignment (
+				vptr_access,
+				new CCodeCastExpression (
+					new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeIdentifier (vtable_var_name)),
+					"const t_%sVtable*".printf (name_root_cl)
+					)
+				);
+		foreach (Field f in cl.get_fields ()) {
+			if (f.binding == MemberBinding.INSTANCE) {
+				if (f.is_private_symbol ()) {
+					var priv_field_access = new CCodeMemberAccess.pointer (
+							new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv"),
+							get_ccode_name (f)
+							);
+					// TODO set default value if any
+					ccode.add_assignment (priv_field_access, new CCodeConstant ("0"));
+					continue;
+				}
+				else {
+					var field_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), get_ccode_name (f));
+					ccode.add_assignment (field_access, new CCodeConstant ("0"));
+				}
+			}
+		}
 	}
 
 
-	private void generate_supra_vtable_and_init (Class cl) {
-		generate_supra_vtable_struct (cl);
-		generate_supra_vtable_var (cl);
-		generate_supra_unref_func (cl); 
+	private void generate_supra_vtable_and_init (Class cl, CCodeFile decl_space) {
+		generate_supra_vtable_struct (cl, decl_space);
+		generate_supra_vtable_var (cl, decl_space);
 	}
 
-	private void generate_supra_vtable_struct (Class cl) {
+	private void generate_supra_vtable_struct (Class cl, CCodeFile decl_space) {
 		string cname = get_ccode_name (cl);
 		var vtable_struct = new CCodeStruct ("s_%sVtable".printf (cname));
 
@@ -450,13 +565,15 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			}
 		}
 
-		cfile.add_type_declaration (new CCodeTypeDefinition (
+
+		// PERF a optimiser (concate)
+		decl_space.add_type_declaration (new CCodeTypeDefinition (
 					"struct s_%sVtable".printf (cname),
 					new CCodeVariableDeclarator ("t_%sVtable".printf (cname))));
-		cfile.add_type_definition (vtable_struct);
+		decl_space.add_type_definition (vtable_struct);
 	}
 
-	private void generate_supra_vtable_var (Class cl) {
+	private void generate_supra_vtable_var (Class cl, CCodeFile decl_space) {
 		string cname = get_ccode_name (cl);
 		string cname_lower = get_ccode_lower_case_name (cl);
 		string vtable_var_name = "%s_VTABLE".printf (get_ccode_upper_case_name (cl));
@@ -521,100 +638,37 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		cfile.add_type_member_declaration (new CCodeIdentifier (ligne_vtable));
 	}
 
-	private void generate_supra_init_func (Class cl, CreationMethod m) {
-		string cname = get_ccode_name (cl);
-		string vtable_var_name = "%s_VTABLE".printf (get_ccode_upper_case_name (cl));
+	// private void generate_supra_init_func (Class cl, CreationMethod m, CCodeFile decl_space) {
+	// }
 
-		var init_context = new EmitContext (m);
-		push_context (init_context);
+public override void generate_class_struct_declaration (Class cl, CCodeFile decl_space) {
+    if (cl.get_attribute ("SupraKlass") == null) {
+        base.generate_class_struct_declaration (cl, decl_space);
+        return;
+    }
+    if (add_symbol_declaration (decl_space, cl, get_ccode_name (cl))) {
+        return;
+    }
+}
 
-		var init_func = new CCodeFunction ("init_%s".printf (cname), "void");
-		init_func.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
+	// public override void generate_class_struct_declaration (Class cl, CCodeFile decl_space) {
+		// // if (cl.get_attribute ("SupraKlass") == null) {
+			// // return;
+		// // }
+		// base.generate_class_struct_declaration (cl, decl_space);
+// 
+		// // if (add_symbol_declaration (decl_space, cl, get_ccode_name (cl))) {
+			// // return;
+		// // }
+	// }
 
-		foreach (Parameter param in m.get_parameters ()) {
-			init_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
-		}
-
-		cfile.add_function_declaration (init_func);
-		push_function (init_func);
-
-		if (cl.base_class != null) {
-			var base_init_call = new CCodeFunctionCall (new CCodeIdentifier ("init_%s".printf (get_ccode_name (cl.base_class))));
-			base_init_call.add_argument (new CCodeCastExpression (new CCodeIdentifier ("self"), "%s*".printf (get_ccode_name (cl.base_class))));
-			foreach (Parameter param in m.get_parameters ()) {
-				base_init_call.add_argument (new CCodeIdentifier (param.name));
-			}	
-
-			ccode.add_expression (base_init_call);
-		}
-		var root_cl = get_root_class (cl);
-		var name_root_cl = get_ccode_name (root_cl);
-
-		var vptr_access = new CCodeMemberAccess.pointer (new CCodeCastExpression (new CCodeIdentifier ("self"), "%s*".printf(name_root_cl)), "vptr");
-
-		ccode.add_assignment (
-				vptr_access,
-				new CCodeCastExpression (
-					new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeIdentifier (vtable_var_name)),
-					"const t_%sVtable*".printf (name_root_cl)
-					)
-				);
-
-
-		foreach (Field f in cl.get_fields ()) {
-			if (f.binding == MemberBinding.INSTANCE) {
-				var field_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), get_ccode_name (f));
-				ccode.add_assignment (field_access, new CCodeConstant ("0"));
-			}
-		}
-
-		// set ref_count to 1
-		if (cl.base_class == null) {
-			var ref_count_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "ref_count");
-			ccode.add_assignment (ref_count_access, new CCodeConstant ("1"));
-		}
-
-		if (m.body != null) {
-
-			foreach (var stmt in m.body.get_statements ()) {
-				if (stmt is ExpressionStatement) {
-					var expr = ((ExpressionStatement) stmt).expression;
-					if (expr is MethodCall && ((MethodCall) expr).call is BaseAccess) {
-						continue; 
-					}
-				}
-
-				stmt.emit (this);
-			}
-		}
-
-		pop_function ();
-
-		cfile.add_function (init_func);
-
-		pop_context ();
-	}
-
-	public override void generate_class_struct_declaration (Class cl, CCodeFile decl_space) {
-		if (cl.get_attribute ("SupraKlass") == null) {
-			base.generate_class_struct_declaration (cl, decl_space);
-			return;
-		}
-
-		if (add_symbol_declaration (decl_space, cl, get_ccode_name (cl))) {
-			return;
-		}
-	}
-
-	private void generate_supra_unref_func (Class cl) {
+	private void generate_unref_func (Class cl, CCodeFile decl_space) {
 		unowned Vala.Class root_cl = get_root_class (cl);
 		string cname_lower = get_ccode_lower_case_name (cl);
 		string root_name = get_ccode_name (root_cl);
 
-
 		var unref_func = new CCodeFunction ("%s_unref".printf (cname_lower), "void");
 		unref_func.add_parameter (new CCodeParameter ("self", "void*")); 
-		cfile.add_function_declaration (unref_func);
 		push_function (unref_func);
 
 		var self_null = new CCodeBinaryExpression (CCodeBinaryOperator.EQUALITY, new CCodeIdentifier ("self"), new CCodeConstant ("NULL"));
@@ -629,7 +683,6 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		ccode.open_if (count_zero);
 		{
-			// _self->vptr->finalize(self);
 			var vptr_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("_self"), "vptr");
 			var finalize_access = new CCodeMemberAccess.pointer (vptr_access, "finalize");
 			var finalize_call = new CCodeFunctionCall (finalize_access);
@@ -644,16 +697,63 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		pop_function ();
 		cfile.add_function (unref_func);
+		decl_space.add_function_declaration (unref_func);
 	}
 
 
 	public override void visit_method_call (MethodCall expr) {
+		if (expr.is_chainup) {
+			unowned Method? m = expr.call.symbol_reference as Method;
+			if (m != null) {
+				unowned Class? cl = m.parent_symbol as Class;
+				if (cl != null && cl.is_supraklass) {
+
+					string cname = "%s_init_%s".printf(
+							get_ccode_lower_case_name(m.parent_symbol),
+							m.name
+							);
+					var ccall = new CCodeFunctionCall(new CCodeIdentifier(cname));
+					var self_cast = new CCodeCastExpression( new CCodeIdentifier("self"), "%s*".printf(get_ccode_name(m.parent_symbol)));
+					ccall.add_argument(self_cast);
+
+					foreach (var arg in expr.get_argument_list()) {
+						arg.accept(this);
+						var arg_c = get_cvalue(arg);
+						if (arg_c != null) ccall.add_argument(arg_c);
+					}
+
+					ccode.add_expression(ccall);
+					set_cvalue(expr, ccall);
+					return;
+				}
+			}
+			unowned var cl = expr.call.symbol_reference as Class;
+			if (cl != null && cl.is_supraklass) {
+				string cname = "%s_init".printf(
+						get_ccode_lower_case_name(cl)
+						);
+				var ccall = new CCodeFunctionCall(new CCodeIdentifier(cname));
+				var self_cast = new CCodeCastExpression( new CCodeIdentifier("self"), "%s*".printf(get_ccode_name(cl)));
+				ccall.add_argument(self_cast);
+
+				foreach (var arg in expr.get_argument_list()) {
+					arg.accept(this);
+					var arg_c = get_cvalue(arg);
+					if (arg_c != null) ccall.add_argument(arg_c);
+				}
+
+				ccode.add_expression(ccall);
+				set_cvalue(expr, ccall);
+				return;
+			}
+		}
 		var member_access = expr.call as MemberAccess;
 		if (member_access != null && member_access.inner is BaseAccess) {
 			unowned Method? method = member_access.symbol_reference as Method;
 			if (method != null) {
 				unowned Class? cl = method.parent_symbol as Class;
 				if (cl != null && cl.is_supraklass) {
+					// Base acces base->method()
 					string cname = "%s_real_%s".printf(
 							get_ccode_lower_case_name(method.parent_symbol),
 							method.name
