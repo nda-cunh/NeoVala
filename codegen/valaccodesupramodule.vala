@@ -35,6 +35,48 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		}
 
 		generate_is_object_macro (cl, decl_space);
+
+		generate_supra_class_externs (cl, decl_space);
+	}
+
+	private void generate_supra_class_externs (Class cl, CCodeFile decl_space) {
+		string cname = get_ccode_name (cl);
+		string cname_lower = get_ccode_lower_case_name (cl);
+
+		// extern declaration of the vtable instance (defined in the class' own
+		// compilation unit) so subclasses can reference it via _vala_parent.
+		decl_space.add_type_member_declaration (new CCodeIdentifier (
+			"extern const t_%sVtable %s_VTABLE;\n".printf (cname, get_ccode_upper_case_name (cl))));
+
+		// finalize, called directly by a subclass' finalize.
+		var fin = new CCodeFunction ("%s_finalize".printf (cname_lower), "void");
+		fin.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
+		decl_space.add_function_declaration (fin);
+
+		// is_a, referenced by the IS_* macros.
+		var root_cl = get_root_class (cl);
+		var is_a = new CCodeFunction ("%s_is_a".printf (get_ccode_name (root_cl)), "bool");
+		is_a.add_parameter (new CCodeParameter ("obj", "void*"));
+		is_a.add_parameter (new CCodeParameter ("target", "const void*"));
+		decl_space.add_function_declaration (is_a);
+
+		// constructors (_new and _init), called by subclass chain-up and by users.
+		foreach (Method m in cl.get_methods ()) {
+			if (!(m is CreationMethod)) {
+				continue;
+			}
+			string method_suffix = (m.name == ".new") ? "" : "_" + m.name;
+
+			var new_func = new CCodeFunction (get_ccode_name (m), "%s*".printf (cname));
+			var init_func = new CCodeFunction ("%s_init%s".printf (cname_lower, method_suffix), "void");
+			init_func.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
+			foreach (Parameter param in m.get_parameters ()) {
+				new_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+				init_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+			}
+			decl_space.add_function_declaration (new_func);
+			decl_space.add_function_declaration (init_func);
+		}
 	}
 
 
@@ -48,10 +90,29 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			return;
 		}
 
-		CCodeFile decl_space = cfile;
+		// With -H, the public declarations of a *public* class live in the
+		// generated header (and every .c includes it). Internal classes and the
+		// no-header case keep their declarations in cfile. Definitions are always
+		// emitted to cfile.
+		CCodeFile decl_space;
+		if (context.header_filename != null && !cl.is_internal_symbol ()) {
+			decl_space = header_file;
+			cfile.add_include (Path.get_basename (context.header_filename), true);
+		} else {
+			decl_space = cfile;
+		}
 		decl_space.add_include ("stdlib.h");
 		decl_space.add_include ("stddef.h");
 		decl_space.add_include ("stdbool.h");
+
+		// Make sure the base class (its struct and the symbols this class
+		// inherits/references: vtable, _init, _finalize, ...) is fully declared
+		// first. This is required when the parent lives in another compilation
+		// unit, and guarantees the parent struct is complete before ours embeds
+		// it by value.
+		if (cl.base_class != null) {
+			generate_class_declaration (cl.base_class, decl_space);
+		}
 
 		generate_private_struct_declaration (cl, decl_space);
 		generate_instance_struct_declaration (cl, decl_space);
@@ -163,6 +224,20 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			return;
 		}
 
+		// emit the public/internal header declarations, like base.visit_method does
+		// (creation methods declare their own _new/_init in visit_creation_method)
+		if (!(m is CreationMethod)
+		    && (m.is_abstract || m.is_virtual
+		    || (m.base_method == null && m.base_interface_method == null))
+		    && m.signal_reference == null) {
+			if (!m.is_internal_symbol ()) {
+				generate_method_declaration (m, header_file);
+			}
+			if (!m.is_private_symbol ()) {
+				generate_method_declaration (m, internal_header_file);
+			}
+		}
+
 		if ((m.is_virtual || m.is_abstract) && !m.overrides) {
 			generate_supra_virtual_wrapper(m);
 		}
@@ -171,20 +246,35 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			generate_supra_real_method(m);
 			return;
 		}
+		// abstract methods have no body: the virtual dispatch wrapper generated
+		// above is all that is needed, so do not fall back to base.visit_method
+		// (which would emit a second, conflicting definition).
+		if (m.is_abstract) {
+			return;
+		}
 		base.visit_method (m);
 	}
 
 	public override bool generate_method_declaration (Method m, CCodeFile decl_space) {
 		var cl = m.parent_symbol as Class;
 		if (cl != null && cl.is_supraklass) {
+			if (add_symbol_declaration (decl_space, m, get_ccode_name (m))) {
+				return true;
+			}
+			// make sure the owning class and any referenced types are
+			// declared in the same decl_space (e.g. the public header)
+			generate_class_declaration (cl, decl_space);
+
 			if (m is CreationMethod) {
 				var func = new CCodeFunction(get_ccode_name(m), get_ccode_name(cl) + "*");
-				func.add_parameter(new CCodeParameter("void", ""));
+				foreach (Parameter param in m.get_parameters()) {
+					func.add_parameter(new CCodeParameter(param.name, get_ccode_name(param.variable_type)));
+				}
 				decl_space.add_function_declaration(func);
 				return true;
 			}
 			if (m.binding == MemberBinding.INSTANCE) {
-				var func = new CCodeFunction(get_ccode_name(m), "void");
+				var func = new CCodeFunction(get_ccode_name(m), get_ccode_name(m.return_type));
 				func.add_parameter(new CCodeParameter("self", get_ccode_name(cl) + "*"));
 				foreach (Parameter param in m.get_parameters()) {
 					func.add_parameter(new CCodeParameter(param.name, get_ccode_name(param.variable_type)));
@@ -195,6 +285,21 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			return true;
 		}
 		return base.generate_method_declaration(m, decl_space);
+	}
+
+	// Declare (not define) the "real" implementation of a method, so a vtable
+	// built in another compilation unit can reference an inherited implementation.
+	private void declare_supra_real_method (Method m, CCodeFile decl_space) {
+		unowned Class? owner = m.parent_symbol as Class;
+		if (owner == null) {
+			return;
+		}
+		var func = new CCodeFunction (get_ccode_real_name (m), get_ccode_name (m.return_type));
+		func.add_parameter (new CCodeParameter ("self", "%s*".printf (get_ccode_name (owner))));
+		foreach (Parameter param in m.get_parameters ()) {
+			func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+		}
+		decl_space.add_function_declaration (func);
 	}
 
 	private void generate_supra_real_method (Method m) {
@@ -211,6 +316,10 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		cfile.add_function_declaration (func_wrapper);
 
 		push_function (func_wrapper);
+
+		if (!(m.return_type is VoidType) && !m.return_type.is_real_non_null_struct_type ()) {
+			ccode.add_declaration (get_ccode_name (m.return_type), new CCodeVariableDeclarator ("result"));
+		}
 
 		if (m.body != null) {
 			m.body.accept (this);
@@ -335,7 +444,6 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		var finalize_func = new CCodeFunction ("%s_finalize".printf (cname_lower), "void");
 		finalize_func.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
-		finalize_func.modifiers = CCodeModifiers.STATIC;
 		cfile.add_function_declaration (finalize_func);
 
 		push_function (finalize_func);
@@ -369,7 +477,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		string init_func_name = "%s_init%s".printf (prefix, method_suffix);
 
 
-		CCodeFile decl_space = (context.header_filename == null) ? cfile : header_file;
+		CCodeFile decl_space = (context.header_filename != null && !cl.is_internal_symbol ()) ? header_file : cfile;
 
 		push_line(m.source_reference);
 
@@ -461,6 +569,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		cfile.add_function (function_init);
 		cfile.add_function (function_new);
+		generate_class_declaration (cl, decl_space);
 		decl_space.add_function_declaration (function_init);
 		decl_space.add_function_declaration (function_new);
 		base.visit_creation_method (m);
@@ -525,7 +634,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 					sig.append (get_ccode_name (param.variable_type));
 				}
 
-				vtable_struct.add_field ("void", "(*%s)(%s)".printf (field_name, sig.str));
+				vtable_struct.add_field (get_ccode_name (m.return_type), "(*%s)(%s)".printf (field_name, sig.str));
 			}
 		}
 
@@ -567,37 +676,53 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 				string field_name = get_ccode_vfunc_name (m_base);
 				membres.append (".%s = ".printf (field_name));
 
+				var sig = new StringBuilder ();
+				sig.append ("void*");
+				foreach (Parameter param in m_base.get_parameters ()) {
+					sig.append (", ");
+					sig.append (get_ccode_name (param.variable_type));
+				}
+				string cast = "(%s (*)(%s)) ".printf (get_ccode_name (m_base.return_type), sig.str);
+
+				// Walk from cl up the hierarchy to find the most-derived
+				// implementation (override) of m_base. A class that does not
+				// override it inherits the implementation from its parent.
 				Method? implementation = null;
-				foreach (Method m_target in cl.get_methods()) {
-					if (m_target.overrides && m_target.base_method == m_base) {
-						implementation = m_target;
-						break;
+				unowned Class? c = cl;
+				while (c != null && implementation == null) {
+					foreach (Method m_target in c.get_methods()) {
+						if (m_target.overrides && m_target.base_method == m_base) {
+							implementation = m_target;
+							break;
+						}
 					}
+					c = c.base_class;
 				}
 
 				if (implementation != null) {
-					membres.append ("(void (*)(void*)) %s".printf(get_ccode_real_name(implementation)));
+					membres.append ("%s%s".printf(cast, get_ccode_real_name(implementation)));
+					// The implementation may live in an ancestor's compilation
+					// unit; declare it so this vtable can reference it.
+					declare_supra_real_method (implementation, cfile);
 				} else if (m_base.is_abstract) {
 					membres.append ("NULL");
 				} else {
-					membres.append ("(void (*)(void*)) %s".printf(get_ccode_real_name(m_base)));
+					membres.append ("%s%s".printf(cast, get_ccode_real_name(m_base)));
+					declare_supra_real_method (m_base, cfile);
 				}
 			}
 		}
 
-		string ligne_vtable = "static const t_%sVtable %s = {\n\t\t%s\n};".printf (
+		string ligne_vtable = "const t_%sVtable %s = {\n\t\t%s\n};\n".printf (
 				cname,
 				vtable_var_name,
 				membres.str
-				);
+		);
 
 		cfile.add_type_member_declaration (new CCodeIdentifier (ligne_vtable));
 	}
 
 	private void generate_ref_function (Class cl, CCodeFile decl_space) {
-		if (add_symbol_declaration (decl_space, cl, "%s_ref".printf(get_ccode_lower_case_name(cl)))) {
-			return;
-		} 
 		string cname = get_ccode_name (cl);
 		string cname_lower = get_ccode_lower_case_name (cl);
 
@@ -644,13 +769,10 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		pop_function ();
 
-		decl_space.add_function (ref_func);
+		cfile.add_function (ref_func);
 	}
 
 	private void generate_unref_func (Class cl, CCodeFile decl_space) {
-		if (add_symbol_declaration (decl_space, cl, "%s_unref".printf(get_ccode_lower_case_name(cl)))) {
-			return;
-		} 
 		unowned Vala.Class root_cl = get_root_class (cl);
 		string cname_lower = get_ccode_lower_case_name (cl);
 		string root_name = get_ccode_name (root_cl);
