@@ -131,10 +131,319 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		}
 
 		generate_supra_vtable_and_init (cl, decl_space);
+
+		foreach (DataType base_type in cl.get_base_types ()) {
+			unowned Interface? iface = base_type.type_symbol as Interface;
+			if (iface != null) {
+				generate_interface_declaration (iface, decl_space);
+				generate_interface_vtable_instance (cl, iface, decl_space);
+			}
+		}
+	}
+
+	//////////////////////////////////////////
+	////    Interfaces (fat pointers)
+	//////////////////////////////////////////
+
+	// A POSIX interface is represented as a "fat pointer":
+	//
+	//     typedef struct _IFoo { void* self; const t_IFooVtable* vtable; } IFoo;
+	//
+	// carrying the instance together with the dispatch table for the concrete
+	// class that produced it. Each implementing class exposes a non-static
+	// CLASS_IFACE_VTABLE so the wrapping can also happen from another unit.
+
+	public override void visit_interface (Interface iface) {
+		if (context.profile != Profile.POSIX) {
+			base.visit_interface (iface);
+			return;
+		}
+
+		CCodeFile decl_space;
+		if (context.header_filename != null && !iface.is_internal_symbol ()) {
+			decl_space = header_file;
+			cfile.add_include (Path.get_basename (context.header_filename), true);
+		} else {
+			decl_space = cfile;
+		}
+
+		generate_interface_declaration (iface, decl_space);
+		generate_interface_dispatch_wrappers (iface);
+		generate_interface_default_methods (iface);
+	}
+
+	private void generate_interface_declaration (Interface iface, CCodeFile decl_space) {
+		if (add_symbol_declaration (decl_space, iface, get_ccode_name (iface))) {
+			return;
+		}
+
+		decl_space.add_include ("stddef.h");
+
+		string cname = get_ccode_name (iface);
+
+		// vtable type
+		decl_space.add_type_declaration (new CCodeTypeDefinition (
+			"struct s_%sVtable".printf (cname),
+			new CCodeVariableDeclarator ("t_%sVtable".printf (cname))));
+
+		var vtable_struct = new CCodeStruct ("s_%sVtable".printf (cname));
+		foreach (Method m in iface.get_methods ()) {
+			if (m.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+			vtable_struct.add_field (get_ccode_name (m.return_type),
+				"(*%s)(%s)".printf (get_ccode_vfunc_name (m), interface_vfunc_signature (m)));
+		}
+		decl_space.add_type_definition (vtable_struct);
+
+		// fat pointer type
+		decl_space.add_type_declaration (new CCodeTypeDefinition (
+			"struct _%s".printf (cname),
+			new CCodeVariableDeclarator (cname)));
+
+		var fat_struct = new CCodeStruct ("_%s".printf (cname));
+		fat_struct.add_field ("void*", "self");
+		fat_struct.add_field ("const t_%sVtable*".printf (cname), "vtable");
+		decl_space.add_type_definition (fat_struct);
+
+		// dispatch wrapper declarations
+		foreach (Method m in iface.get_methods ()) {
+			if (m.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+			decl_space.add_function_declaration (interface_dispatch_function (iface, m));
+		}
+	}
+
+	// The instance is always passed as void* (the fat pointer's self member).
+	private string interface_vfunc_signature (Method m) {
+		var sig = new StringBuilder ();
+		sig.append ("void*");
+		foreach (Parameter param in m.get_parameters ()) {
+			sig.append (", ");
+			sig.append (get_ccode_name (param.variable_type));
+		}
+		return sig.str;
+	}
+
+	private CCodeFunction interface_dispatch_function (Interface iface, Method m) {
+		var func = new CCodeFunction (get_ccode_name (m), get_ccode_name (m.return_type));
+		func.add_parameter (new CCodeParameter ("self", "%s*".printf (get_ccode_name (iface))));
+		foreach (Parameter param in m.get_parameters ()) {
+			func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+		}
+		return func;
+	}
+
+	// ifoo_method (IFoo* self, ...) { return self->vtable->method (self->self, ...); }
+	private void generate_interface_dispatch_wrappers (Interface iface) {
+		foreach (Method m in iface.get_methods ()) {
+			if (m.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+			var func = interface_dispatch_function (iface, m);
+			push_function (func);
+
+			var vtable_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "vtable");
+			var method_ptr = new CCodeMemberAccess.pointer (vtable_access, get_ccode_vfunc_name (m));
+			var vcall = new CCodeFunctionCall (method_ptr);
+			vcall.add_argument (new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "self"));
+			foreach (Parameter param in m.get_parameters ()) {
+				vcall.add_argument (new CCodeIdentifier (param.name));
+			}
+
+			if (m.return_type is VoidType) {
+				ccode.add_expression (vcall);
+			} else {
+				ccode.add_return (vcall);
+			}
+			pop_function ();
+			cfile.add_function (func);
+		}
+	}
+
+	// Default (non-abstract) interface method: "ifoo_real_method".
+	private string interface_default_impl_name (Interface iface, Method m) {
+		return "%s_real_%s".printf (get_ccode_lower_case_name (iface), m.name);
+	}
+
+	private CCodeFunction interface_default_impl_function (Interface iface, Method m) {
+		var func = new CCodeFunction (interface_default_impl_name (iface, m), get_ccode_name (m.return_type));
+		func.add_parameter (new CCodeParameter ("self", "void*"));
+		foreach (Parameter param in m.get_parameters ()) {
+			func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+		}
+		return func;
+	}
+
+	private void generate_interface_default_methods (Interface iface) {
+		foreach (Method m in iface.get_methods ()) {
+			if (m.binding != MemberBinding.INSTANCE || m.is_abstract || m.body == null) {
+				continue;
+			}
+			var func = interface_default_impl_function (iface, m);
+			cfile.add_function_declaration (func);
+
+			push_context (new EmitContext (m));
+			push_function (func);
+			if (!(m.return_type is VoidType) && !m.return_type.is_real_non_null_struct_type ()) {
+				ccode.add_declaration (get_ccode_name (m.return_type), new CCodeVariableDeclarator ("result"));
+			}
+			m.body.accept (this);
+			pop_function ();
+			pop_context ();
+			cfile.add_function (func);
+		}
+	}
+
+	private void generate_interface_vtable_instance (Class cl, Interface iface, CCodeFile decl_space) {
+		string iface_name = get_ccode_name (iface);
+		string vtable_var = "%s_%s_VTABLE".printf (
+			get_ccode_upper_case_name (cl), get_ccode_upper_case_name (iface));
+
+		decl_space.add_type_member_declaration (new CCodeIdentifier (
+			"extern const t_%sVtable %s;\n".printf (iface_name, vtable_var)));
+
+		var membres = new StringBuilder ();
+		bool first = true;
+		foreach (Method im in iface.get_methods ()) {
+			if (im.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+			if (!first) {
+				membres.append (",\n\t\t");
+			}
+			first = false;
+
+			string cast = "(%s (*)(%s)) ".printf (get_ccode_name (im.return_type), interface_vfunc_signature (im));
+			membres.append (".%s = ".printf (get_ccode_vfunc_name (im)));
+
+			Method? impl = find_interface_implementation (cl, im);
+			if (impl != null) {
+				membres.append ("%s%s".printf (cast, get_ccode_real_name (impl)));
+				declare_supra_real_method (impl, cfile);
+			} else if (!im.is_abstract && im.body != null) {
+				// class does not override it: inherit the interface's default
+				membres.append ("%s%s".printf (cast, interface_default_impl_name (iface, im)));
+				cfile.add_function_declaration (interface_default_impl_function (iface, im));
+			} else {
+				membres.append ("NULL");
+			}
+		}
+
+		string ligne = "const t_%sVtable %s = {\n\t\t%s\n};\n".printf (iface_name, vtable_var, membres.str);
+		cfile.add_type_member_declaration (new CCodeIdentifier (ligne));
+	}
+
+	// Find the class method that implements an interface method, walking up the
+	// hierarchy (an inherited implementation counts).
+	private Method? find_interface_implementation (Class cl, Method iface_method) {
+		for (unowned Class? c = cl; c != null; c = c.base_class) {
+			foreach (Method m in c.get_methods ()) {
+				if (m.base_interface_method == iface_method) {
+					return m;
+				}
+			}
+		}
+		// fall back to matching by name (implicit implementation)
+		for (unowned Class? c = cl; c != null; c = c.base_class) {
+			foreach (Method m in c.get_methods ()) {
+				if (m.name == iface_method.name) {
+					return m;
+				}
+			}
+		}
+		return null;
+	}
+
+	// (IFoo) { (void*) obj, &CLASS_IFACE_VTABLE } : wrap a class pointer into an
+	// interface fat pointer.
+	private CCodeExpression build_supra_fat_pointer (Class cl, Interface iface, CCodeExpression cexpr) {
+		generate_interface_declaration (iface, cfile);
+		generate_class_declaration (cl, cfile);
+
+		string vtable_var = "%s_%s_VTABLE".printf (
+			get_ccode_upper_case_name (cl), get_ccode_upper_case_name (iface));
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"extern const t_%sVtable %s;\n".printf (get_ccode_name (iface), vtable_var)));
+
+		var init = new CCodeInitializerList ();
+		init.append (new CCodeCastExpression (cexpr, "void*"));
+		init.append (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeIdentifier (vtable_var)));
+		// &(IFoo){ ... } : interface values are pointers to the fat-pointer struct
+		var literal = new CCodeCastExpression (init, get_ccode_name (iface));
+		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, literal);
+	}
+
+	public override CCodeExpression get_implicit_cast_expression (CCodeExpression source_cexpr, DataType? expression_type, DataType? target_type, CodeNode? node) {
+		if (context.profile == Profile.POSIX && expression_type != null && target_type != null) {
+			unowned Interface? iface = target_type.type_symbol as Interface;
+			if (iface != null) {
+				unowned Class? cl = expression_type.type_symbol as Class;
+				if (cl != null && cl.is_supraklass) {
+					return build_supra_fat_pointer (cl, iface, source_cexpr);
+				}
+				if (expression_type.type_symbol == iface) {
+					// already a fat pointer of the same interface
+					return source_cexpr;
+				}
+			}
+		}
+		return base.get_implicit_cast_expression (source_cexpr, expression_type, target_type, node);
+	}
+
+	// Fat pointers are not reference-counted in the POSIX profile (they only
+	// borrow the instance), so copying one is just copying the pointer and
+	// destroying one is a no-op. This also bypasses the GObject-oriented
+	// "missing class prerequisite" diagnostic for prerequisite-less interfaces.
+	private bool is_supra_interface_type (DataType? type) {
+		return context.profile == Profile.POSIX
+		    && type != null && type.type_symbol is Interface;
+	}
+
+	public override TargetValue? copy_value (TargetValue value, CodeNode node) {
+		if (is_supra_interface_type (value.value_type)) {
+			return ((GLibValue) value).copy ();
+		}
+		return base.copy_value (value, node);
+	}
+
+	public override CCodeExpression destroy_value (TargetValue value, bool is_macro_definition = false) {
+		if (is_supra_interface_type (value.value_type)) {
+			return new CCodeConstant ("((void) 0)");
+		}
+		return base.destroy_value (value, is_macro_definition);
 	}
 
 	public override void visit_cast_expression (CastExpression expr) {
+		unowned Interface? iface = expr.target_type.type_symbol as Interface;
+		if (context.profile == Profile.POSIX && iface != null) {
+			expr.inner.accept (this);
+			unowned Class? cl = expr.inner.value_type.type_symbol as Class;
+			if (cl != null && cl.is_supraklass) {
+				set_cvalue (expr, build_supra_fat_pointer (cl, iface, get_cvalue (expr.inner)));
+			} else {
+				set_cvalue (expr, get_cvalue (expr.inner));
+			}
+			return;
+		}
+
 		var sym = expr.target_type.type_symbol;
+		if (expr.inner is MemberAccess) {
+			var ma = expr.inner as MemberAccess;
+			if (ma.symbol_reference is Field) {
+				var field = ma.symbol_reference as Field;
+				if (field.is_private_symbol()) {
+					base.visit_cast_expression(expr);
+					return;
+				}
+			}
+		}
+		if (sym == null) {
+			base.visit_cast_expression(expr);
+			return;
+		}
+
 		var to_type = get_ccode_upper_case_name (sym);
 		var name = get_ccode_name (sym);
 		expr.inner.accept(this);
@@ -218,6 +527,11 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 	}
 
 	public override void visit_method (Method m) {
+		// interface methods are emitted as dispatch wrappers by visit_interface
+		if (context.profile == Profile.POSIX && m.parent_symbol is Interface) {
+			return;
+		}
+
 		unowned Class? cl = m.parent_symbol as Class;
 		if (cl == null || !cl.is_supraklass) {
 			base.visit_method (m);
@@ -531,34 +845,29 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			ccode.add_assignment (priv_access, new CCodeCastExpression (new CCodeIdentifier ("self->_priv"), "struct s_%sPrivate*".printf(cname)));
 		}
 
-		if (m.body != null) {
-			var it = m.body.get_statements ().iterator();
-			it.next ();
-			Statement first_stat = it.get ();
-			bool is_chain_call = false;
+		unowned List<Statement>? statements = (m.body != null) ? m.body.get_statements () : null;
+		Statement? first_stat = (statements != null && statements.size > 0) ? statements.get (0) : null;
 
-			if (first_stat is ExpressionStatement) {
-				var expr = ((ExpressionStatement) first_stat).expression;
+		bool is_chain_call = false;
+		if (first_stat is ExpressionStatement) {
+			var expr = ((ExpressionStatement) first_stat).expression;
+			if (expr is MethodCall && ((MethodCall) expr).is_chainup) {
+				is_chain_call = true;
+			}
+		}
 
-				if (expr is MethodCall) {
-					var mcall = (MethodCall) expr;
-					if (mcall.is_chainup) {
-						is_chain_call = true;
-					}
+		if (cl.base_class != null && is_chain_call) {
+			first_stat.emit (this);
+			init_field_and_vtable (cl, name_root_cl);
+			for (int i = 1; i < statements.size; i++) {
+				statements.get (i).emit (this);
+			}
+		} else {
+			init_field_and_vtable (cl, name_root_cl);
+			if (statements != null) {
+				foreach (Statement stat in statements) {
+					stat.emit (this);
 				}
-			}
-
-			if (cl.base_class != null && is_chain_call) {
-				first_stat.emit (this);
-				init_field_and_vtable (cl, name_root_cl);
-			}
-			else {
-				init_field_and_vtable (cl, name_root_cl);
-				first_stat.emit (this);
-			}
-
-			while (it.next ()) {
-				it.get ().emit (this);
 			}
 		}
 
