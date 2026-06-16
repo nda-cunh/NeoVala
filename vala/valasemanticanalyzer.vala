@@ -438,6 +438,10 @@ public class Vala.SemanticAnalyzer : CodeVisitor {
 	}
 
 	public bool is_gobject_property (Property prop) {
+		if (object_type == null) {
+			return false;
+		}
+
 		unowned ObjectTypeSymbol? type_sym = prop.parent_symbol as ObjectTypeSymbol;
 		if (type_sym == null || !type_sym.is_subtype_of (object_type)) {
 			return false;

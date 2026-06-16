@@ -170,6 +170,13 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		generate_interface_declaration (iface, decl_space);
 		generate_interface_dispatch_wrappers (iface);
 		generate_interface_default_methods (iface);
+
+		// Define this interface's runtime identity token; its address is the id.
+		declare_interface_id (iface, decl_space);
+		if (!cfile.add_declaration ("%s__def".printf (interface_id_name (iface)))) {
+			cfile.add_type_member_declaration (new CCodeIdentifier (
+				"const char %s = 0;\n".printf (interface_id_name (iface))));
+		}
 	}
 
 	private void generate_interface_declaration (Interface iface, CCodeFile decl_space) {
@@ -354,6 +361,131 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			}
 		}
 		return null;
+	}
+
+	//////////////////////////////////////////
+	////    Runtime interface checks (obj is IFoo)
+	//////////////////////////////////////////
+
+	// Interfaces are identified by their (fully-qualified, hence unique) C name
+	// rather than by a global identity symbol: comparing string contents is
+	// robust across shared objects, whereas address identity of a dummy token
+	// is not (symbol interposition / duplicate definitions between .so).
+
+	// Each interface owns a unique global token; its address is its identity.
+	// Resolved once by the dynamic linker, so a plain pointer equality is safe
+	// across shared objects (no numeric registry, no strcmp).
+	//
+	//     extern const char IFOO_INTERFACE_ID;   // const char IFOO_INTERFACE_ID = 0;
+	private string interface_id_name (Interface iface) {
+		return "%s_INTERFACE_ID".printf (get_ccode_upper_case_name (iface));
+	}
+
+	private void declare_interface_id (Interface iface, CCodeFile decl_space) {
+		if (decl_space.add_declaration (interface_id_name (iface))) {
+			return;
+		}
+		decl_space.add_type_member_declaration (new CCodeIdentifier (
+			"extern const char %s;\n".printf (interface_id_name (iface))));
+	}
+
+	// typedef struct { const void* interface_id; const void* vtable; } t_vala_InterfaceEntry;
+	private void ensure_interface_entry_type () {
+		if (!add_wrapper ("t_vala_InterfaceEntry")) {
+			return;
+		}
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"typedef struct { const void* interface_id; const void* vtable; } t_vala_InterfaceEntry;\n"));
+	}
+
+	// static const t_vala_InterfaceEntry CLASS_INTERFACES[] = {
+	//     { &IFOO_INTERFACE_ID, &CLASS_IFOO_VTABLE }, { NULL, NULL } };
+	// Each entry maps an interface identity to the class' concrete interface
+	// vtable, so the same table powers both `is` and a dynamic interface cast.
+	private string emit_class_interface_table (Class cl, CCodeFile decl_space) {
+		var entries = new StringBuilder ();
+		foreach (DataType base_type in cl.get_base_types ()) {
+			unowned Interface? iface = base_type.type_symbol as Interface;
+			if (iface == null) {
+				continue;
+			}
+			generate_interface_declaration (iface, decl_space);
+			declare_interface_id (iface, decl_space);
+			string iface_vtable = "%s_%s_VTABLE".printf (
+				get_ccode_upper_case_name (cl), get_ccode_upper_case_name (iface));
+			cfile.add_type_member_declaration (new CCodeIdentifier (
+				"extern const t_%sVtable %s;\n".printf (get_ccode_name (iface), iface_vtable)));
+			entries.append_printf ("{ &%s, &%s }, ", interface_id_name (iface), iface_vtable);
+		}
+		if (entries.len == 0) {
+			return "NULL";
+		}
+		ensure_interface_entry_type ();
+		string table_var = "%s_INTERFACES".printf (get_ccode_upper_case_name (cl));
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"static const t_vala_InterfaceEntry %s[] = { %s{ NULL, NULL } };\n".printf (table_var, entries.str)));
+		return table_var;
+	}
+
+	// Emitted once per compilation unit that needs it: walk the vptr/_vala_parent
+	// chain and look the interface identity up by pointer equality. Returns the
+	// concrete interface vtable (for a fat-pointer cast) or NULL. The header
+	// struct mirrors the common prefix of every t_*Vtable.
+	private void emit_interface_is_a_helper () {
+		if (!add_wrapper ("_vala_get_interface")) {
+			return;
+		}
+		ensure_interface_entry_type ();
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"""typedef struct { void (*finalize)(void*); const void* _vala_parent; const void* _vala_interfaces; } t_vala_VtableHeader;
+static const void* _vala_get_interface (void* obj, const void* interface_id) {
+	const t_vala_VtableHeader* v;
+	const t_vala_InterfaceEntry* it;
+	if (obj == NULL) {
+		return NULL;
+	}
+	v = *((const t_vala_VtableHeader* const*) obj);
+	while (v != NULL) {
+		it = (const t_vala_InterfaceEntry*) v->_vala_interfaces;
+		if (it != NULL) {
+			for (; it->interface_id != NULL; it++) {
+				if (it->interface_id == interface_id) {
+					return it->vtable;
+				}
+			}
+		}
+		v = (const t_vala_VtableHeader*) v->_vala_parent;
+	}
+	return NULL;
+}
+"""));
+	}
+
+	// obj is IFoo  ->  _vala_get_interface (obj, &IFOO_INTERFACE_ID) != NULL
+	public override void visit_type_check (TypeCheck expr) {
+		if (context.profile != Profile.POSIX || !(expr.type_reference.type_symbol is Interface)) {
+			base.visit_type_check (expr);
+			return;
+		}
+
+		unowned Interface iface = (Interface) expr.type_reference.type_symbol;
+		generate_interface_declaration (iface, cfile);
+		declare_interface_id (iface, cfile);
+		emit_interface_is_a_helper ();
+
+		CCodeExpression obj = get_cvalue (expr.expression);
+		// A fat-pointer source carries the real object in its self member.
+		unowned DataType? expr_type = expr.expression.value_type;
+		if (expr_type != null && expr_type.type_symbol is Interface) {
+			obj = new CCodeMemberAccess.pointer (obj, "self");
+		}
+
+		var call = new CCodeFunctionCall (new CCodeIdentifier ("_vala_get_interface"));
+		call.add_argument (new CCodeCastExpression (obj, "void*"));
+		call.add_argument (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF,
+			new CCodeIdentifier (interface_id_name (iface))));
+		set_cvalue (expr, new CCodeBinaryExpression (CCodeBinaryOperator.INEQUALITY,
+			call, new CCodeConstant ("NULL")));
 	}
 
 	// (IFoo) { (void*) obj, &CLASS_IFACE_VTABLE } : wrap a class pointer into an
@@ -777,6 +909,18 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		cfile.add_function (finalize_func);
 	}
 
+	public override void visit_field (Field f) {
+		unowned Class? cl = f.parent_symbol as Class;
+		// Instance fields of a supraklass are part of the generated struct and
+		// their initializers are emitted in init_field_and_vtable(). Base
+		// visit_field() would push the GObject instance_init_context, which is
+		// null under --profile=posix and would crash.
+		if (cl != null && cl.is_supraklass && f.binding == MemberBinding.INSTANCE) {
+			return;
+		}
+		base.visit_field (f);
+	}
+
 	public override void visit_creation_method (CreationMethod m) {
 		unowned Class? cl = m.parent_symbol as Class;
 
@@ -896,20 +1040,25 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 					)
 				);
 		foreach (Field f in cl.get_fields ()) {
-			if (f.binding == MemberBinding.INSTANCE) {
-				if (f.is_private_symbol ()) {
-					var priv_field_access = new CCodeMemberAccess.pointer (
-							new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv"),
-							get_ccode_name (f)
-							);
-					// TODO set default value if any
-					ccode.add_assignment (priv_field_access, new CCodeConstant ("0"));
-					continue;
-				}
-				else {
-					var field_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), get_ccode_name (f));
-					ccode.add_assignment (field_access, new CCodeConstant ("0"));
-				}
+			if (f.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+
+			CCodeExpression field_access;
+			if (f.is_private_symbol ()) {
+				field_access = new CCodeMemberAccess.pointer (
+						new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv"),
+						get_ccode_name (f)
+						);
+			} else {
+				field_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), get_ccode_name (f));
+			}
+
+			if (f.initializer != null) {
+				f.initializer.emit (this);
+				ccode.add_assignment (field_access, get_cvalue (f.initializer));
+			} else {
+				ccode.add_assignment (field_access, new CCodeConstant ("0"));
 			}
 		}
 	}
@@ -926,6 +1075,10 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 		vtable_struct.add_field ("void", "(*finalize)(void*)");
 		vtable_struct.add_field ("const void*", "_vala_parent");
+		// Pointer to this class' NULL-terminated t_vala_InterfaceEntry table
+		// (kept opaque here so the vtable struct needs no extra type), used by
+		// `obj is IFoo` / interface casts (see emit_interface_is_a_helper).
+		vtable_struct.add_field ("const void*", "_vala_interfaces");
 
 		unowned Class root_cl = cl;
 		while (root_cl.base_class != null) {
@@ -972,6 +1125,12 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 		} else {
 			membres.append ("._vala_parent = NULL");
 		}
+
+		// Directly-implemented interfaces: emit a NULL-terminated table of their
+		// identity tokens and point the vtable at it. Inherited interfaces are
+		// reached by walking _vala_parent at runtime.
+		membres.append (",\n\t\t._vala_interfaces = ");
+		membres.append (emit_class_interface_table (cl, decl_space));
 
 		unowned Class root_cl = cl;
 		while (root_cl.base_class != null) {
