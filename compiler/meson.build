@@ -1,18 +1,30 @@
+fs = import('fs')
+
 valac_sources = files(
 	'valacompiler.vala',
 )
 
 valac_name = 'valac@0@'.format(vala_version_suffix)
 
-rpath_prefix = '$ORIGIN'
-if host_machine.system() == 'darwin'
-	rpath_prefix = '@loader_path'
+rpath_prefix = (host_machine.system() == 'darwin') ? '@loader_path' : '$ORIGIN'
+libdir = get_option('libdir')
+
+if fs.is_absolute(libdir)
+	rpath_dirs = [
+		libdir,
+		libdir / ('vala' + vala_version_suffix),
+	]
+else
+	rpath_dirs = [
+		rpath_prefix / '..' / libdir,
+		rpath_prefix / '..' / libdir / ('vala' + vala_version_suffix),
+	]
 endif
 
 valac_exe = executable(
 	valac_name,
 	valac_sources,
-	install_rpath: rpath_prefix + '/../lib/vala' + vala_version_suffix,
+	install_rpath: ':'.join(rpath_dirs),
 	dependencies: [glib_dep, valacodegen_dep],
 	install: true,
 )
