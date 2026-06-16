@@ -12,7 +12,7 @@ endif
 valac_exe = executable(
 	valac_name,
 	valac_sources,
-	install_rpath: rpath_prefix + '/../lib/vala' + vala_version_suffix,
+	install_rpath: rpath_prefix + '/../' + get_option('libdir') + '/vala' + vala_version_suffix,
 	dependencies: [glib_dep, valacodegen_dep],
 	install: true,
 )
