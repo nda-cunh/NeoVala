@@ -542,9 +542,35 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 
 	public override CCodeExpression destroy_value (TargetValue value, bool is_macro_definition = false) {
 		if (is_supra_interface_type (value.value_type)) {
+			if (value.value_type != null && value.value_type.value_owned) {
+				emit_supra_object_unref_helper ();
+				var unref_call = new CCodeFunctionCall (new CCodeIdentifier ("_vala_supra_object_unref"));
+				unref_call.add_argument (new CCodeMemberAccess.pointer (get_cvalue_ (value), "self"));
+				return unref_call;
+			}
 			return new CCodeConstant ("((void) 0)");
 		}
 		return base.destroy_value (value, is_macro_definition);
+	}
+
+	private void emit_supra_object_unref_helper () {
+		if (!add_wrapper ("_vala_supra_object_unref")) {
+			return;
+		}
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"""static inline void _vala_supra_object_unref (void* self) {
+	struct _supra_vtable { void (*finalize)(void*); };
+	struct _supra_object { const struct _supra_vtable* vptr; size_t ref_count; };
+	struct _supra_object* _self;
+	if (self == NULL) {
+		return;
+	}
+	_self = (struct _supra_object*) self;
+	if (--_self->ref_count == 0) {
+		_self->vptr->finalize (self);
+		free (self);
+	}
+}"""));
 	}
 
 	public override void visit_cast_expression (CastExpression expr) {
@@ -571,7 +597,8 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 				}
 			}
 		}
-		if (sym == null) {
+		unowned Class? target_cl = sym as Class;
+		if (target_cl == null || !target_cl.is_supraklass) {
 			base.visit_cast_expression(expr);
 			return;
 		}
@@ -821,7 +848,7 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 		var private_struct = new CCodeStruct ("s_%sPrivate".printf (cname));
 		foreach (Field f in cl.get_fields ()) {
 			if (f.is_private_symbol ()) {
-				private_struct.add_field (get_ccode_name (f.variable_type), get_ccode_name (f));
+				append_field (private_struct, f, decl_space);
 			}
 		}
 
@@ -849,7 +876,7 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 
 			foreach (Field f in cl.get_fields ()) {
 				if (f.binding == MemberBinding.INSTANCE && !f.is_private_symbol ()) {
-					struct_public.add_field (get_ccode_name (f.variable_type), get_ccode_name (f));
+					append_field (struct_public, f, decl_space);
 				}
 			}
 			if (cl.has_private_fields) {
@@ -858,6 +885,18 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 				foreach (Field f in cl.get_fields ()) {
 					if (f.is_private_symbol ()) {
 						sb.append_printf("%s %s;", get_ccode_name (f.variable_type), get_ccode_name (f));
+						if (f.variable_type is ArrayType && get_ccode_array_length (f)) {
+							var array_type = (ArrayType) f.variable_type;
+							if (!array_type.fixed_length) {
+								var length_ctype = get_ccode_array_length_type (f);
+								for (int dim = 1; dim <= array_type.rank; dim++) {
+									sb.append_printf("%s %s;", length_ctype, get_variable_array_length_cname (f, dim));
+								}
+								if (array_type.rank == 1 && f.is_internal_symbol ()) {
+									sb.append_printf("%s %s;", length_ctype, get_array_size_cname (get_ccode_name (f)));
+								}
+							}
+						}
 					}
 				}
 				sb.append("}");
@@ -896,6 +935,32 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 
 		if (d?.body != null) {
 			d.body.accept (this);
+		}
+
+		bool needs_priv = false;
+		foreach (Field f in cl.get_fields ()) {
+			if (f.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+			if ((!(f.variable_type is DelegateType) || get_ccode_delegate_target (f)) && requires_destroy (f.variable_type)) {
+				if (f.is_private_symbol ()) {
+					needs_priv = true;
+				}
+			}
+		}
+		if (needs_priv) {
+			var priv_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv");
+			ccode.add_assignment (priv_access, new CCodeCastExpression (new CCodeIdentifier ("self->_priv"), "struct s_%sPrivate*".printf (cname)));
+		}
+		var this_type = SemanticAnalyzer.get_data_type_for_symbol (cl);
+		var instance = new GLibValue (this_type, new CCodeIdentifier ("self"), true);
+		foreach (Field f in cl.get_fields ()) {
+			if (f.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+			if ((!(f.variable_type is DelegateType) || get_ccode_delegate_target (f)) && requires_destroy (f.variable_type)) {
+				ccode.add_expression (destroy_field (f, instance));
+			}
 		}
 
 		if (cl.base_class != null) {
@@ -1012,6 +1077,26 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 				foreach (Statement stat in statements) {
 					stat.emit (this);
 				}
+			}
+		}
+
+		if (m.body != null) {
+			var local_vars = m.body.get_local_variables ();
+			for (int i = local_vars.size - 1; i >= 0; i--) {
+				var local = local_vars[i];
+				local.active = false;
+				if (!local.unreachable && !local.captured && requires_destroy (local.variable_type)) {
+					ccode.add_expression (destroy_local (local));
+				}
+			}
+		}
+
+		// Free owned parameters that were not consumed by the body.
+		foreach (Parameter param in m.get_parameters ()) {
+			if (!param.captured && !param.ellipsis && !param.params_array
+			    && param.direction == ParameterDirection.IN
+			    && requires_destroy (param.variable_type)) {
+				ccode.add_expression (destroy_parameter (param));
 			}
 		}
 
