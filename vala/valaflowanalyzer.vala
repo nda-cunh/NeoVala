@@ -923,7 +923,7 @@ public class Vala.FlowAnalyzer : CodeVisitor {
 						mark_unreachable ();
 						break;
 					} else if (jump_target.is_error_target) {
-						if (context.profile == Profile.GOBJECT) {
+						if (context.profile == Profile.GOBJECT || context.profile == Profile.POSIX) {
 							if (jump_target.error_domain == null
 							    || (jump_target.error_domain == error_type.error_domain
 								&& (jump_target.error_code == null
@@ -1032,7 +1032,7 @@ public class Vala.FlowAnalyzer : CodeVisitor {
 			all_basic_blocks.add (error_block);
 
 			if (catch_clause.error_type != null && !catch_clause.error) {
-				if (context.profile == Profile.GOBJECT) {
+				if (context.profile == Profile.GOBJECT || context.profile == Profile.POSIX) {
 					unowned ErrorType error_type = (ErrorType) catch_clause.error_type;
 					jump_stack.add (new JumpTarget.error_target (error_block, catch_clause, catch_clause.error_type.type_symbol as ErrorDomain, error_type.error_code, null));
 				} else {
@@ -1070,7 +1070,7 @@ public class Vala.FlowAnalyzer : CodeVisitor {
 					break;
 				}
 
-				if (context.profile == Profile.GOBJECT) {
+				if (context.profile == Profile.GOBJECT || context.profile == Profile.POSIX) {
 					if (prev_target.error_domain == jump_target.error_domain &&
 					    prev_target.error_code == jump_target.error_code) {
 						Report.error (stmt.source_reference, "double catch clause of same error detected");

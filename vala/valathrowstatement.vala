@@ -91,12 +91,6 @@ public class Vala.ThrowStatement : CodeNode, Statement {
 
 		checked = true;
 
-		if (context.profile == Profile.POSIX) {
-			Report.error (source_reference, "`throws' is not supported in POSIX profile");
-			error = true;
-			return false;
-		}
-
 		error_expression.target_type = new ErrorType (null, null, source_reference);
 		error_expression.target_type.value_owned = true;
 

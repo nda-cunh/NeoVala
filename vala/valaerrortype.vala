@@ -44,8 +44,18 @@ public class Vala.ErrorType : ReferenceType {
 	public bool dynamic_error { get; set; }
 
 	public ErrorType (ErrorDomain? error_domain, ErrorCode? error_code, SourceReference? source_reference = null) {
-		base ((Symbol) error_domain ?? CodeContext.get ().root.scope.lookup ("GLib").scope.lookup ("Error"), source_reference);
+		base ((Symbol) error_domain ?? resolve_gerror_symbol (), source_reference);
 		this.error_code = error_code;
+	}
+
+	// The generic error base symbol is GLib.Error under the GObject profile and the
+	// root-scope `Error` class (from posix.vapi) under the POSIX profile.
+	static Symbol? resolve_gerror_symbol () {
+		Symbol? glib = CodeContext.get ().root.scope.lookup ("GLib");
+		if (glib != null) {
+			return glib.scope.lookup ("Error");
+		}
+		return CodeContext.get ().root.scope.lookup ("Error");
 	}
 
 	public override bool compatible (DataType target_type) {

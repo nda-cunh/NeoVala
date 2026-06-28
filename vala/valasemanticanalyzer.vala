@@ -244,6 +244,11 @@ public class Vala.SemanticAnalyzer : CodeVisitor {
 
 			generics_dup_func_type = new DelegateType ((Delegate) glib_ns.scope.lookup ("BoxedCopyFunc"));
 		} else {
+			// POSIX profile has no GLib.Error; the error base class is declared in
+			// posix.vapi as `[ErrorBase] class Error` (mapped to t_vala_Error) so it
+			// resolves as a type name (catch (Error e), throws Error) before analysis.
+			gerror_type = (Class) context.root.scope.lookup ("Error");
+
 			delegate_target_type = new PointerType (new VoidType ());
 			destroy_notify = new Delegate ("ValaDestroyNotify", new VoidType ());
 			destroy_notify.add_parameter (new Parameter ("data", new PointerType (new VoidType ())));

@@ -100,7 +100,7 @@ public abstract class Vala.CCodeMethodModule : CCodeStructModule {
 				generate_type_declaration (error_type, decl_space);
 			}
 
-			var cparam = new CCodeParameter ("error", "GError**");
+			var cparam = new CCodeParameter ("error", context.profile == Profile.POSIX ? "t_vala_Error**" : "GError**");
 			cparam_map.set (get_param_pos (get_ccode_error_pos (m)), cparam);
 			if (carg_map != null) {
 				carg_map.set (get_param_pos (get_ccode_error_pos (m)), new CCodeIdentifier (cparam.name));
@@ -759,15 +759,17 @@ public abstract class Vala.CCodeMethodModule : CCodeStructModule {
 			 * have a body, e.g. Vala.Parser.parse_file () */
 			if (m.body != null) {
 				if (current_method_inner_error) {
-					cfile.add_include ("glib.h");
+					if (context.profile != Profile.POSIX) {
+						cfile.add_include ("glib.h");
+					}
 					/* always separate error parameter and inner_error local variable
 					 * as error may be set to NULL but we're always interested in inner errors
 					 */
 					if (m.coroutine) {
 						// no initialization necessary, closure struct is zeroed
-						closure_struct.add_field ("GError*", "_inner_error%d_".printf (current_inner_error_id));
+						closure_struct.add_field (get_inner_error_ctype (), "_inner_error%d_".printf (current_inner_error_id));
 					} else {
-						ccode.add_declaration ("GError*", new CCodeVariableDeclarator.zero ("_inner_error%d_".printf (current_inner_error_id), new CCodeConstant ("NULL")));
+						ccode.add_declaration (get_inner_error_ctype (), new CCodeVariableDeclarator.zero ("_inner_error%d_".printf (current_inner_error_id), new CCodeConstant ("NULL")));
 					}
 				}
 

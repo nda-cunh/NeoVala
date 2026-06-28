@@ -1611,7 +1611,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 			var error_type = (ErrorType) type;
 			if (error_type.error_domain != null) {
 				generate_error_domain_declaration (error_type.error_domain, decl_space);
-			} else {
+			} else if (context.profile != Profile.POSIX) {
 				generate_class_declaration (gerror, decl_space);
 			}
 		} else if (type is PointerType) {
@@ -2055,7 +2055,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 			}
 
 			if (current_method_inner_error) {
-				ccode.add_declaration ("GError*", new CCodeVariableDeclarator.zero ("_inner_error%d_".printf (current_inner_error_id), new CCodeConstant ("NULL")));
+				ccode.add_declaration (get_inner_error_ctype (), new CCodeVariableDeclarator.zero ("_inner_error%d_".printf (current_inner_error_id), new CCodeConstant ("NULL")));
 			}
 
 			pop_function ();
@@ -2624,6 +2624,11 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		return get_cexpression ("_inner_error%d_".printf (current_inner_error_id));
 	}
 
+	// POSIX profile uses a GLib-free flat error struct (t_vala_Error) instead of GError.
+	public string get_inner_error_ctype () {
+		return (context.profile == Profile.POSIX) ? "t_vala_Error*" : "GError*";
+	}
+
 	public string get_local_cname (LocalVariable local) {
 		var cname = get_variable_cname (local.name);
 		if (cname[0].isdigit ()) {
@@ -3011,7 +3016,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 
 	public virtual CCodeExpression? get_dup_func_expression (DataType type, SourceReference? source_reference, bool is_chainup = false) {
 		if (type is ErrorType) {
-			return new CCodeIdentifier ("g_error_copy");
+			return new CCodeIdentifier (context.profile == Profile.POSIX ? "_vala_error_copy" : "g_error_copy");
 		} else if (type is GenericType) {
 			var type_parameter = ((GenericType) type).type_parameter;
 			string identifier = get_ccode_copy_function (type_parameter);
@@ -3564,6 +3569,9 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 				return new CCodeIdentifier (get_ccode_free_function (type.type_symbol));
 			}
 		} else if (type is ErrorType) {
+			if (context.profile == Profile.POSIX) {
+				return new CCodeIdentifier ("_vala_error_free");
+			}
 			cfile.add_include ("glib.h");
 			return new CCodeIdentifier ("g_error_free");
 		} else if (type is GenericType) {
@@ -5284,9 +5292,9 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 
 			if (expr.get_argument_list ().size == 1) {
 				// must not be a format argument
-				creation_call = new CCodeFunctionCall (new CCodeIdentifier ("g_error_new_literal"));
+				creation_call = new CCodeFunctionCall (new CCodeIdentifier (context.profile == Profile.POSIX ? "_vala_error_new_literal" : "g_error_new_literal"));
 			} else {
-				creation_call = new CCodeFunctionCall (new CCodeIdentifier ("g_error_new"));
+				creation_call = new CCodeFunctionCall (new CCodeIdentifier (context.profile == Profile.POSIX ? "_vala_error_new" : "g_error_new"));
 			}
 			creation_call.add_argument (new CCodeIdentifier (get_ccode_upper_case_name (edomain)));
 			creation_call.add_argument (new CCodeIdentifier (get_ccode_name (ecode)));

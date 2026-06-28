@@ -855,7 +855,7 @@ public class Vala.CCodeAttribute : AttributeCache {
 			var type = (DelegateType) node;
 			return get_ccode_name (type.delegate_symbol);
 		} else if (node is ErrorType) {
-			return "GError*";
+			return CodeContext.get ().profile == Profile.POSIX ? "t_vala_Error*" : "GError*";
 		} else if (node is GenericType) {
 			var type = (GenericType) node;
 			if (type.value_owned) {
