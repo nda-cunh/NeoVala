@@ -76,7 +76,6 @@ public abstract class Vala.CCodeStructModule : CCodeBaseModule {
 				requires_vala_extern = true;
 			}
 		}
-
 		if (st.base_struct == null) {
 			decl_space.add_type_declaration (new CCodeTypeDefinition ("struct _%s".printf (get_ccode_name (st)), new CCodeVariableDeclarator (get_ccode_name (st))));
 		} else {
@@ -84,6 +83,10 @@ public abstract class Vala.CCodeStructModule : CCodeBaseModule {
 		}
 
 		var instance_struct = new CCodeStruct ("_%s".printf (get_ccode_name (st)));
+		instance_struct.is_packed = st.is_packed;
+		if (st.is_packed) {
+			requires_packed_macros = true;
+		}
 
 		if (st.version.deprecated) {
 			if (context.profile == Profile.GOBJECT) {

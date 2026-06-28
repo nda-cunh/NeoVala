@@ -33,6 +33,8 @@ public class Vala.CCodeStruct : CCodeNode {
 
 	public bool is_empty { get { return declarations.size == 0; } }
 
+	public bool is_packed { get; set; }
+
 	private List<CCodeDeclaration> declarations = new ArrayList<CCodeDeclaration> ();
 
 	public CCodeStruct (string name) {
@@ -62,6 +64,11 @@ public class Vala.CCodeStruct : CCodeNode {
 	}
 
 	public override void write (CCodeWriter writer) {
+		if (is_packed) {
+			writer.write_string ("PACK_START");
+			writer.write_newline ();
+		}
+
 		writer.write_string ("struct ");
 		writer.write_string (name);
 		writer.write_begin_block ();
@@ -72,6 +79,9 @@ public class Vala.CCodeStruct : CCodeNode {
 		writer.write_end_block ();
 		if (CCodeModifiers.DEPRECATED in modifiers) {
 			writer.write_string (GNUC_DEPRECATED);
+		}
+		if (is_packed) {
+			writer.write_string (" PACK_END");
 		}
 		writer.write_string (";");
 		writer.write_newline ();

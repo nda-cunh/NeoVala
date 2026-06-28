@@ -43,6 +43,7 @@ public class Vala.Struct : TypeSymbol, GenericSymbol {
 	private int? _width;
 	private bool? _signed;
 	private bool? _is_immutable;
+	private bool? _is_packed;
 
 	/**
 	 * Specifies the base type.
@@ -88,6 +89,19 @@ public class Vala.Struct : TypeSymbol, GenericSymbol {
 		set {
 			_is_immutable = value;
 			set_attribute ("Immutable", value);
+		}
+	}
+
+	public bool is_packed {
+		get {
+			if (_is_packed == null) {
+				_is_packed = has_attribute ("Packed");
+			}
+			return _is_packed;
+		}
+		set {
+			_is_packed = value;
+			set_attribute ("Packed", value);
 		}
 	}
 

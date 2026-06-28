@@ -370,6 +370,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 	public bool requires_clear_mutex;
 	public bool requires_memdup2;
 	public bool requires_vala_extern;
+	public bool requires_packed_macros;
 
 	public Set<string> wrappers;
 	Set<Symbol> generated_external_symbols;
@@ -837,6 +838,27 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		decl_space.add_define (extern_define);
 	}
 
+	/**
+	 * Define the PACK_START/PACK_END macros used by [Packed] structs
+	 */
+	void append_packed_macros (CCodeFile decl_space) {
+		var packed_define = new CCodeIfSection ("!defined(PACK_START)");
+
+		CCodeIfSection if_section;
+		if_section = new CCodeIfSection ("defined(__GNUC__) || defined(__clang__)");
+		packed_define.append (if_section);
+		if_section.append (new CCodeDefine ("PACK_START"));
+		if_section.append (new CCodeDefine ("PACK_END", "__attribute__((__packed__))"));
+		if_section = if_section.append_else ("defined(_MSC_VER)");
+		if_section.append (new CCodeDefine ("PACK_START", "__pragma(pack(push, 1))"));
+		if_section.append (new CCodeDefine ("PACK_END", "__pragma(pack(pop))"));
+		if_section = if_section.append_else ();
+		if_section.append (new CCodeDefine ("PACK_START"));
+		if_section.append (new CCodeDefine ("PACK_END"));
+
+		decl_space.add_define (packed_define);
+	}
+
 	void append_c_compiler_mitigations (CCodeFile decl_space) {
 		var vala_strict_c = new CCodeIfSection ("!defined(VALA_STRICT_C)");
 
@@ -865,6 +887,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		requires_array_n_elements = false;
 		requires_clear_mutex = false;
 		requires_vala_extern = false;
+		requires_packed_macros = false;
 
 		wrappers = new HashSet<string> (str_hash, str_equal);
 		generated_external_symbols = new HashSet<Symbol> ();
@@ -919,6 +942,12 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		}
 		if (requires_memdup2) {
 			append_vala_memdup2 ();
+		}
+		if (requires_packed_macros) {
+			unowned CCodeFile decl_space = (context.header_filename != null) ? header_file : cfile;
+			if (!decl_space.add_declaration ("PACK_START")) {
+				append_packed_macros (decl_space);
+			}
 		}
 		if (requires_vala_extern) {
 			if (context.header_filename != null) {
