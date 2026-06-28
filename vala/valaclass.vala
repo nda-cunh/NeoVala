@@ -538,8 +538,8 @@ public class Vala.Class : ObjectTypeSymbol {
 	}
 
 	public override bool check (CodeContext context) {
-		if (context.profile == Profile.POSIX)
-		is_supraklass = true;
+		if (context.profile == Profile.POSIX && !is_compact)
+			is_supraklass = true;
 		if (checked) {
 			return !error;
 		}

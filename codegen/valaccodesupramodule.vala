@@ -86,7 +86,7 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 
 	public override void visit_class (Class cl) {
-		if (context.profile == Profile.POSIX) {
+		if (context.profile == Profile.POSIX && !cl.is_compact) {
 			cl.set_attribute ("SupraKlass", true);
 			cl.is_supraklass = true;
 		}
