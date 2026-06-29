@@ -2701,6 +2701,50 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		}
 	}
 
+	public bool is_simple_array_creation (Variable variable, Expression? expr) {
+		var creation = expr as ArrayCreationExpression;
+		var array_type = variable.variable_type as ArrayType;
+		if (creation != null && array_type != null && array_type.fixed_length
+		    && creation.initializer_list != null) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public LocalVariable? get_inplace_array_element_local (Expression expr, out int index) {
+		index = -1;
+		var creation = expr as ObjectCreationExpression;
+		if (creation == null) {
+			return null;
+		}
+		unowned Struct? st = creation.type_reference.type_symbol as Struct;
+		if (st == null || st.is_simple_type () || get_ccode_name (st) == "va_list"
+		    || creation.type_reference.nullable
+		    || creation.get_object_initializer ().size > 0) {
+			return null;
+		}
+		var il = expr.parent_node as InitializerList;
+		if (il == null) {
+			return null;
+		}
+		var ace = il.parent_node as ArrayCreationExpression;
+		if (ace == null) {
+			return null;
+		}
+		var array_type = ace.target_type as ArrayType;
+		if (array_type == null || !array_type.fixed_length || array_type.rank != 1) {
+			return null;
+		}
+		var local = ace.parent_node as LocalVariable;
+		if (local == null || local.initializer != ace
+		    || !is_simple_array_creation (local, local.initializer)) {
+			return null;
+		}
+		index = il.get_initializers ().index_of (expr);
+		return local;
+	}
+
 	static bool is_foreach_element_variable (LocalVariable local) {
 		var block = local.parent_symbol;
 		if (block != null) {
@@ -2802,7 +2846,8 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		/* Store the initializer */
 
 		if (rhs != null) {
-			if (!is_simple_struct_creation (local, local.initializer)) {
+			if (!is_simple_struct_creation (local, local.initializer)
+			    && !is_simple_array_creation (local, local.initializer)) {
 				store_local (local, local.initializer.target_value, true, local.source_reference);
 			}
 		}
@@ -5012,7 +5057,12 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 			var local = expr.parent_node as LocalVariable;
 			var field = expr.parent_node as Field;
 			var a = expr.parent_node as Assignment;
-			if (local != null && is_simple_struct_creation (local, local.initializer)) {
+			int element_index;
+			var array_local = get_inplace_array_element_local (expr, out element_index);
+			if (array_local != null) {
+				// construct directly into the array slot, no temporary
+				instance = new CCodeElementAccess (get_cvalue_ (get_local_cvalue (array_local)), new CCodeConstant (element_index.to_string ()));
+			} else if (local != null && is_simple_struct_creation (local, local.initializer)) {
 				instance = get_cvalue_ (get_local_cvalue (local));
 			} else if (field != null && is_simple_struct_creation (field, field.initializer)) {
 				// field initialization

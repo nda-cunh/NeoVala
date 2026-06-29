@@ -32,6 +32,11 @@ public class Vala.CCodeArrayModule : CCodeMethodCallModule {
 			if (rank > 1) {
 				append_initializer_list (name_cnode, (InitializerList) e, rank - 1, ref i);
 			} else {
+				int element_index;
+				if (get_inplace_array_element_local (e, out element_index) != null) {
+					i++;
+					continue;
+				}
 				ccode.add_assignment (new CCodeElementAccess (name_cnode, new CCodeConstant (i.to_string ())), get_cvalue (e));
 				i++;
 			}
@@ -43,13 +48,20 @@ public class Vala.CCodeArrayModule : CCodeMethodCallModule {
 		if (array_type != null && array_type.fixed_length) {
 			// no heap allocation for fixed-length arrays
 
-			var temp_var = get_temp_variable (array_type, true, expr);
-			temp_var.init = true;
-			var name_cnode = get_variable_cexpression (temp_var.name);
+			CCodeExpression name_cnode;
+			var local = expr.parent_node as LocalVariable;
+			if (local != null && is_simple_array_creation (local, local.initializer)) {
+				// write the initializer list directly into the declared
+				// variable, avoiding a temporary array and a memcpy
+				name_cnode = get_cvalue_ (get_local_cvalue (local));
+			} else {
+				var temp_var = get_temp_variable (array_type, true, expr);
+				temp_var.init = true;
+				emit_temp_var (temp_var);
+				name_cnode = get_variable_cexpression (temp_var.name);
+			}
+
 			int i = 0;
-
-			emit_temp_var (temp_var);
-
 			append_initializer_list (name_cnode, expr.initializer_list, expr.rank, ref i);
 
 			set_cvalue (expr, name_cnode);
