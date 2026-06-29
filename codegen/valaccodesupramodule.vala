@@ -632,7 +632,7 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 	}
 
 	public override void visit_cast_expression (CastExpression expr) {
-		unowned Interface? iface = expr.target_type.type_symbol as Interface;
+		unowned Interface? iface = expr.target_type != null ? expr.target_type.type_symbol as Interface : null;
 		if (context.profile == Profile.POSIX && iface != null) {
 			expr.inner.accept (this);
 			unowned Class? cl = expr.inner.value_type.type_symbol as Class;
@@ -644,7 +644,7 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 			return;
 		}
 
-		var sym = expr.target_type.type_symbol;
+		var sym = expr.target_type != null ? expr.target_type.type_symbol : null;
 		if (expr.inner is MemberAccess) {
 			var ma = expr.inner as MemberAccess;
 			if (ma.symbol_reference is Field) {
