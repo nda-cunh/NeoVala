@@ -540,14 +540,27 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 			call, new CCodeConstant ("NULL")));
 	}
 
-	// (IFoo) { (void*) obj, &CLASS_IFACE_VTABLE } : wrap a class pointer into an
-	// interface fat pointer.
+	private unowned Class supra_interface_impl_class (Class cl, Interface iface) {
+		unowned Class? c = cl;
+		while (c != null) {
+			foreach (DataType base_type in c.get_base_types ()) {
+				if (base_type.type_symbol == iface) {
+					return c;
+				}
+			}
+			c = c.base_class;
+		}
+		return cl;
+	}
+
 	private CCodeExpression build_supra_fat_pointer (Class cl, Interface iface, CCodeExpression cexpr) {
 		generate_interface_declaration (iface, cfile);
 		generate_class_declaration (cl, cfile);
 
+		unowned Class impl_cl = supra_interface_impl_class (cl, iface);
+
 		string vtable_var = "%s_%s_VTABLE".printf (
-			get_ccode_upper_case_name (cl), get_ccode_upper_case_name (iface));
+			get_ccode_upper_case_name (impl_cl), get_ccode_upper_case_name (iface));
 		cfile.add_type_member_declaration (new CCodeIdentifier (
 			"extern const t_%sVtable %s;\n".printf (get_ccode_name (iface), vtable_var)));
 
@@ -611,20 +624,37 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 		return base.destroy_value (value, is_macro_definition);
 	}
 
+	private void emit_vala_atomic_helpers () {
+		if (!add_wrapper ("vala_atomic")) {
+			return;
+		}
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"""#ifdef _MSC_VER
+#include <intrin.h>
+static inline int vala_atomic_inc (int* p) { return _InterlockedIncrement ((long volatile*) p); }
+static inline int vala_atomic_dec_and_test (int* p) { return _InterlockedDecrement ((long volatile*) p) == 0; }
+#else
+static inline int vala_atomic_inc (int* p) { return __atomic_add_fetch (p, 1, __ATOMIC_SEQ_CST); }
+static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch (p, 1, __ATOMIC_SEQ_CST) == 0; }
+#endif
+"""));
+	}
+
 	private void emit_supra_object_unref_helper () {
 		if (!add_wrapper ("_vala_supra_object_unref")) {
 			return;
 		}
+		emit_vala_atomic_helpers ();
 		cfile.add_type_member_declaration (new CCodeIdentifier (
 			"""static inline void _vala_supra_object_unref (void* self) {
 	struct _supra_vtable { void (*finalize)(void*); };
-	struct _supra_object { const struct _supra_vtable* vptr; size_t ref_count; };
+	struct _supra_object { const struct _supra_vtable* vptr; int ref_count; };
 	struct _supra_object* _self;
 	if (self == NULL) {
 		return;
 	}
 	_self = (struct _supra_object*) self;
-	if (--_self->ref_count == 0) {
+	if (vala_atomic_dec_and_test (&_self->ref_count)) {
 		_self->vptr->finalize (self);
 		free (self);
 	}
@@ -952,7 +982,7 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 
 			if (cl.base_class == null) {
 				struct_public.add_field ("const t_%sVtable*".printf (cname), "vptr");
-				struct_public.add_field ("size_t", "ref_count");
+				struct_public.add_field ("int", "ref_count");
 			} else {
 				struct_public.add_field (get_ccode_name (cl.base_class), "parent");
 			}
@@ -1394,13 +1424,15 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 					)
 				);
 
-		var inc = new CCodeUnaryExpression (
-				CCodeUnaryOperator.POSTFIX_INCREMENT,
+		emit_vala_atomic_helpers ();
+		var inc = new CCodeFunctionCall (new CCodeIdentifier ("vala_atomic_inc"));
+		inc.add_argument (new CCodeUnaryExpression (
+				CCodeUnaryOperator.ADDRESS_OF,
 				new CCodeMemberAccess.pointer (
 					new CCodeIdentifier ("_self"),
 					"ref_count"
 					)
-				);
+				));
 
 		ccode.add_expression (inc);
 		ccode.add_return (new CCodeIdentifier ("self"));
@@ -1426,8 +1458,9 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 
 		ccode.add_declaration ("%s*".printf (root_name), new CCodeVariableDeclarator ("_self", new CCodeCastExpression (new CCodeIdentifier ("self"), "%s*".printf (root_name))));
 
-		var dec_ref = new CCodeUnaryExpression (CCodeUnaryOperator.PREFIX_DECREMENT, new CCodeMemberAccess.pointer (new CCodeIdentifier ("_self"), "ref_count"));
-		var count_zero = new CCodeBinaryExpression (CCodeBinaryOperator.EQUALITY, dec_ref, new CCodeConstant ("0"));
+		emit_vala_atomic_helpers ();
+		var count_zero = new CCodeFunctionCall (new CCodeIdentifier ("vala_atomic_dec_and_test"));
+		count_zero.add_argument (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeMemberAccess.pointer (new CCodeIdentifier ("_self"), "ref_count")));
 
 		ccode.open_if (count_zero);
 		{
