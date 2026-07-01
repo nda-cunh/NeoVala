@@ -29,6 +29,14 @@ using GLib;
  */
 public class Vala.InitializerList : Expression {
 	private List<Expression> initializers = new ArrayList<Expression> ();
+	// parallel to initializers; an entry is the designated index expression
+	// (C99 `[i] = value`) or null for a positional element
+	private List<Expression> designators = new ArrayList<Expression> ();
+
+	/**
+	 * Whether any element carries a designated index (`[i] = value`).
+	 */
+	public bool has_designators { get; private set; }
 
 	/**
 	 * Appends the specified expression to this initializer
@@ -36,8 +44,80 @@ public class Vala.InitializerList : Expression {
 	 * @param expr an expression
 	 */
 	public void append (Expression expr) {
+		append_designated (null, expr);
+	}
+
+	/**
+	 * Appends the specified expression with an optional designated index.
+	 *
+	 * @param designator the designated index expression, or null
+	 * @param expr       an expression
+	 */
+	public void append_designated (Expression? designator, Expression expr) {
 		initializers.add (expr);
+		designators.add (designator);
 		expr.parent_node = this;
+		if (designator != null) {
+			designator.parent_node = this;
+			has_designators = true;
+		}
+	}
+
+	/**
+	 * Returns the designated index expression of the element at the given
+	 * position, or null if the element is positional.
+	 */
+	public Expression? get_designator (int index) {
+		return designators[index];
+	}
+
+	/**
+	 * Returns the resolved designated index of the element at the given
+	 * position, or -1 if the element is positional. Only meaningful after
+	 * the initializer list has been checked.
+	 */
+	public int get_designator_value (int index) {
+		Expression? designator = designators[index];
+		if (designator == null) {
+			return -1;
+		}
+		return designator_to_int (designator);
+	}
+
+	static int designator_to_int (Expression designator) {
+		unowned IntegerLiteral? lit = designator as IntegerLiteral;
+		if (lit == null) {
+			return -1;
+		}
+		var s = lit.value;
+		if (s.has_prefix ("0x") || s.has_prefix ("0X")) {
+			return (int) int64.parse (s.substring (2), 16);
+		}
+		return int.parse (s);
+	}
+
+	/**
+	 * Returns the array length implied by this initializer list, taking
+	 * designated indices into account: max(positional count following the
+	 * C running-index rule, largest designated index + 1).
+	 */
+	public int get_array_length () {
+		if (!has_designators) {
+			return initializers.size;
+		}
+		int running = 0;
+		int max = 0;
+		for (int i = 0; i < initializers.size; i++) {
+			int designated = get_designator_value (i);
+			if (designated >= 0) {
+				running = designated;
+			}
+			running++;
+			if (running > max) {
+				max = running;
+			}
+		}
+		return max;
 	}
 
 	/**
@@ -67,6 +147,11 @@ public class Vala.InitializerList : Expression {
 	}
 
 	public override void accept_children (CodeVisitor visitor) {
+		foreach (Expression designator in designators) {
+			if (designator != null) {
+				designator.accept (visitor);
+			}
+		}
 		foreach (Expression expr in initializers) {
 			expr.accept (visitor);
 		}
@@ -125,6 +210,10 @@ public class Vala.InitializerList : Expression {
 		for (int i = 0; i < initializers.size; i++) {
 			if (initializers[i] == old_node) {
 				initializers[i] = new_node;
+				new_node.parent_node = this;
+			}
+			if (designators[i] == old_node) {
+				designators[i] = new_node;
 				new_node.parent_node = this;
 			}
 		}
@@ -193,7 +282,46 @@ public class Vala.InitializerList : Expression {
 			foreach (Expression e in get_initializers ()) {
 				e.target_type = inner_target_type;
 			}
+
+			if (has_designators) {
+				if (array_type.rank > 1) {
+					error = true;
+					Report.error (source_reference, "designated array initializers are only supported for single-dimensional arrays");
+					return false;
+				}
+				for (int i = 0; i < size; i++) {
+					Expression? designator = get_designator (i);
+					if (designator == null) {
+						error = true;
+						Report.error (get_initializers ()[i].source_reference, "cannot mix designated and positional array initializers");
+						continue;
+					}
+					designator.target_type = array_type.length_type.copy ();
+					if (!designator.check (context)) {
+						error = true;
+						continue;
+					}
+					if (!designator.is_constant () || !(designator is IntegerLiteral)) {
+						error = true;
+						Report.error (designator.source_reference, "array designator must be a constant integer");
+						continue;
+					}
+					if (get_designator_value (i) < 0) {
+						error = true;
+						Report.error (designator.source_reference, "array designator must not be negative");
+						continue;
+					}
+				}
+				if (error) {
+					return false;
+				}
+			}
 		} else if (target_type.type_symbol is Struct) {
+			if (has_designators) {
+				error = true;
+				Report.error (source_reference, "designated initializers are only supported for arrays");
+				return false;
+			}
 			/* initializer is used as struct initializer */
 			unowned Struct st = (Struct) target_type.type_symbol;
 			while (st.base_struct != null) {

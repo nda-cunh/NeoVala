@@ -27,6 +27,8 @@ using GLib;
  */
 public class Vala.CCodeInitializerList : CCodeExpression {
 	private List<CCodeExpression> initializers = new ArrayList<CCodeExpression> ();
+	// parallel to initializers; the C99 designated index (`[i] = `) or -1
+	private List<int> designators = new ArrayList<int> ();
 
 	/**
 	 * Appends the specified expression to this initializer list.
@@ -35,17 +37,34 @@ public class Vala.CCodeInitializerList : CCodeExpression {
 	 */
 	public void append (CCodeExpression expr) {
 		initializers.add (expr);
+		designators.add (-1);
+	}
+
+	/**
+	 * Appends the specified expression with a C99 designated index.
+	 *
+	 * @param index the designated array index (`[index] = `)
+	 * @param expr  an expression
+	 */
+	public void append_designated (int index, CCodeExpression expr) {
+		initializers.add (expr);
+		designators.add (index);
 	}
 
 	public override void write (CCodeWriter writer) {
 		writer.write_string ("{");
 
 		bool first = true;
-		foreach (CCodeExpression expr in initializers) {
+		for (int i = 0; i < initializers.size; i++) {
+			CCodeExpression? expr = initializers[i];
 			if (!first) {
 				writer.write_string (", ");
 			} else {
 				first = false;
+			}
+
+			if (designators[i] >= 0) {
+				writer.write_string ("[%d] = ".printf (designators[i]));
 			}
 
 			if (expr != null) {

@@ -3195,7 +3195,16 @@ public class Vala.Parser : CodeVisitor {
 		var initializer = new InitializerList (get_src (begin));
 		while (current () != TokenType.CLOSE_BRACE) {
 			try {
-				initializer.append (parse_argument ());
+				// C99-style designated array element: [index] = value
+				if (current () == TokenType.OPEN_BRACKET) {
+					next ();
+					var designator = parse_expression ();
+					expect (TokenType.CLOSE_BRACKET);
+					expect (TokenType.ASSIGN);
+					initializer.append_designated (designator, parse_argument ());
+				} else {
+					initializer.append (parse_argument ());
+				}
 			} catch (ParseError e) {
 				if (current () == TokenType.CLOSE_BRACE) {
 					prev ();

@@ -28,10 +28,16 @@ public class Vala.CCodeArrayModule : CCodeMethodCallModule {
 	int next_array_add_id = 0;
 
 	void append_initializer_list (CCodeExpression name_cnode, InitializerList initializer_list, int rank, ref int i) {
-		foreach (Expression e in initializer_list.get_initializers ()) {
+		var initializers = initializer_list.get_initializers ();
+		for (int pos = 0; pos < initializers.size; pos++) {
+			Expression e = initializers[pos];
 			if (rank > 1) {
 				append_initializer_list (name_cnode, (InitializerList) e, rank - 1, ref i);
 			} else {
+				int designated = initializer_list.get_designator_value (pos);
+				if (designated >= 0) {
+					i = designated;
+				}
 				int element_index;
 				if (get_inplace_array_element_local (e, out element_index) != null) {
 					i++;

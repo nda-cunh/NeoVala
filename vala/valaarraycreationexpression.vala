@@ -200,7 +200,7 @@ public class Vala.ArrayCreationExpression : Expression {
 	private int create_sizes_from_initializer_list (CodeContext context, InitializerList il, int rank, List<Literal> sl) {
 		if (sl.size == (this.rank - rank)) {
 			// only add size if this is the first initializer list of the current dimension
-			var init = new IntegerLiteral (il.size.to_string (), il.source_reference);
+			var init = new IntegerLiteral (il.get_array_length ().to_string (), il.source_reference);
 			init.check (context);
 			sl.add (init);
 		}

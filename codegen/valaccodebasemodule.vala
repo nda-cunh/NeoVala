@@ -1105,7 +1105,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 	}
 
 	static void constant_array_ranks_sizes (InitializerList initializer_list, int[] sizes, int rank = 0) {
-		sizes[rank] = int.max (sizes[rank], initializer_list.size);
+		sizes[rank] = int.max (sizes[rank], initializer_list.get_array_length ());
 		rank++;
 		foreach (var expr in initializer_list.get_initializers()) {
 			if (expr is InitializerList && ((InitializerList) expr).target_type is ArrayType) {
@@ -3009,8 +3009,14 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 			}
 		} else {
 			var clist = new CCodeInitializerList ();
-			foreach (Expression expr in list.get_initializers ()) {
-				clist.append (get_cvalue (expr));
+			var initializers = list.get_initializers ();
+			for (int i = 0; i < initializers.size; i++) {
+				int designated = list.get_designator_value (i);
+				if (designated >= 0) {
+					clist.append_designated (designated, get_cvalue (initializers[i]));
+				} else {
+					clist.append (get_cvalue (initializers[i]));
+				}
 			}
 			set_cvalue (list, clist);
 		}

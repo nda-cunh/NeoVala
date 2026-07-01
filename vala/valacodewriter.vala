@@ -1011,14 +1011,21 @@ public class Vala.CodeWriter : CodeVisitor {
 		write_string ("{");
 
 		bool first = true;
-		foreach (Expression initializer in list.get_initializers ()) {
+		var initializers = list.get_initializers ();
+		for (int i = 0; i < initializers.size; i++) {
 			if (!first) {
 				write_string (", ");
 			} else {
 				write_string (" ");
 			}
 			first = false;
-			initializer.accept (this);
+			Expression? designator = list.get_designator (i);
+			if (designator != null) {
+				write_string ("[");
+				designator.accept (this);
+				write_string ("] = ");
+			}
+			initializers[i].accept (this);
 		}
 		write_string (" }");
 	}
