@@ -338,8 +338,13 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 
 			Method? impl = find_interface_implementation (cl, im);
 			if (impl != null) {
-				membres.append ("%s%s".printf (cast, get_ccode_real_name (impl)));
-				declare_supra_real_method (impl, cfile);
+				if ((impl.is_virtual || impl.is_abstract) && !impl.overrides) {
+					membres.append ("%s%s".printf (cast, get_ccode_name (impl)));
+					generate_method_declaration (impl, cfile);
+				} else {
+					membres.append ("%s%s".printf (cast, get_ccode_real_name (impl)));
+					declare_supra_real_method (impl, cfile);
+				}
 			} else if (!im.is_abstract && im.body != null) {
 				// class does not override it: inherit the interface's default
 				membres.append ("%s%s".printf (cast, interface_default_impl_name (iface, im)));
