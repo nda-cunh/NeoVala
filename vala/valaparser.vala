@@ -3988,7 +3988,11 @@ public class Vala.Parser : CodeVisitor {
 			do {
 				var begin = get_location ();
 				string id = parse_identifier ();
-				list.add (new TypeParameter (id, get_src (begin)));
+				var type_param = new TypeParameter (id, get_src (begin));
+				if (accept (TokenType.COLON)) {
+					type_param.constraint_type = parse_type (true, false);
+				}
+				list.add (type_param);
 			} while (accept (TokenType.COMMA));
 			expect (TokenType.OP_GT);
 			return list;
@@ -4004,6 +4008,11 @@ public class Vala.Parser : CodeVisitor {
 		if (accept (TokenType.OP_LT)) {
 			do {
 				skip_type ();
+				// type-parameter constraint (`<G : IFoo>`) when this skip is
+				// used to disambiguate a generic declaration
+				if (accept (TokenType.COLON)) {
+					skip_type ();
+				}
 			} while (accept (TokenType.COMMA));
 			expect (TokenType.OP_GT);
 		}

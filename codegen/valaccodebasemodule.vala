@@ -3068,12 +3068,19 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 
 	// POSIX generics: resolve a type parameter to its t_TypeInfo* descriptor
 	// (the single param threaded in place of GObject's type/dup/destroy triple).
+	// Witness (interface vtable) threaded alongside the t_TypeInfo for a
+	// constrained erased type parameter `<G : IFoo>`. Overridden by the POSIX
+	// backend; the GObject path never has constraints.
+	protected virtual CCodeExpression? get_supra_constraint_witness_argument (DataType type_arg, TypeParameter type_param, bool is_chainup) {
+		return null;
+	}
+
 	protected CCodeExpression get_supra_typeinfo_expression (GenericType type, bool is_chainup = false) {
 		var name = "%s_typeinfo".printf (type.type_parameter.name.ascii_down ());
 		return get_generic_type_expression (name, type, is_chainup);
 	}
 
-	CCodeExpression get_generic_type_expression (string identifier, GenericType type, bool is_chainup = false) {
+	protected CCodeExpression get_generic_type_expression (string identifier, GenericType type, bool is_chainup = false) {
 		if (type.type_parameter.parent_symbol is Interface) {
 			unowned Interface iface = (Interface) type.type_parameter.parent_symbol;
 			require_generic_accessors (iface);
@@ -5097,6 +5104,13 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 	}
 
 	public void add_generic_type_arguments (Method m, Map<int,CCodeExpression> arg_map, List<DataType> type_args, CodeNode expr, bool is_chainup = false, List<TypeParameter>? type_parameters = null) {
+		unowned List<TypeParameter>? tparams = type_parameters;
+		if (tparams == null) {
+			tparams = m.get_type_parameters ();
+			if ((tparams == null || tparams.size == 0) && m.parent_symbol is Class) {
+				tparams = ((Class) m.parent_symbol).get_type_parameters ();
+			}
+		}
 		int type_param_index = 0;
 		foreach (var type_arg in type_args) {
 			if (context.profile == Profile.POSIX) {
@@ -5110,6 +5124,13 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 						new CCodeIdentifier (get_supra_typeinfo (type_arg)));
 				}
 				arg_map.set (get_param_pos (0.1 * type_param_index + 0.01), arg);
+				unowned TypeParameter? tp = (tparams != null && type_param_index < tparams.size) ? tparams[type_param_index] : null;
+				if (tp != null && tp.constraint_type != null) {
+					var witness = get_supra_constraint_witness_argument (type_arg, tp, is_chainup);
+					if (witness != null) {
+						arg_map.set (get_param_pos (0.1 * type_param_index + 0.02), witness);
+					}
+				}
 				type_param_index++;
 				continue;
 			}
@@ -6346,7 +6367,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		return result;
 	}
 
-	string intptr_ctype () {
+	protected string intptr_ctype () {
 		if (context.profile == Profile.POSIX) {
 			cfile.add_include ("stdint.h");
 			return "intptr_t";

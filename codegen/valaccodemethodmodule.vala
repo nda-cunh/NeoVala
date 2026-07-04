@@ -1091,6 +1091,14 @@ public abstract class Vala.CCodeMethodModule : CCodeStructModule {
 					if (carg_map != null) {
 						carg_map.set (get_param_pos (0.1 * type_param_index + 0.01), new CCodeIdentifier (typeinfo));
 					}
+					unowned Interface? constraint = type_param.constraint_type != null ? type_param.constraint_type.type_symbol as Interface : null;
+					if (constraint != null) {
+						var witness = "%s_witness".printf (type_param.name.ascii_down ());
+						cparam_map.set (get_param_pos (0.1 * type_param_index + 0.02), new CCodeParameter (witness, "const t_%sVtable*".printf (get_ccode_name (constraint))));
+						if (carg_map != null) {
+							carg_map.set (get_param_pos (0.1 * type_param_index + 0.02), new CCodeIdentifier (witness));
+						}
+					}
 					type_param_index++;
 					continue;
 				}

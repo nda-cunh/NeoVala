@@ -729,6 +729,25 @@ public abstract class Vala.DataType : CodeNode {
 			}
 		}
 
+		// check nominal type-parameter constraints (`<G : IFoo>`)
+		if (type_symbol is GenericSymbol) {
+			var type_params = ((GenericSymbol) type_symbol).get_type_parameters ();
+			var type_args = get_type_arguments ();
+			for (int i = 0; i < type_params.size && i < type_args.size; i++) {
+				TypeParameter type_param = type_params[i];
+				if (type_param.constraint_type != null) {
+					DataType type_arg = type_args[i];
+					if (!(type_arg is GenericType) && !type_param.is_satisfied_by (type_arg)) {
+						error = true;
+						Report.error (source_reference,
+							"`%s' does not implement constraint interface `%s' of type parameter `%s'".printf (
+								type_arg.to_string (), type_param.constraint_type.to_string (), type_param.name));
+						return false;
+					}
+				}
+			}
+		}
+
 		return true;
 	}
 }

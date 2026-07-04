@@ -640,6 +640,26 @@ public class Vala.MethodCall : Expression, CallableExpression {
 					value_type = formal_value_type.get_actual_type (target_object_type, method_type_args, this);
 				}
 			}
+			// check nominal type-parameter constraints (`<G : IFoo>`)
+			if (m != null && m.has_type_parameters ()) {
+				unowned MemberAccess ma = (MemberAccess) call;
+				var type_args = ma.get_type_arguments ();
+				int i = 0;
+				foreach (var type_param in m.get_type_parameters ()) {
+					if (type_param.constraint_type != null && i < type_args.size) {
+						DataType type_arg = type_args[i];
+						if (!(type_arg is GenericType) && !type_param.is_satisfied_by (type_arg)) {
+							error = true;
+							Report.error (type_arg.source_reference ?? source_reference,
+								"`%s' does not implement constraint interface `%s' of type parameter `%s'".printf (
+									type_arg.to_string (), type_param.constraint_type.to_string (), type_param.name));
+							return false;
+						}
+					}
+					i++;
+				}
+			}
+
 			// replace method-type if needed for proper argument-check in semantic-analyser
 			if (m != null && m.coroutine) {
 				unowned MemberAccess ma = (MemberAccess) call;

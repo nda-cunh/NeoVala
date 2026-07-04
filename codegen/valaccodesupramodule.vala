@@ -566,6 +566,151 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 		return cl;
 	}
 
+	// Constrained erased generic (`<G : IFoo>`): the value is the raw object
+	// payload, not a fat pointer. Build one on the fly, resolving the concrete
+	// class's interface vtable at runtime by walking its vptr chain.
+	private CCodeExpression build_supra_dynamic_fat_pointer (Interface iface, CCodeExpression cexpr) {
+		generate_interface_declaration (iface, cfile);
+		declare_interface_id (iface, cfile);
+		emit_interface_is_a_helper ();
+
+		var lookup = new CCodeFunctionCall (new CCodeIdentifier ("_vala_get_interface"));
+		lookup.add_argument (new CCodeCastExpression (cexpr, "void*"));
+		lookup.add_argument (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF,
+			new CCodeIdentifier (interface_id_name (iface))));
+
+		var init = new CCodeInitializerList ();
+		init.append (new CCodeCastExpression (cexpr, "void*"));
+		init.append (new CCodeCastExpression (lookup, "const t_%sVtable*".printf (get_ccode_name (iface))));
+		var literal = new CCodeCastExpression (init, get_ccode_name (iface));
+		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, literal);
+	}
+
+	// Build a fat pointer for a constrained erased generic from the witness
+	// vtable threaded in alongside the t_TypeInfo: (IFoo){ (void*) g, g_witness }.
+	private CCodeExpression build_supra_witness_fat_pointer (Interface iface, CCodeExpression cexpr, CCodeExpression witness) {
+		generate_interface_declaration (iface, cfile);
+		var init = new CCodeInitializerList ();
+		init.append (new CCodeCastExpression (cexpr, "void*"));
+		init.append (new CCodeCastExpression (witness, "const t_%sVtable*".printf (get_ccode_name (iface))));
+		var literal = new CCodeCastExpression (init, get_ccode_name (iface));
+		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, literal);
+	}
+
+	// The erased ABI bit-packs integral values into the void* payload; strings
+	// and objects are the pointer itself.
+	private bool supra_is_packed_value (DataType type) {
+		return !get_ccode_name (type).has_suffix ("*");
+	}
+
+	// Unpack the erased void* payload back to the concrete C type inside a
+	// witness adapter: (gint)(intptr_t) self for integrals, (Foo*) self else.
+	private CCodeExpression supra_unpack_self (DataType concrete) {
+		CCodeExpression self = new CCodeIdentifier ("self");
+		if (supra_is_packed_value (concrete)) {
+			self = new CCodeCastExpression (self, intptr_ctype ());
+		}
+		return new CCodeCastExpression (self, get_ccode_name (concrete));
+	}
+
+	// Auto (duck-typed) witness: a per-(concrete, interface) vtable whose slots
+	// are adapters unpacking the erased self and calling the concrete type's
+	// matching method. Emitted once; returns the vtable's C identifier.
+	private string emit_supra_constraint_witness (DataType concrete, Interface iface) {
+		string csan = get_ccode_name (concrete).replace ("*", "").replace (" ", "_");
+		string vtable_var = "_witness_%s_%s".printf (csan, get_ccode_name (iface));
+		if (!add_wrapper (vtable_var)) {
+			return vtable_var;
+		}
+		generate_interface_declaration (iface, cfile);
+
+		var slots = new StringBuilder ();
+		foreach (Method m in iface.get_methods ()) {
+			if (m.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+			Method? cm = concrete.get_member (m.name) as Method;
+			generate_method_declaration (cm, cfile);
+			if (!cm.external && cm.external_package && add_generated_external_symbol (cm)) {
+				visit_method (cm);
+			}
+			string adapter = "%s_%s".printf (vtable_var, get_ccode_vfunc_name (m));
+
+			var proto = new StringBuilder ();
+			proto.append ("static %s %s (void* self".printf (get_ccode_name (m.return_type), adapter));
+			foreach (Parameter param in m.get_parameters ()) {
+				proto.append (", %s %s".printf (get_ccode_name (param.variable_type), param.name));
+			}
+			proto.append (");\n");
+			cfile.add_type_member_declaration (new CCodeIdentifier (proto.str));
+
+			var func = new CCodeFunction (adapter, get_ccode_name (m.return_type));
+			func.modifiers |= CCodeModifiers.STATIC;
+			func.add_parameter (new CCodeParameter ("self", "void*"));
+			foreach (Parameter param in m.get_parameters ()) {
+				func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+			}
+			push_function (func);
+
+			var call = new CCodeFunctionCall (new CCodeIdentifier (get_ccode_name (cm)));
+			call.add_argument (supra_unpack_self (concrete));
+			foreach (Parameter param in m.get_parameters ()) {
+				call.add_argument (new CCodeIdentifier (param.name));
+			}
+			if (get_ccode_name (m.return_type) == "void") {
+				ccode.add_expression (call);
+			} else {
+				CCodeExpression ret = call;
+				// Bridge ownership: the interface contract returns owned, but the
+				// concrete method may hand back an unowned reference (e.g. the
+				// string identity `to_string`); copy it so the caller can free it.
+				if (m.return_type.value_owned && !cm.return_type.value_owned && requires_copy (m.return_type)) {
+					var cp = new CCodeFunctionCall (new CCodeIdentifier (get_ccode_copy_function (cm.return_type.type_symbol)));
+					cp.add_argument (call);
+					ret = cp;
+				}
+				ccode.add_return (ret);
+			}
+			pop_function ();
+			cfile.add_function (func);
+
+			if (slots.len > 0) {
+				slots.append (", ");
+			}
+			slots.append (adapter);
+		}
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"static const t_%sVtable %s = { %s };\n".printf (get_ccode_name (iface), vtable_var, slots.str)));
+		return vtable_var;
+	}
+
+	protected override CCodeExpression? get_supra_constraint_witness_argument (DataType type_arg, TypeParameter type_param, bool is_chainup) {
+		unowned Interface? iface = type_param.constraint_type.type_symbol as Interface;
+		if (iface == null) {
+			return null;
+		}
+		if (type_arg is GenericType) {
+			// forwarding an enclosing constrained parameter: pass its witness through
+			var name = "%s_witness".printf (((GenericType) type_arg).type_parameter.name.ascii_down ());
+			return get_generic_type_expression (name, (GenericType) type_arg, is_chainup);
+		}
+		// A class that nominally implements the interface already has a per-class
+		// interface vtable emitted; reuse it instead of synthesizing an adapter.
+		unowned Class? cl = type_arg.type_symbol as Class;
+		if (cl != null && cl.is_supraklass && type_arg.type_symbol.is_subtype_of (iface)) {
+			generate_class_declaration (cl, cfile);
+			generate_interface_declaration (iface, cfile);
+			unowned Class impl = supra_interface_impl_class (cl, iface);
+			string vtable_var = "%s_%s_VTABLE".printf (
+				get_ccode_upper_case_name (impl), get_ccode_upper_case_name (iface));
+			cfile.add_type_member_declaration (new CCodeIdentifier (
+				"extern const t_%sVtable %s;\n".printf (get_ccode_name (iface), vtable_var)));
+			return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeIdentifier (vtable_var));
+		}
+		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF,
+			new CCodeIdentifier (emit_supra_constraint_witness (type_arg, iface)));
+	}
+
 	private CCodeExpression build_supra_fat_pointer (Class cl, Interface iface, CCodeExpression cexpr) {
 		generate_interface_declaration (iface, cfile);
 		generate_class_declaration (cl, cfile);
@@ -595,6 +740,14 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 		if (context.profile == Profile.POSIX && expression_type != null && target_type != null) {
 			unowned Interface? iface = target_type.type_symbol as Interface;
 			if (iface != null) {
+				if (expression_type is GenericType) {
+					unowned GenericType gt = (GenericType) expression_type;
+					if (gt.type_parameter.constraint_type != null) {
+						var wname = "%s_witness".printf (gt.type_parameter.name.ascii_down ());
+						return build_supra_witness_fat_pointer (iface, source_cexpr, get_generic_type_expression (wname, gt));
+					}
+					return build_supra_dynamic_fat_pointer (iface, source_cexpr);
+				}
 				unowned Class? cl = expression_type.type_symbol as Class;
 				if (cl != null && cl.is_supraklass) {
 					return build_supra_fat_pointer (cl, iface, source_cexpr);
@@ -996,9 +1149,45 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		return names;
 	}
 
+	private unowned Interface? supra_constraint_iface (TypeParameter tp) {
+		return tp.constraint_type != null ? tp.constraint_type.type_symbol as Interface : null;
+	}
+
+	// All per-instance erased-generic descriptors threaded through the ctor and
+	// stored in priv: each type parameter's t_TypeInfo* plus, when constrained,
+	// its interface witness vtable. Order matches add_supra_typeinfo_params.
+	private string[] supra_generic_names (Class cl) {
+		string[] names = {};
+		foreach (var tp in cl.get_type_parameters ()) {
+			names += "%s_typeinfo".printf (tp.name.ascii_down ());
+			if (supra_constraint_iface (tp) != null) {
+				names += "%s_witness".printf (tp.name.ascii_down ());
+			}
+		}
+		return names;
+	}
+
+	// "const t_TypeInfo* g_typeinfo;const t_IFooVtable* g_witness;..." for the
+	// private struct and its in-instance sizing mirror.
+	private string supra_generic_field_decls (Class cl) {
+		var sb = new StringBuilder ();
+		foreach (var tp in cl.get_type_parameters ()) {
+			sb.append_printf ("const t_TypeInfo* %s_typeinfo;", tp.name.ascii_down ());
+			unowned Interface? iface = supra_constraint_iface (tp);
+			if (iface != null) {
+				sb.append_printf ("const t_%sVtable* %s_witness;", get_ccode_name (iface), tp.name.ascii_down ());
+			}
+		}
+		return sb.str;
+	}
+
 	private void add_supra_typeinfo_params (CCodeFunction func, Class cl) {
-		foreach (var name in supra_typeinfo_names (cl)) {
-			func.add_parameter (new CCodeParameter (name, "const t_TypeInfo*"));
+		foreach (var tp in cl.get_type_parameters ()) {
+			func.add_parameter (new CCodeParameter ("%s_typeinfo".printf (tp.name.ascii_down ()), "const t_TypeInfo*"));
+			unowned Interface? iface = supra_constraint_iface (tp);
+			if (iface != null) {
+				func.add_parameter (new CCodeParameter ("%s_witness".printf (tp.name.ascii_down ()), "const t_%sVtable*".printf (get_ccode_name (iface))));
+			}
 		}
 	}
 
@@ -1015,8 +1204,12 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				append_field (private_struct, f, decl_space);
 			}
 		}
-		foreach (var name in supra_typeinfo_names (cl)) {
-			private_struct.add_field ("const t_TypeInfo*", name);
+		foreach (var tp in cl.get_type_parameters ()) {
+			private_struct.add_field ("const t_TypeInfo*", "%s_typeinfo".printf (tp.name.ascii_down ()));
+			unowned Interface? iface = supra_constraint_iface (tp);
+			if (iface != null) {
+				private_struct.add_field ("const t_%sVtable*".printf (get_ccode_name (iface)), "%s_witness".printf (tp.name.ascii_down ()));
+			}
 		}
 
 		decl_space.add_type_declaration (new CCodeTypeDefinition ("struct s_%sPrivate".printf (cname), new CCodeVariableDeclarator ("t_%sPrivate".printf (cname))));
@@ -1066,9 +1259,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 						}
 					}
 				}
-				foreach (var name in supra_typeinfo_names (cl)) {
-					sb.append_printf("const t_TypeInfo* %s;", name);
-				}
+				sb.append (supra_generic_field_decls (cl));
 				sb.append("}");
 				struct_public.add_field ("struct s_%sPrivate*".printf(cname), "priv");
 				struct_public.add_field ("_Alignas(max_align_t) char", "_priv[sizeof(%s)]".printf(sb.str));
@@ -1195,7 +1386,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 
 		var init_call = new CCodeFunctionCall(new CCodeIdentifier(init_func_name));
 		init_call.add_argument(new CCodeIdentifier("self"));
-		foreach (var name in supra_typeinfo_names (cl)) {
+		foreach (var name in supra_generic_names (cl)) {
 			init_call.add_argument (new CCodeIdentifier (name));
 		}
 		foreach (var param in m.get_parameters()) {
@@ -1233,7 +1424,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			ccode.add_assignment (priv_access, new CCodeCastExpression (new CCodeIdentifier ("self->_priv"), "struct s_%sPrivate*".printf(cname)));
 		}
 		// store the erased-generic descriptors into the instance
-		foreach (var name in supra_typeinfo_names (cl)) {
+		foreach (var name in supra_generic_names (cl)) {
 			var priv_field = new CCodeMemberAccess.pointer (new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv"), name);
 			ccode.add_assignment (priv_field, new CCodeIdentifier (name));
 		}

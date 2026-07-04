@@ -87,6 +87,10 @@ public class Vala.GenericType : DataType {
 		} else if (member_name == "destroy") {
 			return get_destroy_field ();
 		}
+		// nominal constraint (`<G : IFoo>`): expose the interface's members
+		if (type_parameter.constraint_type != null) {
+			return type_parameter.constraint_type.get_member (member_name);
+		}
 		return null;
 	}
 

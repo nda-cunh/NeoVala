@@ -201,6 +201,11 @@ public class Vala.SymbolResolver : CodeVisitor {
 		current_scope = current_scope.parent_scope;
 	}
 
+	public override void visit_type_parameter (TypeParameter p) {
+		// resolve a nominal constraint (`<G : IFoo>`) if present
+		p.accept_children (this);
+	}
+
 	public override void visit_creation_method (CreationMethod m) {
 		if (m.checked) {
 			return;
