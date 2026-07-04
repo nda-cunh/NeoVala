@@ -1605,13 +1605,21 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 				var cl = (Class) object_type.type_symbol;
 				generate_class_declaration (cl, decl_space);
 				if (!cl.is_compact && cl.has_type_parameters ()) {
-					generate_struct_declaration ((Struct) gtype_type, decl_space);
+					if (context.profile == Profile.POSIX) {
+						emit_supra_typeinfo_decl ();
+					} else {
+						generate_struct_declaration ((Struct) gtype_type, decl_space);
+					}
 				}
 			} else if (object_type.type_symbol is Interface) {
 				var iface = (Interface) object_type.type_symbol;
 				generate_interface_declaration (iface, decl_space);
 				if (iface.has_type_parameters ()) {
-					generate_struct_declaration ((Struct) gtype_type, decl_space);
+					if (context.profile == Profile.POSIX) {
+						emit_supra_typeinfo_decl ();
+					} else {
+						generate_struct_declaration ((Struct) gtype_type, decl_space);
+					}
 				}
 			}
 		} else if (type is DelegateType) {
@@ -1649,7 +1657,11 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		} else if (type is MethodType) {
 			var method = ((MethodType) type).method_symbol;
 			if (method.has_type_parameters () && !get_ccode_simple_generics (method)) {
-				generate_struct_declaration ((Struct) gtype_type, decl_space);
+				if (context.profile == Profile.POSIX) {
+					emit_supra_typeinfo_decl ();
+				} else {
+					generate_struct_declaration ((Struct) gtype_type, decl_space);
+				}
 			}
 		}
 
@@ -3054,6 +3066,13 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		}
 	}
 
+	// POSIX generics: resolve a type parameter to its t_TypeInfo* descriptor
+	// (the single param threaded in place of GObject's type/dup/destroy triple).
+	protected CCodeExpression get_supra_typeinfo_expression (GenericType type, bool is_chainup = false) {
+		var name = "%s_typeinfo".printf (type.type_parameter.name.ascii_down ());
+		return get_generic_type_expression (name, type, is_chainup);
+	}
+
 	CCodeExpression get_generic_type_expression (string identifier, GenericType type, bool is_chainup = false) {
 		if (type.type_parameter.parent_symbol is Interface) {
 			unowned Interface iface = (Interface) type.type_parameter.parent_symbol;
@@ -3074,6 +3093,9 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 	}
 
 	public CCodeExpression get_type_id_expression (DataType type, bool is_chainup = false) {
+		if (context.profile == Profile.POSIX && type is GenericType) {
+			return get_supra_typeinfo_expression ((GenericType) type, is_chainup);
+		}
 		if (type is GenericType) {
 			var type_parameter = ((GenericType) type).type_parameter;
 			unowned Symbol? parent = type_parameter.owner.owner;
@@ -3097,6 +3119,8 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 	public virtual CCodeExpression? get_dup_func_expression (DataType type, SourceReference? source_reference, bool is_chainup = false) {
 		if (type is ErrorType) {
 			return new CCodeIdentifier (context.profile == Profile.POSIX ? "_vala_error_copy" : "g_error_copy");
+		} else if (context.profile == Profile.POSIX && type is GenericType) {
+			return new CCodeMemberAccess.pointer (get_supra_typeinfo_expression ((GenericType) type, is_chainup), "dup");
 		} else if (type is GenericType) {
 			var type_parameter = ((GenericType) type).type_parameter;
 			string identifier = get_ccode_copy_function (type_parameter);
@@ -3654,6 +3678,8 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 			}
 			cfile.add_include ("glib.h");
 			return new CCodeIdentifier ("g_error_free");
+		} else if (context.profile == Profile.POSIX && type is GenericType) {
+			return new CCodeMemberAccess.pointer (get_supra_typeinfo_expression ((GenericType) type, is_chainup), "free");
 		} else if (type is GenericType) {
 			var type_parameter = ((GenericType) type).type_parameter;
 			string identifier = get_ccode_destroy_function (type_parameter);
@@ -5014,9 +5040,79 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 	public virtual void generate_error_domain_declaration (ErrorDomain edomain, CCodeFile decl_space) {
 	}
 
+	// POSIX generics: the hand-rolled, GObject-free type descriptor threaded in
+	// place of the (GType, GBoxedCopyFunc, GDestroyNotify) triple. One canonical
+	// static const per concrete type per TU; its address is the runtime identity.
+	protected void emit_supra_typeinfo_decl (CCodeFile? decl_space = null) {
+		unowned CCodeFile f = decl_space ?? cfile;
+		f.add_include ("string.h");
+		if (!add_wrapper ("t_TypeInfo")) {
+			return;
+		}
+		f.add_type_declaration (new CCodeIdentifier (
+			"typedef struct { size_t size; void* (*dup)(void*); void (*free)(void*); const void* vtable; const char* name; } t_TypeInfo;\n"
+			+ "#define VALA_TYPEOF_EQ(a, b) ((a) == (b) || ((a)->vtable ? (a)->vtable == (b)->vtable : (b)->vtable == NULL && strcmp ((a)->name, (b)->name) == 0))\n"));
+	}
+
+	protected string get_supra_typeinfo (DataType type) {
+		emit_supra_typeinfo_decl ();
+		var cname = get_ccode_name (type);
+		var sb = new StringBuilder ();
+		for (int i = 0; i < cname.length; i++) {
+			unichar c = cname[i];
+			sb.append_unichar (c.isalnum () ? c : '_');
+		}
+		var id = "_typeinfo_%s".printf (sb.str);
+		if (add_wrapper (id)) {
+			// dup/free are the type's real copy/destroy funcs, cast to the
+			// uniform void* ABI; NULL for POD value types (int, double, ...).
+			string dup = "NULL";
+			string destroy = "NULL";
+			if (requires_copy (type)) {
+				var e = get_dup_func_expression (type, type.source_reference);
+				if (e is CCodeIdentifier) {
+					dup = "(void* (*)(void*)) %s".printf (((CCodeIdentifier) e).name);
+				}
+			}
+			if (requires_destroy (type)) {
+				var e = get_destroy_func_expression (type);
+				if (e is CCodeIdentifier) {
+					destroy = "(void (*)(void*)) %s".printf (((CCodeIdentifier) e).name);
+				}
+			}
+			// vtable: the class's shared CLASS_VTABLE address for a supraklass
+			// (cross-TU type identity), NULL for value types / strings.
+			string vtable = "NULL";
+			unowned var ots = type.type_symbol as ObjectTypeSymbol;
+			if (ots != null && ots.is_supraklass) {
+				string vtable_var = "%s_VTABLE".printf (get_ccode_upper_case_name (ots));
+				cfile.add_type_member_declaration (new CCodeIdentifier (
+					"extern const t_%sVtable %s;\n".printf (get_ccode_name (ots), vtable_var)));
+				vtable = "&%s".printf (vtable_var);
+			}
+			cfile.add_type_member_declaration (new CCodeIdentifier (
+				"static const t_TypeInfo %s = { sizeof (%s), %s, %s, %s, \"%s\" };\n".printf (id, cname, dup, destroy, vtable, cname)));
+		}
+		return id;
+	}
+
 	public void add_generic_type_arguments (Method m, Map<int,CCodeExpression> arg_map, List<DataType> type_args, CodeNode expr, bool is_chainup = false, List<TypeParameter>? type_parameters = null) {
 		int type_param_index = 0;
 		foreach (var type_arg in type_args) {
+			if (context.profile == Profile.POSIX) {
+				CCodeExpression arg;
+				if (type_arg is GenericType) {
+					// forwarding an enclosing type parameter: pass the incoming
+					// t_TypeInfo* through, don't synthesize a bogus descriptor.
+					arg = get_supra_typeinfo_expression ((GenericType) type_arg, is_chainup);
+				} else {
+					arg = new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF,
+						new CCodeIdentifier (get_supra_typeinfo (type_arg)));
+				}
+				arg_map.set (get_param_pos (0.1 * type_param_index + 0.01), arg);
+				type_param_index++;
+				continue;
+			}
 			if (get_ccode_simple_generics (m)) {
 				if (requires_copy (type_arg)) {
 					arg_map.set (get_param_pos (-1 + 0.1 * type_param_index + 0.03), get_destroy0_func_expression (type_arg, is_chainup));
@@ -5522,6 +5618,12 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 	}
 
 	public override void visit_sizeof_expression (SizeofExpression expr) {
+		if (context.profile == Profile.POSIX && expr.type_reference is GenericType) {
+			set_cvalue (expr, new CCodeMemberAccess.pointer (
+				get_supra_typeinfo_expression ((GenericType) expr.type_reference), "size"));
+			return;
+		}
+
 		generate_type_declaration (expr.type_reference, cfile);
 
 		var csizeof = new CCodeFunctionCall (new CCodeIdentifier ("sizeof"));
@@ -6233,15 +6335,31 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 			while (cexpr is CCodeCastExpression) {
 				cexpr = ((CCodeCastExpression) cexpr).inner;
 			}
-			result = new CCodeCastExpression (new CCodeCastExpression (cexpr, "gintptr"), get_ccode_name (actual_type));
+			result = new CCodeCastExpression (new CCodeCastExpression (cexpr, intptr_ctype ()), get_ccode_name (actual_type));
 		} else if (analyzer.is_unsigned_integer_type_argument (actual_type)) {
 			// FIXME this should not happen
 			while (cexpr is CCodeCastExpression) {
 				cexpr = ((CCodeCastExpression) cexpr).inner;
 			}
-			result = new CCodeCastExpression (new CCodeCastExpression (cexpr, "guintptr"), get_ccode_name (actual_type));
+			result = new CCodeCastExpression (new CCodeCastExpression (cexpr, uintptr_ctype ()), get_ccode_name (actual_type));
 		}
 		return result;
+	}
+
+	string intptr_ctype () {
+		if (context.profile == Profile.POSIX) {
+			cfile.add_include ("stdint.h");
+			return "intptr_t";
+		}
+		return "gintptr";
+	}
+
+	string uintptr_ctype () {
+		if (context.profile == Profile.POSIX) {
+			cfile.add_include ("stdint.h");
+			return "uintptr_t";
+		}
+		return "guintptr";
 	}
 
 	public CCodeExpression convert_to_generic_pointer (CCodeExpression cexpr, DataType actual_type) {
@@ -6252,13 +6370,13 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 			while (cexpr is CCodeCastExpression) {
 				cexpr = ((CCodeCastExpression) cexpr).inner;
 			}
-			result = new CCodeCastExpression (new CCodeCastExpression (cexpr, "gintptr"), get_ccode_name (pointer_type));
+			result = new CCodeCastExpression (new CCodeCastExpression (cexpr, intptr_ctype ()), get_ccode_name (pointer_type));
 		} else if (analyzer.is_unsigned_integer_type_argument (actual_type)) {
 			// FIXME this should not happen
 			while (cexpr is CCodeCastExpression) {
 				cexpr = ((CCodeCastExpression) cexpr).inner;
 			}
-			result = new CCodeCastExpression (new CCodeCastExpression (cexpr, "guintptr"), get_ccode_name (pointer_type));
+			result = new CCodeCastExpression (new CCodeCastExpression (cexpr, uintptr_ctype ()), get_ccode_name (pointer_type));
 		}
 		return result;
 	}

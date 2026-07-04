@@ -48,6 +48,25 @@ public abstract class Vala.ObjectTypeSymbol : TypeSymbol, GenericSymbol {
 
 	private List<Constant> constants = new ArrayList<Constant> ();
 
+	private bool? _is_supraklass;
+
+	/**
+	 * SupraKlass is the default posix object model (classes and interfaces).
+	 * Under --profile=posix the backend force-enables it, which also lets a
+	 * [SupraKlass] header in a .vapi mark a type as part of the posix model.
+	 */
+	public bool is_supraklass {
+		get {
+			if (_is_supraklass == null) {
+				_is_supraklass = has_attribute ("SupraKlass");
+			}
+			return _is_supraklass;
+		}
+		set {
+			_is_supraklass = value;
+		}
+	}
+
 	protected ObjectTypeSymbol (string name, SourceReference? source_reference = null, Comment? comment = null) {
 		base (name, source_reference, comment);
 	}

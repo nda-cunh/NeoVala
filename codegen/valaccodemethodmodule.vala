@@ -1082,6 +1082,18 @@ public abstract class Vala.CCodeMethodModule : CCodeStructModule {
 		if (type_parameters != null) {
 			int type_param_index = 0;
 			foreach (var type_param in type_parameters) {
+				if (context.profile == Profile.POSIX) {
+					// GObject-free generics: a single hand-rolled t_TypeInfo*
+					// descriptor instead of the (GType, dup, destroy) triple.
+					emit_supra_typeinfo_decl ();
+					var typeinfo = "%s_typeinfo".printf (type_param.name.ascii_down ());
+					cparam_map.set (get_param_pos (0.1 * type_param_index + 0.01), new CCodeParameter (typeinfo, "const t_TypeInfo*"));
+					if (carg_map != null) {
+						carg_map.set (get_param_pos (0.1 * type_param_index + 0.01), new CCodeIdentifier (typeinfo));
+					}
+					type_param_index++;
+					continue;
+				}
 				cfile.add_include ("glib-object.h");
 				var type = get_ccode_type_id (type_param);
 				var dup_func = get_ccode_copy_function (type_param);

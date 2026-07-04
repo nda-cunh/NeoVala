@@ -218,6 +218,13 @@ public class Vala.SemanticAnalyzer : CodeVisitor {
 			unichar_type = new IntegerType (unichar_struct);
 		}
 
+		if (context.profile == Profile.POSIX) {
+			var posix_type = root_symbol.scope.lookup ("Type") as Struct;
+			if (posix_type != null) {
+				type_type = new IntegerType (posix_type);
+			}
+		}
+
 		if (context.profile == Profile.GOBJECT) {
 			var glib_ns = root_symbol.scope.lookup ("GLib");
 

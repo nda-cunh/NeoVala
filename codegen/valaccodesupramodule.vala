@@ -75,6 +75,8 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			var new_func = new CCodeFunction (get_ccode_name (m), "%s*".printf (cname));
 			var init_func = new CCodeFunction ("%s_init%s".printf (cname_lower, method_suffix), "void");
 			init_func.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
+			add_supra_typeinfo_params (new_func, cl);
+			add_supra_typeinfo_params (init_func, cl);
 			foreach (Parameter param in m.get_parameters ()) {
 				new_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 				init_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
@@ -119,6 +121,9 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			generate_class_declaration (cl.base_class, decl_space);
 		}
 
+		if (cl.has_type_parameters ()) {
+			emit_supra_typeinfo_decl (decl_space);
+		}
 		generate_private_struct_declaration (cl, decl_space);
 		generate_instance_struct_declaration (cl, decl_space);
 
@@ -163,6 +168,9 @@ public class Vala.CCodeSupraModule : CCodeDelegateModule {
 			base.visit_interface (iface);
 			return;
 		}
+
+		iface.set_attribute ("SupraKlass", true);
+		iface.is_supraklass = true;
 
 		CCodeFile decl_space;
 		if (context.header_filename != null && !iface.is_internal_symbol ()) {
@@ -776,6 +784,22 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 	}
 
 	public override void visit_typeof_expression (TypeofExpression expr) {
+		if (context.profile == Profile.POSIX) {
+			CCodeExpression e;
+			if (expr.type_reference is GenericType) {
+				e = get_supra_typeinfo_expression ((GenericType) expr.type_reference);
+			} else {
+				unowned Class? cl = expr.type_reference.type_symbol as Class;
+				if (cl != null && cl.is_supraklass) {
+					generate_class_declaration (cl, cfile);
+				}
+				e = new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF,
+					new CCodeIdentifier (get_supra_typeinfo (expr.type_reference)));
+			}
+			set_cvalue (expr, new CCodeCastExpression (e, "const void*"));
+			return;
+		}
+		base.visit_typeof_expression (expr);
 	}
 
 	public override void visit_method (Method m) {
@@ -891,6 +915,11 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		var func_wrapper = new CCodeFunction (real_name, get_ccode_name (m.return_type));
 		func_wrapper.add_parameter (new CCodeParameter ("self", "%s*".printf (get_ccode_name (cl))));
 
+		// A creation method's _construct runs in in-creation context, where a
+		// type parameter resolves to the incoming t_TypeInfo* param (not priv).
+		if (m is CreationMethod) {
+			add_supra_typeinfo_params (func_wrapper, cl);
+		}
 		foreach (Parameter param in m.get_parameters ()) {
 			func_wrapper.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 		}
@@ -956,8 +985,25 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 
 	}
 
+	// POSIX erased generics: the per-instance t_TypeInfo* descriptor names for a
+	// generic class (one per type parameter), stored in the private struct and
+	// threaded through the constructor in place of GObject's type/dup/destroy triple.
+	private string[] supra_typeinfo_names (Class cl) {
+		string[] names = {};
+		foreach (var tp in cl.get_type_parameters ()) {
+			names += "%s_typeinfo".printf (tp.name.ascii_down ());
+		}
+		return names;
+	}
+
+	private void add_supra_typeinfo_params (CCodeFunction func, Class cl) {
+		foreach (var name in supra_typeinfo_names (cl)) {
+			func.add_parameter (new CCodeParameter (name, "const t_TypeInfo*"));
+		}
+	}
+
 	private void generate_private_struct_declaration (Class cl, CCodeFile decl_space) {
-		if (!cl.has_private_fields) {
+		if (!cl.has_private_fields && !cl.has_type_parameters ()) {
 			return;
 		}
 		string cname = get_ccode_name (cl);
@@ -968,6 +1014,9 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			if (f.is_private_symbol ()) {
 				append_field (private_struct, f, decl_space);
 			}
+		}
+		foreach (var name in supra_typeinfo_names (cl)) {
+			private_struct.add_field ("const t_TypeInfo*", name);
 		}
 
 		decl_space.add_type_declaration (new CCodeTypeDefinition ("struct s_%sPrivate".printf (cname), new CCodeVariableDeclarator ("t_%sPrivate".printf (cname))));
@@ -997,7 +1046,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 					append_field (struct_public, f, decl_space);
 				}
 			}
-			if (cl.has_private_fields) {
+			if (cl.has_private_fields || cl.has_type_parameters ()) {
 				StringBuilder sb = new StringBuilder();
 				sb.append("struct {");
 				foreach (Field f in cl.get_fields ()) {
@@ -1016,6 +1065,9 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 							}
 						}
 					}
+				}
+				foreach (var name in supra_typeinfo_names (cl)) {
+					sb.append_printf("const t_TypeInfo* %s;", name);
 				}
 				sb.append("}");
 				struct_public.add_field ("struct s_%sPrivate*".printf(cname), "priv");
@@ -1050,6 +1102,9 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		cfile.add_function_declaration (finalize_func);
 
 		push_function (finalize_func);
+		// establish the class as current symbol so a generic field's destroy
+		// resolves to self->priv-><T>_typeinfo->free (is_in_generic_type).
+		emit_context.push_symbol (cl);
 
 		if (d?.body != null) {
 			d.body.accept (this);
@@ -1088,6 +1143,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			ccode.add_expression (parent_finalize);
 		}
 
+		emit_context.pop_symbol ();
 		pop_function ();
 		cfile.add_function (finalize_func);
 	}
@@ -1126,6 +1182,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 
 		var function_new = new CCodeFunction(new_func_name, "%s*".printf(cname));
 
+		add_supra_typeinfo_params (function_new, cl);
 		foreach (var param in m.get_parameters()) {
 			function_new.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 		}
@@ -1138,6 +1195,9 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 
 		var init_call = new CCodeFunctionCall(new CCodeIdentifier(init_func_name));
 		init_call.add_argument(new CCodeIdentifier("self"));
+		foreach (var name in supra_typeinfo_names (cl)) {
+			init_call.add_argument (new CCodeIdentifier (name));
+		}
 		foreach (var param in m.get_parameters()) {
 			init_call.add_argument (new CCodeIdentifier (param.name));
 		}
@@ -1152,6 +1212,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		var function_init = new CCodeFunction (init_func_name, "void");
 		function_init.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
 
+		add_supra_typeinfo_params (function_init, cl);
 		foreach (Parameter param in m.get_parameters ()) {
 			function_init.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 		}
@@ -1167,9 +1228,14 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			ccode.add_assignment (ref_count_access, new CCodeConstant ("1"));
 		}
 		// priv-> point to the buffer in the struct
-		if (cl.has_private_fields) {
+		if (cl.has_private_fields || cl.has_type_parameters ()) {
 			var priv_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv");
 			ccode.add_assignment (priv_access, new CCodeCastExpression (new CCodeIdentifier ("self->_priv"), "struct s_%sPrivate*".printf(cname)));
+		}
+		// store the erased-generic descriptors into the instance
+		foreach (var name in supra_typeinfo_names (cl)) {
+			var priv_field = new CCodeMemberAccess.pointer (new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv"), name);
+			ccode.add_assignment (priv_field, new CCodeIdentifier (name));
 		}
 
 		unowned List<Statement>? statements = (m.body != null) ? m.body.get_statements () : null;
