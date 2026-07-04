@@ -1555,49 +1555,40 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 	}
 
 
+	// Append the call's Vala arguments (each visited) to a C call.
+	private void add_supra_call_arguments (CCodeFunctionCall ccall, MethodCall expr) {
+		foreach (var arg in expr.get_argument_list ()) {
+			arg.accept (this);
+			var arg_c = get_cvalue (arg);
+			if (arg_c != null) {
+				ccall.add_argument (arg_c);
+			}
+		}
+	}
+
+	// Emit `cname ((self_type*) self, args...)` as the value of `expr`. Shared by
+	// the chainup and base-access paths, which all thread the current `self`.
+	private void emit_supra_self_call (MethodCall expr, string cname, Symbol self_type) {
+		var ccall = new CCodeFunctionCall (new CCodeIdentifier (cname));
+		ccall.add_argument (new CCodeCastExpression (new CCodeIdentifier ("self"), "%s*".printf (get_ccode_name (self_type))));
+		add_supra_call_arguments (ccall, expr);
+		ccode.add_expression (ccall);
+		set_cvalue (expr, ccall);
+	}
+
 	public override void visit_method_call (MethodCall expr) {
 		if (expr.is_chainup) {
 			unowned Method? m = expr.call.symbol_reference as Method;
 			if (m != null) {
 				unowned Class? cl = m.parent_symbol as Class;
 				if (cl != null && cl.is_supraklass) {
-
-					string cname = "%s_init_%s".printf(
-						get_ccode_lower_case_name(m.parent_symbol),
-						m.name
-					);
-					var ccall = new CCodeFunctionCall(new CCodeIdentifier(cname));
-					var self_cast = new CCodeCastExpression( new CCodeIdentifier("self"), "%s*".printf(get_ccode_name(m.parent_symbol)));
-					ccall.add_argument(self_cast);
-
-					foreach (var arg in expr.get_argument_list()) {
-						arg.accept(this);
-						var arg_c = get_cvalue(arg);
-						if (arg_c != null) ccall.add_argument(arg_c);
-					}
-
-					ccode.add_expression(ccall);
-					set_cvalue(expr, ccall);
+					emit_supra_self_call (expr, "%s_init_%s".printf (get_ccode_lower_case_name (m.parent_symbol), m.name), m.parent_symbol);
 					return;
 				}
 			}
 			unowned var cl = expr.call.symbol_reference as Class;
 			if (cl != null && cl.is_supraklass) {
-				string cname = "%s_init".printf(
-						get_ccode_lower_case_name(cl)
-						);
-				var ccall = new CCodeFunctionCall(new CCodeIdentifier(cname));
-				var self_cast = new CCodeCastExpression( new CCodeIdentifier("self"), "%s*".printf(get_ccode_name(cl)));
-				ccall.add_argument(self_cast);
-
-				foreach (var arg in expr.get_argument_list()) {
-					arg.accept(this);
-					var arg_c = get_cvalue(arg);
-					if (arg_c != null) ccall.add_argument(arg_c);
-				}
-
-				ccode.add_expression(ccall);
-				set_cvalue(expr, ccall);
+				emit_supra_self_call (expr, "%s_init".printf (get_ccode_lower_case_name (cl)), cl);
 				return;
 			}
 		}
@@ -1607,26 +1598,8 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			if (method != null) {
 				unowned Class? cl = method.parent_symbol as Class;
 				if (cl != null && cl.is_supraklass) {
-					// Base acces base->method()
-					string cname = "%s_real_%s".printf(
-							get_ccode_lower_case_name(method.parent_symbol),
-							method.name
-							);
-					var ccall = new CCodeFunctionCall(new CCodeIdentifier(cname));
-					var self_cast = new CCodeCastExpression(
-							new CCodeIdentifier("self"),
-							"%s*".printf(get_ccode_name(method.parent_symbol))
-							);
-					ccall.add_argument(self_cast);
-
-					foreach (var arg in expr.get_argument_list()) {
-						arg.accept(this);
-						var arg_c = get_cvalue(arg);
-						if (arg_c != null) ccall.add_argument(arg_c);
-					}
-
-					ccode.add_expression(ccall);
-					set_cvalue(expr, ccall);
+					// base access: base->method()
+					emit_supra_self_call (expr, "%s_real_%s".printf (get_ccode_lower_case_name (method.parent_symbol), method.name), method.parent_symbol);
 					return;
 				}
 			}
@@ -1644,10 +1617,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			    && current_method != null && current_method.parent_symbol == iface && current_method.body != null) {
 				var ccall = new CCodeFunctionCall (new CCodeIdentifier (get_ccode_name (m)));
 				ccall.add_argument (build_supra_dynamic_fat_pointer (iface, new CCodeIdentifier ("self")));
-				foreach (var arg in expr.get_argument_list ()) {
-					arg.accept (this);
-					ccall.add_argument (get_cvalue (arg));
-				}
+				add_supra_call_arguments (ccall, expr);
 				if (m.return_type is VoidType) {
 					ccode.add_expression (ccall);
 				} else {
