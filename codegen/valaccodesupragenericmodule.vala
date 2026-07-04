@@ -10,26 +10,6 @@ using Vala;
 
 public class Vala.CCodeSupraGenericModule : CCodeSupraModule {
 
-	// Constrained erased generic (`<G : IFoo>`): the value is the raw object
-	// payload, not a fat pointer. Build one on the fly, resolving the concrete
-	// class's interface vtable at runtime by walking its vptr chain.
-	private CCodeExpression build_supra_dynamic_fat_pointer (Interface iface, CCodeExpression cexpr) {
-		generate_interface_declaration (iface, cfile);
-		declare_interface_id (iface, cfile);
-		emit_interface_is_a_helper ();
-
-		var lookup = new CCodeFunctionCall (new CCodeIdentifier ("_vala_get_interface"));
-		lookup.add_argument (new CCodeCastExpression (cexpr, "void*"));
-		lookup.add_argument (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF,
-			new CCodeIdentifier (interface_id_name (iface))));
-
-		var init = new CCodeInitializerList ();
-		init.append (new CCodeCastExpression (cexpr, "void*"));
-		init.append (new CCodeCastExpression (lookup, "const t_%sVtable*".printf (get_ccode_name (iface))));
-		var literal = new CCodeCastExpression (init, get_ccode_name (iface));
-		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, literal);
-	}
-
 	// Build a fat pointer for a constrained erased generic from the witness
 	// vtable threaded in alongside the t_TypeInfo: (IFoo){ (void*) g, g_witness }.
 	private CCodeExpression build_supra_witness_fat_pointer (Interface iface, CCodeExpression cexpr, CCodeExpression witness) {

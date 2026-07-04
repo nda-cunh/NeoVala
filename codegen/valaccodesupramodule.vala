@@ -567,6 +567,27 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 	}
 
 
+	// Build a fat pointer from a raw object payload, resolving the interface
+	// vtable at runtime by walking its vptr chain. Used for constrained erased
+	// generics and for `this` inside a default interface method (where `self`
+	// is the raw object, not a fat pointer).
+	protected CCodeExpression build_supra_dynamic_fat_pointer (Interface iface, CCodeExpression cexpr) {
+		generate_interface_declaration (iface, cfile);
+		declare_interface_id (iface, cfile);
+		emit_interface_is_a_helper ();
+
+		var lookup = new CCodeFunctionCall (new CCodeIdentifier ("_vala_get_interface"));
+		lookup.add_argument (new CCodeCastExpression (cexpr, "void*"));
+		lookup.add_argument (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF,
+			new CCodeIdentifier (interface_id_name (iface))));
+
+		var init = new CCodeInitializerList ();
+		init.append (new CCodeCastExpression (cexpr, "void*"));
+		init.append (new CCodeCastExpression (lookup, "const t_%sVtable*".printf (get_ccode_name (iface))));
+		var literal = new CCodeCastExpression (init, get_ccode_name (iface));
+		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, literal);
+	}
+
 	protected CCodeExpression build_supra_fat_pointer (Class cl, Interface iface, CCodeExpression cexpr) {
 		generate_interface_declaration (iface, cfile);
 		generate_class_declaration (cl, cfile);
@@ -1621,6 +1642,32 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				}
 			}
 		}
+		// `this.sibling()` inside a default interface method: `self` here is the
+		// raw object (the fat pointer's `.self`), but the dispatch wrapper expects
+		// a fat pointer. Rebuild one from `self` instead of passing it raw.
+		if (context.profile == Profile.POSIX && member_access != null) {
+			unowned Method? m = member_access.symbol_reference as Method;
+			unowned Interface? iface = (m != null) ? m.parent_symbol as Interface : null;
+			bool this_instance = member_access.inner == null
+				|| (member_access.inner is MemberAccess && ((MemberAccess) member_access.inner).member_name == "this");
+			if (iface != null && m.binding == MemberBinding.INSTANCE && this_instance
+			    && !m.has_error_type_parameter ()
+			    && current_method != null && current_method.parent_symbol == iface && current_method.body != null) {
+				var ccall = new CCodeFunctionCall (new CCodeIdentifier (get_ccode_name (m)));
+				ccall.add_argument (build_supra_dynamic_fat_pointer (iface, new CCodeIdentifier ("self")));
+				foreach (var arg in expr.get_argument_list ()) {
+					arg.accept (this);
+					ccall.add_argument (get_cvalue (arg));
+				}
+				if (m.return_type is VoidType) {
+					ccode.add_expression (ccall);
+				} else {
+					set_cvalue (expr, ccall);
+				}
+				return;
+			}
+		}
+
 		base.visit_method_call(expr);
 	}
 
