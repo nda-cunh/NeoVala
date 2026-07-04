@@ -961,17 +961,6 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 
 	}
 
-	// POSIX erased generics: the per-instance t_TypeInfo* descriptor names for a
-	// generic class (one per type parameter), stored in the private struct and
-	// threaded through the constructor in place of GObject's type/dup/destroy triple.
-	private string[] supra_typeinfo_names (Class cl) {
-		string[] names = {};
-		foreach (var tp in cl.get_type_parameters ()) {
-			names += "%s_typeinfo".printf (tp.name.ascii_down ());
-		}
-		return names;
-	}
-
 	private unowned Interface? supra_constraint_iface (TypeParameter tp) {
 		return tp.constraint_type != null ? tp.constraint_type.type_symbol as Interface : null;
 	}
