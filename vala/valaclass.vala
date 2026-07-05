@@ -578,7 +578,7 @@ public class Vala.Class : ObjectTypeSymbol {
 			Report.error (source_reference, "`%s' cannot inherit from SingleInstance class `%s'", get_full_name (), base_class.get_full_name ());
 		}
 
-		if (is_singleton && !is_subtype_of (context.analyzer.object_type)) {
+		if (is_singleton && context.analyzer.object_type != null && !is_subtype_of (context.analyzer.object_type)) {
 			error = true;
 			Report.error (source_reference, "SingleInstance class `%s' requires inheritance from `GLib.Object'", get_full_name ());
 		}
@@ -648,7 +648,7 @@ public class Vala.Class : ObjectTypeSymbol {
 		}
 
 		foreach (Property prop in get_properties ()) {
-			if (prop.has_attribute ("NoAccessorMethod") && !is_subtype_of (context.analyzer.object_type)) {
+			if (prop.has_attribute ("NoAccessorMethod") && context.analyzer.object_type != null && !is_subtype_of (context.analyzer.object_type)) {
 				error = true;
 				Report.error (prop.source_reference, "NoAccessorMethod is only allowed for properties in classes derived from GLib.Object");
 				return false;
@@ -709,7 +709,7 @@ public class Vala.Class : ObjectTypeSymbol {
 				}
 			}
 
-			if (!external && !external_package && base_class != null && !base_class.is_subtype_of (context.analyzer.gsource_type)) {
+			if (!external && !external_package && base_class != null && context.analyzer.gsource_type != null && !base_class.is_subtype_of (context.analyzer.gsource_type)) {
 				foreach (Field f in get_fields ()) {
 					if (f.binding == MemberBinding.INSTANCE) {
 						error = true;
