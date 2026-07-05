@@ -163,10 +163,32 @@ public class Vala.Block : Symbol, Statement {
 		context.analyzer.current_symbol = this;
 		context.analyzer.insert_block = this;
 
+		var block_narrowed = new ArrayList<Symbol> ();
+
 		for (int i = 0; i < statement_list.size; i++) {
 			if (!statement_list[i].check (context)) {
 				error = true;
 			}
+
+			// `if (x == null) return;` narrows x to non-null for the rest of
+			// the block (the fall-through path proves x != null)
+			if (context.nonnull_types) {
+				IfStatement? if_stmt = statement_list[i] as IfStatement;
+				if (if_stmt != null && if_stmt.false_statement == null
+				    && SemanticAnalyzer.block_always_exits (if_stmt.true_statement)) {
+					var syms = new ArrayList<Symbol> ();
+					SemanticAnalyzer.collect_non_null_symbols (if_stmt.condition, false, syms);
+					foreach (var sym in syms) {
+						if (context.analyzer.flow_non_null_add (sym)) {
+							block_narrowed.add (sym);
+						}
+					}
+				}
+			}
+		}
+
+		foreach (var sym in block_narrowed) {
+			context.analyzer.flow_non_null_remove (sym);
 		}
 
 		foreach (LocalVariable local in get_local_variables ()) {

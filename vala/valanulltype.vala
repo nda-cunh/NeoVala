@@ -32,7 +32,7 @@ public class Vala.NullType : ReferenceType {
 	}
 
 	public override bool compatible (DataType target_type) {
-		if (CodeContext.get ().experimental_non_null) {
+		if (CodeContext.get ().nonnull_types) {
 			return target_type.nullable;
 		}
 

@@ -1036,7 +1036,7 @@ public class Vala.MemberAccess : Expression {
 				}
 			}
 
-			if (context.experimental_non_null && instance && inner.value_type.nullable &&
+			if (context.nonnull_types && instance && inner.value_type.nullable &&
 			    !(inner.value_type is PointerType) && !(inner.value_type is GenericType) &&
 				!(inner.value_type is ArrayType)) {
 				Report.error (source_reference, "Access to instance member `%s' from nullable reference denied", symbol_reference.get_full_name ());
@@ -1059,6 +1059,16 @@ public class Vala.MemberAccess : Expression {
 				value_type = formal_value_type.get_actual_type (inner.value_type, null, this);
 			} else {
 				value_type = formal_value_type;
+			}
+
+			// flow narrowing: a read of a symbol proven non-null (e.g. inside
+			// `if (x != null)`) yields a non-null value type
+			if (!lvalue && value_type != null && value_type.nullable
+			    && context.analyzer.is_flow_non_null (symbol_reference)) {
+				if (value_type == formal_value_type) {
+					value_type = value_type.copy ();
+				}
+				value_type.nullable = false;
 			}
 
 			if (symbol_reference is Method) {

@@ -83,7 +83,7 @@ public class Vala.LocalVariable : Variable {
 			variable_type = new VarType ();
 		}
 
-		if (!context.experimental_non_null) {
+		if (!context.nonnull_types) {
 			// local reference variables are considered nullable
 			// except when using experimental non-null enhancements
 			if (variable_type is ReferenceType) {

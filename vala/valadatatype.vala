@@ -293,7 +293,7 @@ public abstract class Vala.DataType : CodeNode {
 	public virtual bool compatible (DataType target_type) {
 		var context = CodeContext.get ();
 
-		if (context.experimental_non_null && nullable && !target_type.nullable) {
+		if (context.nonnull_types && nullable && !target_type.nullable) {
 			return false;
 		}
 

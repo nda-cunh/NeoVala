@@ -165,7 +165,7 @@ public abstract class Vala.Expression : CodeNode {
 
 		// declare the inner expression as a local variable to check for null
 		var inner_type = inner.value_type.copy ();
-		if (context.experimental_non_null && !inner_type.nullable) {
+		if (context.nonnull_types && !inner_type.nullable) {
 			Report.warning (inner.source_reference, "inner expression is never null");
 			// make it nullable, otherwise the null check will not compile in non-null mode
 			inner_type.nullable = true;
@@ -184,7 +184,7 @@ public abstract class Vala.Expression : CodeNode {
 
 		Expression inner_access = new MemberAccess.simple (inner_local.name, source_reference);
 
-		if (context.experimental_non_null) {
+		if (context.nonnull_types) {
 			inner_access = new CastExpression.non_null (inner_access, source_reference);
 		}
 

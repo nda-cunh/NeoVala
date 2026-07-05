@@ -121,9 +121,40 @@ public class Vala.IfStatement : CodeNode, Statement {
 
 		condition.check (context);
 
+		var true_narrowed = new ArrayList<Symbol> ();
+		var false_narrowed = new ArrayList<Symbol> ();
+		if (context.nonnull_types && !condition.error) {
+			var true_syms = new ArrayList<Symbol> ();
+			SemanticAnalyzer.collect_non_null_symbols (condition, true, true_syms);
+			foreach (var sym in true_syms) {
+				if (context.analyzer.flow_non_null_add (sym)) {
+					true_narrowed.add (sym);
+				}
+			}
+		}
+
 		true_statement.check (context);
+
+		foreach (var sym in true_narrowed) {
+			context.analyzer.flow_non_null_remove (sym);
+		}
+
 		if (false_statement != null) {
+			if (context.nonnull_types && !condition.error) {
+				var false_syms = new ArrayList<Symbol> ();
+				SemanticAnalyzer.collect_non_null_symbols (condition, false, false_syms);
+				foreach (var sym in false_syms) {
+					if (context.analyzer.flow_non_null_add (sym)) {
+						false_narrowed.add (sym);
+					}
+				}
+			}
+
 			false_statement.check (context);
+
+			foreach (var sym in false_narrowed) {
+				context.analyzer.flow_non_null_remove (sym);
+			}
 		}
 
 		if (condition.error) {

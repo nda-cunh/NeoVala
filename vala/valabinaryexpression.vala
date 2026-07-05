@@ -230,7 +230,7 @@ public class Vala.BinaryExpression : Expression {
 					// value owned if either left or right is owned
 					local_type.value_owned = true;
 				}
-				if (context.experimental_non_null) {
+				if (context.nonnull_types) {
 					if (!local_type.nullable) {
 						Report.warning (left.source_reference, "left operand is never null");
 						if (right.value_type != null && right.value_type.nullable) {

@@ -420,7 +420,13 @@ public abstract class Vala.CCodeMemberAccessModule : CCodeControlFlowModule {
 		// Add cast for narrowed type access of variables if needed
 		if (expr.symbol_reference is Variable) {
 			unowned GLibValue cvalue = (GLibValue) expr.target_value;
-			if (!(cvalue.value_type is GenericType) && cvalue.value_type.type_symbol != null
+			if (context.profile == Profile.POSIX && cvalue.value_type is ValueType
+			    && cvalue.value_type.nullable && !expr.value_type.nullable) {
+				// a nullable value type narrowed to non-null (e.g. inside
+				// `if (x != null)`) is boxed on the heap; unbox it
+				cvalue.cvalue = new CCodeUnaryExpression (CCodeUnaryOperator.POINTER_INDIRECTION, cvalue.cvalue);
+				cvalue.value_type = expr.value_type.copy ();
+			} else if (!(cvalue.value_type is GenericType) && cvalue.value_type.type_symbol != null
 			    && cvalue.value_type.type_symbol != expr.value_type.type_symbol) {
 				cvalue.cvalue = new CCodeCastExpression (cvalue.cvalue, get_ccode_name (expr.value_type));
 			}

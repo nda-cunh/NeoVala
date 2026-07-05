@@ -1327,6 +1327,9 @@ public class Vala.Parser : CodeVisitor {
 				if (accept (TokenType.CLOSE_PARENS)) {
 					// (!) non-null cast
 					var inner = parse_unary_expression ();
+					if (context.profile == Profile.POSIX) {
+						Report.error (get_src (begin), "the `(!)' non-null cast is not allowed; use `if (x != null)' to narrow instead");
+					}
 					return new CastExpression.non_null (inner, get_src (begin));
 				}
 				break;

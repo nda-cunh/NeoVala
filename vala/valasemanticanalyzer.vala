@@ -179,7 +179,98 @@ public class Vala.SemanticAnalyzer : CodeVisitor {
 	// for the whole execution of CodeNode.accept
 	public List<CodeNode> replaced_nodes = new ArrayList<CodeNode> ();
 
+	// symbols currently proven non-null by flow narrowing (e.g. inside
+	// `if (x != null) { ... }`); consulted by MemberAccess to relax the
+	// nullable value type of a narrowed local/parameter/field read
+	HashSet<Symbol> flow_non_null = new HashSet<Symbol> (direct_hash, direct_equal);
+
 	public SemanticAnalyzer () {
+	}
+
+	/**
+	 * Whether the given symbol is currently proven non-null by flow narrowing.
+	 */
+	public bool is_flow_non_null (Symbol sym) {
+		return flow_non_null.contains (sym);
+	}
+
+	/**
+	 * Marks a symbol as non-null for the duration of a narrowed scope.
+	 * Returns true if it was newly added (caller must clear it afterwards).
+	 */
+	public bool flow_non_null_add (Symbol sym) {
+		return flow_non_null.add (sym);
+	}
+
+	public void flow_non_null_remove (Symbol sym) {
+		flow_non_null.remove (sym);
+	}
+
+	/**
+	 * Collects the symbols proven non-null when the given condition evaluates
+	 * to `positive`. Handles `x != null` / `x == null`, `&&`, `||` and `!`.
+	 */
+	public static void collect_non_null_symbols (Expression condition, bool positive, Collection<Symbol> result) {
+		unowned BinaryExpression? binary = condition as BinaryExpression;
+		if (binary != null) {
+			if ((positive && binary.operator == BinaryOperator.INEQUALITY)
+			    || (!positive && binary.operator == BinaryOperator.EQUALITY)) {
+				unowned Symbol? sym = null;
+				if (binary.left is NullLiteral) {
+					sym = symbol_of_narrowable (binary.right);
+				} else if (binary.right is NullLiteral) {
+					sym = symbol_of_narrowable (binary.left);
+				}
+				if (sym != null) {
+					result.add (sym);
+				}
+				return;
+			}
+			if ((positive && binary.operator == BinaryOperator.AND)
+			    || (!positive && binary.operator == BinaryOperator.OR)) {
+				collect_non_null_symbols (binary.left, positive, result);
+				collect_non_null_symbols (binary.right, positive, result);
+				return;
+			}
+			return;
+		}
+
+		unowned UnaryExpression? unary = condition as UnaryExpression;
+		if (unary != null && unary.operator == UnaryOperator.LOGICAL_NEGATION) {
+			collect_non_null_symbols (unary.inner, !positive, result);
+		}
+	}
+
+	/**
+	 * Whether the given statement always transfers control out of the
+	 * current block (used for the `if (x == null) return;` narrowing pattern).
+	 */
+	public static bool block_always_exits (Statement stmt) {
+		if (stmt is ReturnStatement || stmt is ThrowStatement
+		    || stmt is BreakStatement || stmt is ContinueStatement) {
+			return true;
+		}
+		unowned Block? block = stmt as Block;
+		if (block != null) {
+			var stmts = block.get_statements ();
+			if (stmts.size > 0) {
+				return block_always_exits (stmts[stmts.size - 1]);
+			}
+		}
+		return false;
+	}
+
+	// a narrowable operand is a simple reference to a local/parameter/field
+	static unowned Symbol? symbol_of_narrowable (Expression expr) {
+		unowned MemberAccess? ma = expr as MemberAccess;
+		if (ma == null) {
+			return null;
+		}
+		unowned Symbol? sym = ma.symbol_reference;
+		if (sym is LocalVariable || sym is Parameter || sym is Field) {
+			return sym;
+		}
+		return null;
 	}
 
 	/**

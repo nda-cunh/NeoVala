@@ -62,6 +62,14 @@ public class Vala.CodeContext {
 	public bool experimental_non_null { get; set; }
 
 	/**
+	 * Whether strict non-null type checking is in effect. Always on under
+	 * the POSIX profile, otherwise gated by --enable-experimental-non-null.
+	 */
+	public bool nonnull_types {
+		get { return experimental_non_null || profile == Profile.POSIX; }
+	}
+
+	/**
 	 * Enable GObject creation tracing.
 	 */
 	public bool gobject_tracing { get; set; }
