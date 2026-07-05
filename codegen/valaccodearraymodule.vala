@@ -579,7 +579,14 @@ public class Vala.CCodeArrayModule : CCodeMethodCallModule {
 		function.add_parameter (new CCodeParameter ("length", get_ccode_name (ssize_t_type)));
 		if (array_type.element_type is GenericType) {
 			// dup function array elements
-			function.add_parameter (new CCodeParameter (get_ccode_copy_function (((GenericType) array_type.element_type).type_parameter), "GBoxedCopyFunc"));
+			if (context.profile == Profile.POSIX) {
+				// POSIX threads the whole t_TypeInfo*; the body references
+				// g_typeinfo->dup (see get_dup_func_expression).
+				emit_supra_typeinfo_decl ();
+				function.add_parameter (new CCodeParameter ("g_typeinfo", "const t_TypeInfo*"));
+			} else {
+				function.add_parameter (new CCodeParameter (get_ccode_copy_function (((GenericType) array_type.element_type).type_parameter), "GBoxedCopyFunc"));
+			}
 		}
 
 		// definition

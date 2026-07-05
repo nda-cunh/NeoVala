@@ -4992,7 +4992,14 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 				ccall.add_argument (get_array_length_cvalue (value));
 
 				if (array_type.element_type is GenericType) {
-					var elem_dupexpr = get_dup_func_expression (array_type.element_type, node.source_reference);
+					CCodeExpression? elem_dupexpr;
+					if (context.profile == Profile.POSIX) {
+						// POSIX passes the whole t_TypeInfo*; the wrapper body
+						// dereferences g_typeinfo->dup itself.
+						elem_dupexpr = get_supra_typeinfo_expression ((GenericType) array_type.element_type);
+					} else {
+						elem_dupexpr = get_dup_func_expression (array_type.element_type, node.source_reference);
+					}
 					if (elem_dupexpr == null) {
 						elem_dupexpr = new CCodeConstant ("NULL");
 					}
