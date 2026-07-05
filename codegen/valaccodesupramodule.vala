@@ -1003,6 +1003,18 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		}
 	}
 
+	// Signal storage / teardown hooks, filled in by CCodeSupraSignalModule.
+	// Kept here (empty) so the class object model owns the struct layout and
+	// finalize body while the signal machinery lives in its own chain link.
+	protected virtual void append_supra_signal_fields (Class cl, CCodeStruct instance_struct, CCodeFile decl_space) {
+	}
+
+	protected virtual void emit_supra_signal_finalize (Class cl) {
+	}
+
+	protected virtual void emit_supra_signal_init (Class cl) {
+	}
+
 	private void generate_private_struct_declaration (Class cl, CCodeFile decl_space) {
 		if (!cl.has_private_fields && !cl.has_type_parameters ()) {
 			return;
@@ -1076,6 +1088,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				struct_public.add_field ("struct s_%sPrivate*".printf(cname), "priv");
 				struct_public.add_field ("_Alignas(max_align_t) char", "_priv[sizeof(%s)]".printf(sb.str));
 			}
+			append_supra_signal_fields (cl, struct_public, decl_space);
 			decl_space.add_type_declaration (new CCodeTypeDefinition ("struct _%s".printf (cname), new CCodeVariableDeclarator (cname)));
 			decl_space.add_type_definition (struct_public);
 		}
@@ -1138,6 +1151,8 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				ccode.add_expression (destroy_field (f, instance));
 			}
 		}
+
+		emit_supra_signal_finalize (cl);
 
 		if (cl.base_class != null) {
 			var parent_cname_lower = get_ccode_lower_case_name (cl.base_class);
@@ -1333,6 +1348,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				ccode.add_assignment (field_access, new CCodeConstant ("0"));
 			}
 		}
+		emit_supra_signal_init (cl);
 	}
 
 

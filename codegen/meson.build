@@ -13,6 +13,7 @@ valacodegen_sources = files(
 	'valaccodestructmodule.vala',
 	'valaccodesupraerrormodule.vala',
     'valaccodesupramodule.vala',
+	'valaccodesuprasignalmodule.vala',
 	'valaccodesupragenericmodule.vala',
 	'valaclassregisterfunction.vala',
 	'valactype.vala',

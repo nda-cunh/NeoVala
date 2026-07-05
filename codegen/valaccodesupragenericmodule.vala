@@ -8,7 +8,7 @@
 
 using Vala;
 
-public class Vala.CCodeSupraGenericModule : CCodeSupraModule {
+public class Vala.CCodeSupraGenericModule : CCodeSupraSignalModule {
 
 	// Build a fat pointer for a constrained erased generic from the witness
 	// vtable threaded in alongside the t_TypeInfo: (IFoo){ (void*) g, g_witness }.
