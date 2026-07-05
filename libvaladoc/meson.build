@@ -1,4 +1,15 @@
 libvaladoc_sources = files(
+	'ctyperesolver.vala',
+	'devhelp-markupwriter.vala',
+	'doclet.vala',
+	'errorreporter.vala',
+	'filehelper.vala',
+	'gtkdocmarkupwriter.vala',
+	'gtkdocrenderer.vala',
+	'gvc-compat.c',
+	'markupwriter.vala',
+	'moduleloader.vala',
+	'settings.vala',
 	'api/array.vala',
 	'api/attribute.vala',
 	'api/callable.vala',
@@ -116,17 +127,6 @@ libvaladoc_sources = files(
 	'taglets/tagletsee.vala',
 	'taglets/tagletsince.vala',
 	'taglets/tagletthrows.vala',
-	'ctyperesolver.vala',
-	'devhelp-markupwriter.vala',
-	'doclet.vala',
-	'errorreporter.vala',
-	'filehelper.vala',
-	'gtkdocmarkupwriter.vala',
-	'gtkdocrenderer.vala',
-	'gvc-compat.c',
-	'markupwriter.vala',
-	'moduleloader.vala',
-	'settings.vala',
 )
 
 libvaladoc_lib = library(

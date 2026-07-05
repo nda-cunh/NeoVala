@@ -307,7 +307,6 @@ vapis = files(
 	'webkitgtk-web-extension-6.0.deps',
 	'webkitgtk-web-process-extension-6.0.vapi',
 	'webkitgtk-web-process-extension-6.0.deps',
-	'xtst.vapi',
 	'x11.vapi',
 	'xcb.vapi',
 	'xcb-icccm.vapi',

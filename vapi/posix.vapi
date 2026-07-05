@@ -54,6 +54,23 @@ public struct char {
 	public inline string to_string () {
 		return "%c".printf (this);
 	}
+	[CCode (cname = "isascii", cheader_filename = "ctype.h")]
+	public bool is_ascii ();
+	[CCode (cname = "isprint", cheader_filename = "ctype.h")]
+	public bool is_print ();
+	[CCode (cname = "isgraph", cheader_filename = "ctype.h")]
+	public bool is_graph ();
+	[CCode (cname = "isalpha", cheader_filename = "ctype.h")]
+	public bool is_alpha ();
+	[CCode (cname = "isdigit", cheader_filename = "ctype.h")]
+	public bool is_digit ();
+	[CCode (cname = "isalnum", cheader_filename = "ctype.h")]
+	public bool is_alnum ();
+
+	[CCode (cname = "tolower", cheader_filename = "ctype.h")]
+	public char to_lower ();
+	[CCode (cname = "toupper", cheader_filename = "ctype.h")]
+	public char to_upper ();
 }
 
 [CCode (cname = "unsigned char", default_value = "\'\\0\'")]
@@ -255,6 +272,12 @@ public struct time_t {
 }
 
 [SimpleType]
+[IntegerType (rank = 9)]
+[CCode (cname = "const void*", has_type_id = false, default_value = "((const void*) 0)")]
+public struct Type {
+}
+
+[SimpleType]
 [CCode (cheader_filename = "stdarg.h", cprefix = "va_", has_type_id = false, destroy_function = "va_end", lvalue_access = false)]
 public struct va_list {
 	[CCode (cname = "va_start")]
@@ -267,7 +290,7 @@ public struct va_list {
 
 [Compact]
 [Immutable]
-[CCode (cname = "char", const_cname = "const char", copy_function = "strdup", free_function = "free", cheader_filename = "stdlib.h,string.h")]
+[CCode (cname = "char", const_cname = "char", copy_function = "strdup", free_function = "free", cheader_filename = "stdlib.h,string.h")]
 public class string {
 	[PrintfFormat]
 	public string printf (...);
@@ -299,6 +322,14 @@ public class string {
 [CCode (cname="printf", cheader_filename = "stdio.h")]
 [PrintfFormat]
 public void print (string format,...);
+
+[Compact]
+[ErrorBase]
+[CCode (cname = "t_vala_Error")]
+public class Error {
+	public int code;
+	public string message;
+}
 
 #endif
 

@@ -2,12 +2,12 @@
 option('valadoc', type: 'boolean', value : true,
 	description : 'Enable build of libvaladoc and valadoc')
 
-# Tests
-option('tests', type: 'boolean', value: false,
-  description : 'Build tests')
-
 # Documentation
 option('documentation', type: 'boolean', value: false,
 	description : 'Build API reference and tools documentation')
 option('manpages', type: 'boolean', value: false,
 	description : 'Build man pages for installed tools')
+
+# Tests
+option('tests', type: 'boolean', value: false,
+	description : 'Build tests')
