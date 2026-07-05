@@ -38,6 +38,7 @@ public class Vala.IntegerType : ValueType {
 	public override DataType copy () {
 		var result = new IntegerType ((Struct) type_symbol, literal_value, literal_type_name, source_reference);
 		result.value_owned = value_owned;
+		result.is_weak_ref = is_weak_ref;
 		result.nullable = nullable;
 		return result;
 	}

@@ -479,6 +479,7 @@ public class Vala.SymbolResolver : CodeVisitor {
 		type.source_reference = unresolved_type.source_reference;
 		type.value_owned = unresolved_type.value_owned;
 		type.nullable = unresolved_type.nullable;
+		type.is_weak_ref = unresolved_type.is_weak_ref;
 		sym.used = true;
 
 		type.is_dynamic = unresolved_type.is_dynamic;

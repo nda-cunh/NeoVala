@@ -154,6 +154,7 @@ public enum Vala.TokenType {
 	VOID,
 	VOLATILE,
 	WEAK,
+	WEAKREF,
 	WHILE,
 	WITH,
 	YIELD;
@@ -290,6 +291,7 @@ public enum Vala.TokenType {
 		case VOID: return "`void'";
 		case VOLATILE: return "`volatile'";
 		case WEAK: return "`weak'";
+		case WEAKREF: return "`weakref'";
 		case WHILE: return "`while'";
 		case WITH: return "`with'";
 		case YIELD: return "`yield'";

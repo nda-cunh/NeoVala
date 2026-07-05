@@ -178,6 +178,8 @@ public class Vala.ArrayType : ReferenceType {
 		}
 
 		result.value_owned = value_owned;
+
+		result.is_weak_ref = is_weak_ref;
 		result.nullable = nullable;
 		result.floating_reference = floating_reference;
 

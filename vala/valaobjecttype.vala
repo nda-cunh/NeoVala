@@ -43,6 +43,7 @@ public class Vala.ObjectType : ReferenceType {
 		var result = new ObjectType (object_type_symbol);
 		result.source_reference = source_reference;
 		result.value_owned = value_owned;
+		result.is_weak_ref = is_weak_ref;
 		result.nullable = nullable;
 		result.is_dynamic = is_dynamic;
 		result.floating_reference = floating_reference;

@@ -35,6 +35,12 @@ public abstract class Vala.DataType : CodeNode {
 	public bool value_owned { get; set; }
 
 	/**
+	 * Specifies that the reference is an auto-nulling weak reference
+	 * (the `weakref` soft keyword, POSIX profile). Implies !value_owned.
+	 */
+	public bool is_weak_ref { get; set; }
+
+	/**
 	 * Specifies that the expression may be null.
 	 */
 	public bool nullable { get; set; }

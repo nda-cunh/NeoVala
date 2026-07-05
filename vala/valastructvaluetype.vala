@@ -60,6 +60,7 @@ public class Vala.StructValueType : ValueType {
 	public override DataType copy () {
 		var result = new StructValueType ((Struct) type_symbol, source_reference);
 		result.value_owned = value_owned;
+		result.is_weak_ref = is_weak_ref;
 		result.nullable = nullable;
 
 		foreach (DataType arg in get_type_arguments ()) {

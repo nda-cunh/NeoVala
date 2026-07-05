@@ -46,6 +46,7 @@ public class Vala.GenericType : DataType {
 		var result = new GenericType (type_parameter);
 		result.source_reference = source_reference;
 		result.value_owned = value_owned;
+		result.is_weak_ref = is_weak_ref;
 		result.nullable = nullable;
 		result.floating_reference = floating_reference;
 

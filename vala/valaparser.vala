@@ -310,6 +310,7 @@ public class Vala.Parser : CodeVisitor {
 		case TokenType.VOID:
 		case TokenType.VOLATILE:
 		case TokenType.WEAK:
+		case TokenType.WEAKREF:
 		case TokenType.WHILE:
 		case TokenType.WITH:
 		case TokenType.YIELD:
@@ -480,6 +481,7 @@ public class Vala.Parser : CodeVisitor {
 		accept (TokenType.OWNED);
 		accept (TokenType.UNOWNED);
 		accept (TokenType.WEAK);
+		accept (TokenType.WEAKREF);
 
 		if (is_inner_array_type ()) {
 			expect (TokenType.OPEN_PARENS);
@@ -529,6 +531,7 @@ public class Vala.Parser : CodeVisitor {
 		bool is_dynamic = accept (TokenType.DYNAMIC);
 
 		bool value_owned = owned_by_default;
+		bool is_weak_ref = false;
 
 		if (require_unowned) {
 			expect (TokenType.UNOWNED);
@@ -536,8 +539,16 @@ public class Vala.Parser : CodeVisitor {
 			if (owned_by_default) {
 				if (accept (TokenType.UNOWNED)) {
 					value_owned = false;
+				} else if (accept (TokenType.WEAKREF)) {
+					if (context.profile != Profile.POSIX) {
+						Report.error (get_last_src (), "`weakref' is only supported in the POSIX profile");
+					}
+					value_owned = false;
+					is_weak_ref = true;
 				} else if (accept (TokenType.WEAK)) {
-					if (!can_weak_ref && !context.deprecated) {
+					if (context.profile == Profile.POSIX) {
+						Report.error (get_last_src (), "`weak' is not supported in the POSIX profile, use `unowned' or `weakref'");
+					} else if (!can_weak_ref && !context.deprecated) {
 						Report.warning (get_last_src (), "deprecated syntax, use `unowned` modifier");
 					}
 					value_owned = false;
@@ -635,6 +646,7 @@ public class Vala.Parser : CodeVisitor {
 
 		type.is_dynamic = is_dynamic;
 		type.value_owned = value_owned;
+		type.is_weak_ref = is_weak_ref;
 		return type;
 	}
 

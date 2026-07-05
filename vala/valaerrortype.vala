@@ -91,6 +91,7 @@ public class Vala.ErrorType : ReferenceType {
 	public override DataType copy () {
 		var result = new ErrorType (error_domain, error_code, source_reference);
 		result.value_owned = value_owned;
+		result.is_weak_ref = is_weak_ref;
 		result.nullable = nullable;
 		result.dynamic_error = dynamic_error;
 

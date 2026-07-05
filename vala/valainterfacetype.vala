@@ -43,6 +43,7 @@ public class Vala.InterfaceType : ReferenceType {
 		var result = new InterfaceType (interface_symbol, source_reference);
 		result.source_reference = source_reference;
 		result.value_owned = value_owned;
+		result.is_weak_ref = is_weak_ref;
 		result.nullable = nullable;
 		result.is_dynamic = is_dynamic;
 		result.floating_reference = floating_reference;

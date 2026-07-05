@@ -1015,6 +1015,18 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 	protected virtual void emit_supra_signal_init (Class cl) {
 	}
 
+	// Weak-reference (weakref) storage / teardown hooks, filled in by
+	// CCodeSupraWeakRefModule. The target-side registration list lives on the
+	// root class only; the finalize hook nulls every registered slot.
+	protected virtual void append_supra_weakref_field (Class cl, CCodeStruct instance_struct, CCodeFile decl_space) {
+	}
+
+	protected virtual void emit_supra_weakref_finalize (Class cl) {
+	}
+
+	protected virtual void emit_supra_weakref_init (Class cl) {
+	}
+
 	private void generate_private_struct_declaration (Class cl, CCodeFile decl_space) {
 		if (!cl.has_private_fields && !cl.has_type_parameters ()) {
 			return;
@@ -1089,6 +1101,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				struct_public.add_field ("_Alignas(max_align_t) char", "_priv[sizeof(%s)]".printf(sb.str));
 			}
 			append_supra_signal_fields (cl, struct_public, decl_space);
+			append_supra_weakref_field (cl, struct_public, decl_space);
 			decl_space.add_type_declaration (new CCodeTypeDefinition ("struct _%s".printf (cname), new CCodeVariableDeclarator (cname)));
 			decl_space.add_type_definition (struct_public);
 		}
@@ -1153,6 +1166,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		}
 
 		emit_supra_signal_finalize (cl);
+		emit_supra_weakref_finalize (cl);
 
 		if (cl.base_class != null) {
 			var parent_cname_lower = get_ccode_lower_case_name (cl.base_class);
@@ -1349,6 +1363,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			}
 		}
 		emit_supra_signal_init (cl);
+		emit_supra_weakref_init (cl);
 	}
 
 
@@ -1677,12 +1692,12 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		decl_space.add_function_declaration (ref_func);
 	}
 
-}
-
-private unowned Vala.Class get_root_class (Vala.Class cl) {
-	unowned Vala.Class root = cl;
-	while (root.base_class != null) {
-		root = root.base_class;
+	protected unowned Vala.Class get_root_class (Vala.Class cl) {
+		unowned Vala.Class root = cl;
+		while (root.base_class != null) {
+			root = root.base_class;
+		}
+		return root;
 	}
-	return root;
+
 }

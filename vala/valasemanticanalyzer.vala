@@ -286,6 +286,7 @@ public class Vala.SemanticAnalyzer : CodeVisitor {
 			var type = f.variable_type.copy ();
 			if (!lvalue) {
 				type.value_owned = false;
+				type.is_weak_ref = false;
 			}
 			return type;
 		} else if (sym is EnumValue) {
@@ -309,6 +310,7 @@ public class Vala.SemanticAnalyzer : CodeVisitor {
 			var type = p.variable_type.copy ();
 			if (!lvalue) {
 				type.value_owned = false;
+				type.is_weak_ref = false;
 			}
 			return type;
 		} else if (sym is LocalVariable) {
@@ -316,6 +318,7 @@ public class Vala.SemanticAnalyzer : CodeVisitor {
 			var type = local.variable_type.copy ();
 			if (!lvalue) {
 				type.value_owned = false;
+				type.is_weak_ref = false;
 			}
 			return type;
 		} else if (sym is Method) {
