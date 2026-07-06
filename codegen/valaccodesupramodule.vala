@@ -214,6 +214,10 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 			vtable_struct.add_field (get_ccode_name (m.return_type),
 				"(*%s)(%s)".printf (get_ccode_vfunc_name (m), interface_vfunc_signature (m)));
 		}
+		foreach (Method m in interface_property_methods (iface)) {
+			vtable_struct.add_field (get_ccode_name (m.return_type),
+				"(*%s)(%s)".printf (get_ccode_vfunc_name (m), interface_vfunc_signature (m)));
+		}
 		decl_space.add_type_definition (vtable_struct);
 
 		// fat pointer type
@@ -233,6 +237,31 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 			}
 			decl_space.add_function_declaration (interface_dispatch_function (iface, m));
 		}
+		foreach (Method m in interface_property_methods (iface)) {
+			decl_space.add_function_declaration (interface_dispatch_function (iface, m));
+		}
+	}
+
+	private Vala.List<Method> interface_property_methods (Interface iface) {
+		var methods = new ArrayList<Method> ();
+		foreach (Property prop in iface.get_properties ()) {
+			if (prop.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+			if (prop.get_accessor != null) {
+				var m = prop.get_accessor.get_method ();
+				if (m != null) {
+					methods.add (m);
+				}
+			}
+			if (prop.set_accessor != null) {
+				var m = prop.set_accessor.get_method ();
+				if (m != null) {
+					methods.add (m);
+				}
+			}
+		}
+		return methods;
 	}
 
 	// The instance is always passed as void* (the fat pointer's self member).
@@ -259,10 +288,17 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 
 	// ifoo_method (IFoo* self, ...) { return self->vtable->method (self->self, ...); }
 	private void generate_interface_dispatch_wrappers (Interface iface) {
+		var dispatch_methods = new ArrayList<Method> ();
 		foreach (Method m in iface.get_methods ()) {
 			if (m.binding != MemberBinding.INSTANCE) {
 				continue;
 			}
+			dispatch_methods.add (m);
+		}
+		foreach (Method m in interface_property_methods (iface)) {
+			dispatch_methods.add (m);
+		}
+		foreach (Method m in dispatch_methods) {
 			var func = interface_dispatch_function (iface, m);
 			push_function (func);
 
@@ -362,8 +398,83 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 			}
 		}
 
+		foreach (Property iprop in iface.get_properties ()) {
+			if (iprop.binding != MemberBinding.INSTANCE) {
+				continue;
+			}
+			Property? impl = find_interface_property_implementation (cl, iprop);
+			if (iprop.get_accessor != null) {
+				emit_interface_vtable_accessor_entry (iprop.get_accessor,
+					impl != null ? impl.get_accessor : null, iface, membres, ref first);
+			}
+			if (iprop.set_accessor != null) {
+				emit_interface_vtable_accessor_entry (iprop.set_accessor,
+					impl != null ? impl.set_accessor : null, iface, membres, ref first);
+			}
+		}
+
 		string ligne = "const t_%sVtable %s = {\n\t\t%s\n};\n".printf (iface_name, vtable_var, membres.str);
 		cfile.add_type_member_declaration (new CCodeIdentifier (ligne));
+	}
+
+	private void emit_interface_vtable_accessor_entry (PropertyAccessor iface_acc, PropertyAccessor? impl_acc, Interface iface, StringBuilder membres, ref bool first) {
+		var im = iface_acc.get_method ();
+		if (im == null) {
+			return;
+		}
+		if (!first) {
+			membres.append (",\n\t\t");
+		}
+		first = false;
+
+		string cast = "(%s (*)(%s)) ".printf (get_ccode_name (im.return_type), interface_vfunc_signature (im));
+		membres.append (".%s = ".printf (get_ccode_vfunc_name (im)));
+
+		if (impl_acc != null) {
+			membres.append ("%s%s".printf (cast, get_ccode_real_name (impl_acc)));
+			forward_declare_supra_real_accessor (impl_acc, iface);
+		} else if (!iface_acc.prop.is_abstract && iface_acc.body != null) {
+			membres.append ("%s%s".printf (cast, interface_default_impl_name (iface, im)));
+			cfile.add_function_declaration (interface_default_impl_function (iface, im));
+		} else {
+			membres.append ("NULL");
+		}
+	}
+
+	private void forward_declare_supra_real_accessor (PropertyAccessor acc, Interface iface) {
+		var prop = (Property) acc.prop;
+		bool returns_real_struct = acc.readable && prop.property_type.is_real_non_null_struct_type ();
+		string ret = (acc.readable && !returns_real_struct) ? get_ccode_name (acc.value_type) : "void";
+		var func = new CCodeFunction (get_ccode_real_name (acc), ret);
+		func.modifiers |= CCodeModifiers.STATIC;
+		var base_type = new ObjectType ((ObjectTypeSymbol) iface);
+		func.add_parameter (new CCodeParameter ("base", get_ccode_name (base_type)));
+		if (returns_real_struct) {
+			func.add_parameter (new CCodeParameter ("result", "%s *".printf (get_ccode_name (acc.value_type))));
+		} else if (!acc.readable && prop.property_type.is_real_non_null_struct_type ()) {
+			func.add_parameter (new CCodeParameter ("value", "%s *".printf (get_ccode_name (acc.value_type))));
+		} else if (acc.writable || acc.construction) {
+			func.add_parameter (new CCodeParameter ("value", get_ccode_name (acc.value_type)));
+		}
+		cfile.add_function_declaration (func);
+	}
+
+	private Property? find_interface_property_implementation (Class cl, Property iface_prop) {
+		for (unowned Class? c = cl; c != null; c = c.base_class) {
+			foreach (Property p in c.get_properties ()) {
+				if (p.base_interface_property == iface_prop) {
+					return p;
+				}
+			}
+		}
+		for (unowned Class? c = cl; c != null; c = c.base_class) {
+			foreach (Property p in c.get_properties ()) {
+				if (p.name == iface_prop.name) {
+					return p;
+				}
+			}
+		}
+		return null;
 	}
 
 	// Find the class method that implements an interface method, walking up the
