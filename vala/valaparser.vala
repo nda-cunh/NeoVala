@@ -2072,7 +2072,16 @@ public class Vala.Parser : CodeVisitor {
 		var begin = get_location ();
 		DataType variable_type;
 		bool is_dynamic = accept (TokenType.DYNAMIC);
-		if (accept (TokenType.UNOWNED) && accept (TokenType.VAR)) {
+		bool is_weak_ref = accept (TokenType.WEAKREF);
+		if (is_weak_ref && accept (TokenType.VAR)) {
+			if (context.profile != Profile.POSIX) {
+				Report.error (get_last_src (), "`weakref' is only supported in the POSIX profile");
+			}
+			variable_type = new VarType (false);
+			variable_type.is_weak_ref = true;
+			variable_type.nullable = accept (TokenType.INTERR);
+			variable_type.is_dynamic = is_dynamic;
+		} else if (!is_weak_ref && accept (TokenType.UNOWNED) && accept (TokenType.VAR)) {
 			variable_type = new VarType (false);
 			variable_type.nullable = accept (TokenType.INTERR);
 			variable_type.is_dynamic = is_dynamic;

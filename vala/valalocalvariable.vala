@@ -158,6 +158,7 @@ public class Vala.LocalVariable : Variable {
 			bool nullable = variable_type.nullable;
 			bool value_owned = variable_type.value_owned;
 			bool is_dynamic = variable_type.is_dynamic;
+			bool is_weak_ref = variable_type.is_weak_ref;
 			variable_type = initializer.value_type.copy ();
 			variable_type.value_owned = value_owned;
 			variable_type.floating_reference = false;
@@ -166,6 +167,10 @@ public class Vala.LocalVariable : Variable {
 			}
 			if (is_dynamic) {
 				variable_type.is_dynamic = true;
+			}
+			if (is_weak_ref) {
+				variable_type.is_weak_ref = true;
+				variable_type.nullable = true;
 			}
 
 			initializer.target_type = variable_type;
