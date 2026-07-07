@@ -2168,6 +2168,22 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		store_parameter (param, value, true);
 	}
 
+	void emit_posix_closure_atomic_helpers () {
+		if (!add_wrapper ("vala_atomic")) {
+			return;
+		}
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"""#ifdef _MSC_VER
+#include <intrin.h>
+static inline int vala_atomic_inc (int* p) { return _InterlockedIncrement ((long volatile*) p); }
+static inline int vala_atomic_dec_and_test (int* p) { return _InterlockedDecrement ((long volatile*) p) == 0; }
+#else
+static inline int vala_atomic_inc (int* p) { return __atomic_add_fetch (p, 1, __ATOMIC_SEQ_CST); }
+static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch (p, 1, __ATOMIC_SEQ_CST) == 0; }
+#endif
+"""));
+	}
+
 	public override void visit_block (Block b) {
 		emit_context.push_symbol (b);
 
@@ -2213,7 +2229,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 					data.add_field (get_ccode_name (this_type), "self");
 				}
 
-				if (current_method != null) {
+				if (current_method != null && context.profile != Profile.POSIX) {
 					// allow capturing generic type parameters
 					foreach (var type_param in current_method.get_type_parameters ()) {
 						data.add_field ("GType", get_ccode_type_id (type_param));
@@ -2247,8 +2263,17 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 				}
 			}
 
-			var data_alloc = new CCodeFunctionCall (new CCodeIdentifier ("g_slice_new0"));
-			data_alloc.add_argument (new CCodeIdentifier (struct_name));
+			CCodeFunctionCall data_alloc;
+			if (context.profile == Profile.POSIX) {
+				data_alloc = new CCodeFunctionCall (new CCodeIdentifier ("calloc"));
+				data_alloc.add_argument (new CCodeConstant ("1"));
+				var sizeof_call = new CCodeFunctionCall (new CCodeIdentifier ("sizeof"));
+				sizeof_call.add_argument (new CCodeIdentifier (struct_name));
+				data_alloc.add_argument (sizeof_call);
+			} else {
+				data_alloc = new CCodeFunctionCall (new CCodeIdentifier ("g_slice_new0"));
+				data_alloc.add_argument (new CCodeIdentifier (struct_name));
+			}
 
 			if (is_in_coroutine ()) {
 				closure_struct.add_field (struct_name + "*", "_data%d_".printf (block_id));
@@ -2287,7 +2312,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 					ccode.add_assignment (new CCodeMemberAccess.pointer (get_variable_cexpression ("_data%d_".printf (block_id)), "self"), instance);
 				}
 
-				if (current_method != null) {
+				if (current_method != null && context.profile != Profile.POSIX) {
 					// allow capturing generic type parameters
 					var data_var = get_variable_cexpression ("_data%d_".printf (block_id));
 					foreach (var type_param in current_method.get_type_parameters ()) {
@@ -2348,7 +2373,10 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 
 			push_function (ref_fun);
 
-			var ccall = new CCodeFunctionCall (new CCodeIdentifier ("g_atomic_int_inc"));
+			if (context.profile == Profile.POSIX) {
+				emit_posix_closure_atomic_helpers ();
+			}
+			var ccall = new CCodeFunctionCall (new CCodeIdentifier (context.profile == Profile.POSIX ? "vala_atomic_inc" : "g_atomic_int_inc"));
 			ccall.add_argument (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeMemberAccess.pointer (new CCodeIdentifier ("_data%d_".printf (block_id)), "_ref_count_")));
 			ccode.add_expression (ccall);
 			ccode.add_return (new CCodeIdentifier ("_data%d_".printf (block_id)));
@@ -2365,7 +2393,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 			push_function (unref_fun);
 
 			ccode.add_declaration (struct_name + "*", new CCodeVariableDeclarator ("_data%d_".printf (block_id), new CCodeCastExpression (new CCodeIdentifier ("_userdata_"), struct_name + "*")));
-			ccall = new CCodeFunctionCall (new CCodeIdentifier ("g_atomic_int_dec_and_test"));
+			ccall = new CCodeFunctionCall (new CCodeIdentifier (context.profile == Profile.POSIX ? "vala_atomic_dec_and_test" : "g_atomic_int_dec_and_test"));
 			ccall.add_argument (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeMemberAccess.pointer (new CCodeIdentifier ("_data%d_".printf (block_id)), "_ref_count_")));
 			ccode.open_if (ccall);
 
@@ -2387,7 +2415,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 				ccode.add_assignment (new CCodeIdentifier ("self"), new CCodeMemberAccess.pointer (outer_block, "self"));
 			}
 
-			if (current_method != null) {
+			if (current_method != null && context.profile != Profile.POSIX) {
 				// assign captured generic type parameters
 				foreach (var type_param in current_method.get_type_parameters ()) {
 					var type = get_ccode_type_id (type_param);
@@ -2485,9 +2513,15 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 				}
 			}
 
-			var data_free = new CCodeFunctionCall (new CCodeIdentifier ("g_slice_free"));
-			data_free.add_argument (new CCodeIdentifier (struct_name));
-			data_free.add_argument (new CCodeIdentifier ("_data%d_".printf (block_id)));
+			CCodeFunctionCall data_free;
+			if (context.profile == Profile.POSIX) {
+				data_free = new CCodeFunctionCall (new CCodeIdentifier ("free"));
+				data_free.add_argument (new CCodeIdentifier ("_data%d_".printf (block_id)));
+			} else {
+				data_free = new CCodeFunctionCall (new CCodeIdentifier ("g_slice_free"));
+				data_free.add_argument (new CCodeIdentifier (struct_name));
+				data_free.add_argument (new CCodeIdentifier ("_data%d_".printf (block_id)));
+			}
 			ccode.add_expression (data_free);
 
 			ccode.close ();
