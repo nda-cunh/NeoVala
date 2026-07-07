@@ -370,6 +370,11 @@ public class Vala.Assignment : Expression {
 				}
 			}
 
+			if (context.analyzer.is_flow_non_null (ma.symbol_reference)
+			    && (right.value_type == null || right.value_type.nullable)) {
+				context.analyzer.flow_non_null_remove (ma.symbol_reference);
+			}
+
 			if (left.value_type != null && right.value_type != null) {
 				/* if there was an error on either side,
 				 * i.e. {left|right}.value_type == null, skip type check */
