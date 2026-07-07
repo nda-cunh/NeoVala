@@ -81,6 +81,8 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 				new_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 				init_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 			}
+			add_supra_error_param (new_func, m);
+			add_supra_error_param (init_func, m);
 			decl_space.add_function_declaration (new_func);
 			decl_space.add_function_declaration (init_func);
 		}
@@ -947,6 +949,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				foreach (Parameter param in m.get_parameters()) {
 					func.add_parameter(new CCodeParameter(param.name, get_ccode_name(param.variable_type)));
 				}
+				add_supra_error_param (func, m);
 				decl_space.add_function_declaration(func);
 				return true;
 			}
@@ -1329,6 +1332,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		foreach (var param in m.get_parameters()) {
 			function_new.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 		}
+		add_supra_error_param (function_new, m);
 
 		push_function(function_new);
 		var alloc_call = new CCodeFunctionCall(new CCodeIdentifier("malloc"));
@@ -1344,7 +1348,24 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		foreach (var param in m.get_parameters()) {
 			init_call.add_argument (new CCodeIdentifier (param.name));
 		}
+		if (m.has_error_type_parameter ()) {
+			init_call.add_argument (new CCodeIdentifier ("error"));
+		}
 		ccode.add_expression(init_call);
+		// A throwing constructor: if _init set the error, drop the partially
+		// constructed object (finalize + free via _unref) and return NULL.
+		if (m.has_error_type_parameter ()) {
+			var err_set = new CCodeBinaryExpression (CCodeBinaryOperator.AND,
+				new CCodeBinaryExpression (CCodeBinaryOperator.INEQUALITY, new CCodeIdentifier ("error"), new CCodeConstant ("NULL")),
+				new CCodeBinaryExpression (CCodeBinaryOperator.INEQUALITY,
+					new CCodeUnaryExpression (CCodeUnaryOperator.POINTER_INDIRECTION, new CCodeIdentifier ("error")), new CCodeConstant ("NULL")));
+			ccode.open_if (err_set);
+			var unref_call = new CCodeFunctionCall (new CCodeIdentifier ("%s_unref".printf (prefix)));
+			unref_call.add_argument (new CCodeIdentifier ("self"));
+			ccode.add_expression (unref_call);
+			ccode.add_return (new CCodeConstant ("NULL"));
+			ccode.close ();
+		}
 		ccode.add_return(new CCodeIdentifier("self"));
 		pop_function();
 
@@ -1359,6 +1380,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		foreach (Parameter param in m.get_parameters ()) {
 			function_init.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
 		}
+		add_supra_error_param (function_init, m);
 
 		push_function (function_init);
 		var root_cl = get_root_class (cl);
@@ -1425,6 +1447,10 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			    && requires_destroy (param.variable_type)) {
 				ccode.add_expression (destroy_parameter (param));
 			}
+		}
+
+		if (current_method_inner_error) {
+			ccode.add_declaration (get_inner_error_ctype (), new CCodeVariableDeclarator.zero ("_inner_error%d_".printf (current_inner_error_id), new CCodeConstant ("NULL")));
 		}
 
 		pop_function ();

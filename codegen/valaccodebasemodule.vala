@@ -2186,11 +2186,11 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 					    && (!method_inner_error_var_count.contains (current_method)
 					    || method_inner_error_var_count.get (current_method) < current_inner_error_id)) {
 						// no initialization necessary, closure struct is zeroed
-						closure_struct.add_field ("GError*", "_inner_error%d_".printf (current_inner_error_id));
+						closure_struct.add_field (get_inner_error_ctype (), "_inner_error%d_".printf (current_inner_error_id));
 						method_inner_error_var_count.set (current_method, current_inner_error_id);
 					}
 				} else {
-					ccode.add_declaration ("GError*", new CCodeVariableDeclarator.zero ("_inner_error%d_".printf (current_inner_error_id), new CCodeConstant ("NULL")));
+					ccode.add_declaration (get_inner_error_ctype (), new CCodeVariableDeclarator.zero ("_inner_error%d_".printf (current_inner_error_id), new CCodeConstant ("NULL")));
 				}
 			}
 		}

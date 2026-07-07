@@ -118,7 +118,9 @@ static void _vala_error_free (t_vala_Error* e) {
 		append_out_param_free (current_method);
 
 		if (current_method is CreationMethod && current_method.parent_symbol is Class) {
-			ccode.add_return (new CCodeConstant ("NULL"));
+			// The supra `_init` is a void function; it signals failure through
+			// *error and its `_new` wrapper drops the half-built object.
+			ccode.add_return ();
 		} else {
 			return_default_value (current_return_type, true);
 		}
@@ -134,7 +136,7 @@ static void _vala_error_free (t_vala_Error* e) {
 		ccode.add_assignment (inner_error, new CCodeConstant ("NULL"));
 
 		if (current_method is CreationMethod && current_method.parent_symbol is Class) {
-			ccode.add_return (new CCodeConstant ("NULL"));
+			ccode.add_return ();
 		} else if (current_return_type != null && !(current_return_type is VoidType)) {
 			return_default_value (current_return_type, true);
 		} else if (current_method != null) {

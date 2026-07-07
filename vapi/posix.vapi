@@ -27,7 +27,7 @@
  *  Nikola Hadžić <nikola.hadzic.000@protonmail.com>
  */
 
-#if POSIX
+#if POSIX && !SUPRA
 [CCode (cname = "bool", cheader_filename = "stdbool.h", default_value = "false")]
 [BooleanType]
 public struct bool {
