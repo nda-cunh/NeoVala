@@ -6056,6 +6056,19 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			assert_not_reached ();
 		}
 
+		// void* arithmetic: cast to unsigned char* for standard byte-wise arithmetic
+		if ((expr.operator == BinaryOperator.PLUS || expr.operator == BinaryOperator.MINUS)
+		    && expr.left.value_type is PointerType
+		    && ((PointerType) expr.left.value_type).base_type is VoidType) {
+			var byte_ptr = new CCodeCastExpression (cleft, "unsigned char *");
+			if (expr.right.value_type is PointerType) {
+				// pointer - pointer: byte difference
+				set_cvalue (expr, new CCodeBinaryExpression (op, byte_ptr, new CCodeCastExpression (cright, "unsigned char *")));
+			} else {
+				set_cvalue (expr, new CCodeCastExpression (new CCodeBinaryExpression (op, byte_ptr, cright), "void *"));
+			}
+			return;
+		}
 		if (expr.operator == BinaryOperator.EQUALITY ||
 		    expr.operator == BinaryOperator.INEQUALITY) {
 			var left_type = expr.left.target_type;

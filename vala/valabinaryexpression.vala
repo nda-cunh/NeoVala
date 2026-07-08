@@ -408,22 +408,25 @@ public class Vala.BinaryExpression : Expression {
 			// check for pointer arithmetic
 			if (left.value_type is PointerType) {
 				unowned PointerType pointer_type = (PointerType) left.value_type;
-				if (pointer_type.base_type is VoidType) {
-					error = true;
-					Report.error (source_reference, "Pointer arithmetic not supported for `void*'");
-					return false;
-				}
-
 				unowned Struct? offset_type = right.value_type.type_symbol as Struct;
 				if (offset_type != null && offset_type.is_integer_type ()) {
 					if (operator == BinaryOperator.PLUS
 					    || operator == BinaryOperator.MINUS) {
 						// pointer arithmetic: pointer +/- offset
+						// (byte arithmetic for void*, GCC extension)
 						value_type = left.value_type.copy ();
+					} else if (pointer_type.base_type is VoidType) {
+						error = true;
+						Report.error (source_reference, "Pointer arithmetic not supported for `void*'");
+						return false;
 					}
 				} else if (right.value_type is PointerType) {
 					// pointer arithmetic: pointer - pointer
 					value_type = context.analyzer.size_t_type;
+				} else if (pointer_type.base_type is VoidType) {
+					error = true;
+					Report.error (source_reference, "Pointer arithmetic not supported for `void*'");
+					return false;
 				}
 			} else {
 				left.target_type.nullable = false;

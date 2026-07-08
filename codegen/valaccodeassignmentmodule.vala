@@ -36,6 +36,14 @@ public class Vala.CCodeAssignmentModule : CCodeMemberAccessModule {
 
 		if (assignment.operator == AssignmentOperator.SIMPLE) {
 			store_value (assignment.left.target_value, assignment.right.target_value, assignment.source_reference);
+		} else if ((assignment.operator == AssignmentOperator.ADD || assignment.operator == AssignmentOperator.SUB)
+		           && assignment.left.value_type is PointerType
+		           && ((PointerType) assignment.left.value_type).base_type is VoidType) {
+			// void* compound arithmetic: cast to unsigned char* for standard byte-wise arithmetic
+			var op = assignment.operator == AssignmentOperator.ADD ? CCodeBinaryOperator.PLUS : CCodeBinaryOperator.MINUS;
+			var byte_ptr = new CCodeCastExpression (get_cvalue (assignment.left), "unsigned char *");
+			var arith = new CCodeCastExpression (new CCodeBinaryExpression (op, byte_ptr, get_cvalue (assignment.right)), "void *");
+			ccode.add_expression (new CCodeAssignment (get_cvalue (assignment.left), arith, CCodeAssignmentOperator.SIMPLE));
 		} else {
 			CCodeAssignmentOperator cop;
 
