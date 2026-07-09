@@ -13,6 +13,10 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 		if (context.profile == Profile.POSIX && cl == context.analyzer.gerror_type) {
 			return;
 		}
+		if (add_symbol_declaration (decl_space, cl, get_ccode_name (cl))) {
+			return;
+		}
+
 		if (cl.base_class != null) {
 			generate_class_declaration (cl.base_class, decl_space);
 		}
@@ -27,10 +31,6 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 		decl_space.add_include ("stdlib.h");
 		decl_space.add_include ("stddef.h");
 		decl_space.add_include ("stdbool.h");
-
-		if (add_symbol_declaration (decl_space, cl, get_ccode_name (cl))) {
-			return;
-		}
 
 		generate_vtable_declaration (cl, decl_space);
 		generate_instance_struct_declaration (cl, decl_space);
