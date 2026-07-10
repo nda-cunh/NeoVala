@@ -275,6 +275,10 @@ public struct time_t {
 [IntegerType (rank = 9)]
 [CCode (cname = "const void*", has_type_id = false, default_value = "((const void*) 0)")]
 public struct Type {
+	public unowned string name { get; }
+	public unowned string to_string () {
+		return name;
+	}
 }
 
 [SimpleType]
