@@ -244,6 +244,28 @@ public class Vala.CCodeMethodCallModule : CCodeAssignmentModule {
 			}
 		} else if (m is CreationMethod && m.parent_symbol is Struct) {
 			ccall.add_argument (get_this_cexpression ());
+		} else if (context.profile == Profile.POSIX && m != null && m.binding == MemberBinding.INSTANCE
+		           && m.parent_symbol is Interface && ((Interface) m.parent_symbol).has_type_parameters ()
+		           && ma.inner != null && ma.inner.value_type != null) {
+			unowned Interface iface = (Interface) m.parent_symbol;
+			var instance_type = get_base_interface_type (ma.inner.value_type, iface, expr);
+			if (instance_type != null) {
+				var type_args = new ArrayList<DataType> ();
+				var type_params = new ArrayList<TypeParameter> ();
+				foreach (DataType type_arg in instance_type.get_type_arguments ()) {
+					type_args.add (type_arg);
+				}
+				foreach (TypeParameter type_param in iface.get_type_parameters ()) {
+					type_params.add (type_param);
+				}
+				foreach (DataType type_arg in ma.get_type_arguments ()) {
+					type_args.add (type_arg);
+				}
+				foreach (TypeParameter type_param in m.get_type_parameters ()) {
+					type_params.add (type_param);
+				}
+				add_generic_type_arguments (m, in_arg_map, type_args, expr, false, type_params);
+			}
 		} else if (m != null && m.has_type_parameters () && !get_ccode_has_generic_type_parameter (m) && !get_ccode_simple_generics (m) && (ccall != finish_call || expr.is_yield_expression)) {
 			// generic method
 			// don't add generic arguments for .end() calls

@@ -77,10 +77,8 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 			init_func.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
 			add_supra_typeinfo_params (new_func, cl);
 			add_supra_typeinfo_params (init_func, cl);
-			foreach (Parameter param in m.get_parameters ()) {
-				new_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
-				init_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
-			}
+			add_supra_parameters (new_func, m);
+			add_supra_parameters (init_func, m);
 			add_supra_error_param (new_func, m);
 			add_supra_error_param (init_func, m);
 			decl_space.add_function_declaration (new_func);
@@ -203,6 +201,10 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 
 		string cname = get_ccode_name (iface);
 
+		if (iface.has_type_parameters ()) {
+			emit_supra_typeinfo_decl (decl_space);
+		}
+
 		// vtable type
 		decl_space.add_type_declaration (new CCodeTypeDefinition (
 			"struct s_%sVtable".printf (cname),
@@ -214,7 +216,7 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 				continue;
 			}
 			vtable_struct.add_field (get_ccode_name (m.return_type),
-				"(*%s)(%s)".printf (get_ccode_vfunc_name (m), interface_vfunc_signature (m)));
+				"(*%s)(%s)".printf (get_ccode_vfunc_name (m), interface_vfunc_signature (m, iface)));
 		}
 		foreach (Method m in interface_property_methods (iface)) {
 			vtable_struct.add_field (get_ccode_name (m.return_type),
@@ -237,7 +239,7 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 			if (m.binding != MemberBinding.INSTANCE) {
 				continue;
 			}
-			decl_space.add_function_declaration (interface_dispatch_function (iface, m));
+			decl_space.add_function_declaration (interface_dispatch_function (iface, m, true));
 		}
 		foreach (Method m in interface_property_methods (iface)) {
 			decl_space.add_function_declaration (interface_dispatch_function (iface, m));
@@ -266,24 +268,93 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 		return methods;
 	}
 
-	// The instance is always passed as void* (the fat pointer's self member).
-	private string interface_vfunc_signature (Method m) {
+	protected void add_supra_parameter (CCodeFunction func, Parameter param) {
+		func.add_parameter (new CCodeParameter (get_ccode_name (param), get_ccode_name (param.variable_type)));
+
+		unowned DelegateType? dt = param.variable_type as DelegateType;
+		if (dt != null && dt.delegate_symbol.has_target) {
+			func.add_parameter (new CCodeParameter (get_ccode_delegate_target_name (param),
+				get_ccode_name (delegate_target_type)));
+			if (dt.is_disposable ()) {
+				func.add_parameter (new CCodeParameter (get_ccode_delegate_target_destroy_notify_name (param),
+					get_ccode_name (delegate_target_destroy_type)));
+			}
+		}
+	}
+
+	protected void add_supra_parameters (CCodeFunction func, Method m) {
+		foreach (Parameter param in m.get_parameters ()) {
+			add_supra_parameter (func, param);
+		}
+	}
+
+	protected string supra_parameter_type_suffix (Method m) {
 		var sig = new StringBuilder ();
-		sig.append ("void*");
 		foreach (Parameter param in m.get_parameters ()) {
 			sig.append (", ");
 			sig.append (get_ccode_name (param.variable_type));
+
+			unowned DelegateType? dt = param.variable_type as DelegateType;
+			if (dt != null && dt.delegate_symbol.has_target) {
+				sig.append (", ");
+				sig.append (get_ccode_name (delegate_target_type));
+				if (dt.is_disposable ()) {
+					sig.append (", ");
+					sig.append (get_ccode_name (delegate_target_destroy_type));
+				}
+			}
 		}
+		return sig.str;
+	}
+
+	protected void add_supra_forward_arguments (CCodeFunctionCall vcall, Method m) {
+		foreach (Parameter param in m.get_parameters ()) {
+			vcall.add_argument (new CCodeIdentifier (get_ccode_name (param)));
+
+			unowned DelegateType? dt = param.variable_type as DelegateType;
+			if (dt != null && dt.delegate_symbol.has_target) {
+				vcall.add_argument (new CCodeIdentifier (get_ccode_delegate_target_name (param)));
+				if (dt.is_disposable ()) {
+					vcall.add_argument (new CCodeIdentifier (get_ccode_delegate_target_destroy_notify_name (param)));
+				}
+			}
+		}
+	}
+
+	private void add_supra_tp_typeinfo_params (CCodeFunction func, List<TypeParameter> type_params) {
+		foreach (TypeParameter tp in type_params) {
+			func.add_parameter (new CCodeParameter ("%s_typeinfo".printf (tp.name.ascii_down ()), "const t_TypeInfo*"));
+		}
+	}
+
+	private void add_supra_iface_typeinfo_params (CCodeFunction func, Interface iface) {
+		add_supra_tp_typeinfo_params (func, iface.get_type_parameters ());
+	}
+
+	private string interface_vfunc_signature (Method m, Interface? iface = null) {
+		var sig = new StringBuilder ();
+		sig.append ("void*");
+		if (iface != null) {
+			for (int i = 0; i < iface.get_type_parameters ().size; i++) {
+				sig.append (", const t_TypeInfo*");
+			}
+		}
+		for (int i = 0; i < m.get_type_parameters ().size; i++) {
+			sig.append (", const t_TypeInfo*");
+		}
+		sig.append (supra_parameter_type_suffix (m));
 		sig.append (supra_error_param_suffix (m));
 		return sig.str;
 	}
 
-	private CCodeFunction interface_dispatch_function (Interface iface, Method m) {
+	private CCodeFunction interface_dispatch_function (Interface iface, Method m, bool generic = false) {
 		var func = new CCodeFunction (get_ccode_name (m), get_ccode_name (m.return_type));
 		func.add_parameter (new CCodeParameter ("self", "%s*".printf (get_ccode_name (iface))));
-		foreach (Parameter param in m.get_parameters ()) {
-			func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+		if (generic) {
+			add_supra_iface_typeinfo_params (func, iface);
 		}
+		add_supra_tp_typeinfo_params (func, m.get_type_parameters ());
+		add_supra_parameters (func, m);
 		add_supra_error_param (func, m);
 		return func;
 	}
@@ -297,20 +368,29 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 			}
 			dispatch_methods.add (m);
 		}
+		int generic_methods = dispatch_methods.size;
 		foreach (Method m in interface_property_methods (iface)) {
 			dispatch_methods.add (m);
 		}
-		foreach (Method m in dispatch_methods) {
-			var func = interface_dispatch_function (iface, m);
+		for (int i = 0; i < dispatch_methods.size; i++) {
+			Method m = dispatch_methods[i];
+			bool generic = i < generic_methods;
+			var func = interface_dispatch_function (iface, m, generic);
 			push_function (func);
 
 			var vtable_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "vtable");
 			var method_ptr = new CCodeMemberAccess.pointer (vtable_access, get_ccode_vfunc_name (m));
 			var vcall = new CCodeFunctionCall (method_ptr);
 			vcall.add_argument (new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "self"));
-			foreach (Parameter param in m.get_parameters ()) {
-				vcall.add_argument (new CCodeIdentifier (param.name));
+			if (generic) {
+				foreach (TypeParameter tp in iface.get_type_parameters ()) {
+					vcall.add_argument (new CCodeIdentifier ("%s_typeinfo".printf (tp.name.ascii_down ())));
+				}
 			}
+			foreach (TypeParameter tp in m.get_type_parameters ()) {
+				vcall.add_argument (new CCodeIdentifier ("%s_typeinfo".printf (tp.name.ascii_down ())));
+			}
+			add_supra_forward_arguments (vcall, m);
 			if (m.has_error_type_parameter ()) {
 				vcall.add_argument (new CCodeIdentifier ("error"));
 			}
@@ -330,12 +410,14 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 		return "%s_real_%s".printf (get_ccode_lower_case_name (iface), m.name);
 	}
 
-	private CCodeFunction interface_default_impl_function (Interface iface, Method m) {
+	private CCodeFunction interface_default_impl_function (Interface iface, Method m, bool generic = false) {
 		var func = new CCodeFunction (interface_default_impl_name (iface, m), get_ccode_name (m.return_type));
 		func.add_parameter (new CCodeParameter ("self", "void*"));
-		foreach (Parameter param in m.get_parameters ()) {
-			func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
+		if (generic) {
+			add_supra_iface_typeinfo_params (func, iface);
 		}
+		add_supra_tp_typeinfo_params (func, m.get_type_parameters ());
+		add_supra_parameters (func, m);
 		add_supra_error_param (func, m);
 		return func;
 	}
@@ -345,7 +427,7 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 			if (m.binding != MemberBinding.INSTANCE || m.is_abstract || m.body == null) {
 				continue;
 			}
-			var func = interface_default_impl_function (iface, m);
+			var func = interface_default_impl_function (iface, m, true);
 			cfile.add_function_declaration (func);
 
 			push_context (new EmitContext (m));
@@ -358,6 +440,65 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 			pop_context ();
 			cfile.add_function (func);
 		}
+	}
+
+	private string[] supra_parameter_types (Method m) {
+		string[] types = {};
+		foreach (Parameter param in m.get_parameters ()) {
+			types += get_ccode_name (param.variable_type);
+
+			unowned DelegateType? dt = param.variable_type as DelegateType;
+			if (dt != null && dt.delegate_symbol.has_target) {
+				types += get_ccode_name (delegate_target_type);
+				if (dt.is_disposable ()) {
+					types += get_ccode_name (delegate_target_destroy_type);
+				}
+			}
+		}
+		return types;
+	}
+
+	private string emit_supra_iface_vtable_thunk (Class cl, Interface iface, Method im, string target) {
+		string name = "_%s_%s_%s_thunk".printf (get_ccode_lower_case_name (cl),
+			get_ccode_lower_case_name (iface), im.name);
+		if (!add_wrapper (name)) {
+			return name;
+		}
+
+		string ret = get_ccode_name (im.return_type);
+		var impl_typeinfos = new StringBuilder ();
+		for (int i = 0; i < im.get_type_parameters ().size; i++) {
+			impl_typeinfos.append (", const t_TypeInfo*");
+		}
+		string target_type = "%s (*)(void*%s%s%s)".printf (ret, impl_typeinfos.str,
+			supra_parameter_type_suffix (im), supra_error_param_suffix (im));
+
+		var decl = new StringBuilder ("void* self");
+		var args = new StringBuilder ("self");
+		foreach (TypeParameter tp in iface.get_type_parameters ()) {
+			decl.append_printf (", const t_TypeInfo* %s_typeinfo", tp.name.ascii_down ());
+		}
+		foreach (TypeParameter tp in im.get_type_parameters ()) {
+			decl.append_printf (", const t_TypeInfo* %s_typeinfo", tp.name.ascii_down ());
+			args.append_printf (", %s_typeinfo", tp.name.ascii_down ());
+		}
+		int i = 0;
+		foreach (string type in supra_parameter_types (im)) {
+			decl.append_printf (", %s _p%d", type, i);
+			args.append_printf (", _p%d", i);
+			i++;
+		}
+		if (im.has_error_type_parameter ()) {
+			decl.append (", t_vala_Error** error");
+			args.append (", error");
+		}
+
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"static inline %s %s (%s) {\n\t%s((%s) %s) (%s);\n}\n".printf (
+				ret, name, decl.str,
+				(im.return_type is VoidType) ? "" : "return ",
+				target_type, target, args.str)));
+		return name;
 	}
 
 	private void generate_interface_vtable_instance (Class cl, Interface iface, CCodeFile decl_space) {
@@ -379,22 +520,28 @@ public class Vala.CCodeSupraModule : CCodeSupraErrorModule {
 			}
 			first = false;
 
-			string cast = "(%s (*)(%s)) ".printf (get_ccode_name (im.return_type), interface_vfunc_signature (im));
+			string cast = "(%s (*)(%s)) ".printf (get_ccode_name (im.return_type), interface_vfunc_signature (im, iface));
 			membres.append (".%s = ".printf (get_ccode_vfunc_name (im)));
 
 			Method? impl = find_interface_implementation (cl, im);
 			if (impl != null) {
+				string target;
 				if ((impl.is_virtual || impl.is_abstract) && !impl.overrides) {
-					membres.append ("%s%s".printf (cast, get_ccode_name (impl)));
+					target = get_ccode_name (impl);
 					generate_method_declaration (impl, cfile);
 				} else {
-					membres.append ("%s%s".printf (cast, get_ccode_real_name (impl)));
+					target = get_ccode_real_name (impl);
 					declare_supra_real_method (impl, cfile);
+				}
+				if (iface.has_type_parameters ()) {
+					membres.append (emit_supra_iface_vtable_thunk (cl, iface, im, target));
+				} else {
+					membres.append ("%s%s".printf (cast, target));
 				}
 			} else if (!im.is_abstract && im.body != null) {
 				// class does not override it: inherit the interface's default
 				membres.append ("%s%s".printf (cast, interface_default_impl_name (iface, im)));
-				cfile.add_function_declaration (interface_default_impl_function (iface, im));
+				cfile.add_function_declaration (interface_default_impl_function (iface, im, true));
 			} else {
 				membres.append ("NULL");
 			}
@@ -745,7 +892,8 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 	fat->self = self;
 	fat->vtable = vtable;
 	return fat;
-}""".printf (cname, func, cname, cname, cname, cname)));
+}
+""".printf (cname, func, cname, cname, cname, cname)));
 	}
 
 	private bool is_supra_interface_type (DataType? type) {
@@ -755,7 +903,14 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 
 	public override TargetValue? copy_value (TargetValue value, CodeNode node) {
 		if (is_supra_interface_type (value.value_type)) {
-			return ((GLibValue) value).copy ();
+			var result = ((GLibValue) value).copy ();
+			emit_supra_fat_pointer_ref_helper ();
+			var ref_call = new CCodeFunctionCall (new CCodeIdentifier ("_vala_supra_iface_ref"));
+			ref_call.add_argument (get_cvalue_ (value));
+			result.cvalue = new CCodeCastExpression (ref_call,
+				"%s*".printf (get_ccode_name (value.value_type.type_symbol)));
+			result.value_type.value_owned = true;
+			return result;
 		}
 		return base.copy_value (value, node);
 	}
@@ -789,6 +944,45 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 """));
 	}
 
+	private void emit_supra_fat_pointer_ref_helper () {
+		if (!add_wrapper ("_vala_supra_iface_ref")) {
+			return;
+		}
+		emit_supra_object_ref_helper ();
+		cfile.add_include ("stdlib.h");
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"""static inline void* _vala_supra_iface_ref (void* fat) {
+	struct _supra_fat { void* self; const void* vtable; };
+	struct _supra_fat* _fat;
+	struct _supra_fat* copy;
+	if (fat == NULL) {
+		return NULL;
+	}
+	_fat = (struct _supra_fat*) fat;
+	copy = (struct _supra_fat*) malloc (sizeof (struct _supra_fat));
+	copy->self = _vala_supra_object_ref (_fat->self);
+	copy->vtable = _fat->vtable;
+	return copy;
+}
+"""));
+	}
+
+	private void emit_supra_object_ref_helper () {
+		if (!add_wrapper ("_vala_supra_object_ref")) {
+			return;
+		}
+		emit_vala_atomic_helpers ();
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"""static inline void* _vala_supra_object_ref (void* self) {
+	struct _supra_object { const void* vptr; int ref_count; };
+	if (self != NULL) {
+		vala_atomic_inc (&((struct _supra_object*) self)->ref_count);
+	}
+	return self;
+}
+"""));
+	}
+
 	// Releases both halves of an owned interface value: the referenced instance
 	// and the boxed { self, vtable } pair itself.
 	private void emit_supra_fat_pointer_unref_helper () {
@@ -806,7 +1000,8 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 	_fat = (struct _supra_fat*) fat;
 	_vala_supra_object_unref (_fat->self);
 	free (fat);
-}"""));
+}
+"""));
 	}
 
 	private void emit_supra_object_unref_helper () {
@@ -827,7 +1022,16 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		_self->vptr->finalize (self);
 		free (self);
 	}
-}"""));
+}
+"""));
+	}
+
+	private bool is_supra_raw_self (Expression e) {
+		if (current_method == null || !(current_method.parent_symbol is Interface) || current_method.body == null) {
+			return false;
+		}
+		unowned MemberAccess? ma = e as MemberAccess;
+		return ma != null && ma.member_name == "this";
 	}
 
 	public override void visit_cast_expression (CastExpression expr) {
@@ -835,8 +1039,17 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		if (context.profile == Profile.POSIX && iface != null) {
 			expr.inner.accept (this);
 			unowned Class? cl = expr.inner.value_type.type_symbol as Class;
+			unowned Interface? inner_iface = expr.inner.value_type.type_symbol as Interface;
+			bool heap = expr.target_type.value_owned
+			    && expr.inner.value_type != null && expr.inner.value_type.value_owned;
 			if (cl != null && cl.is_supraklass) {
-				set_cvalue (expr, build_supra_fat_pointer (cl, iface, get_cvalue (expr.inner), expr.target_type.value_owned));
+				set_cvalue (expr, build_supra_fat_pointer (cl, iface, get_cvalue (expr.inner), heap));
+			} else if (inner_iface != null && inner_iface != iface) {
+				CCodeExpression obj = get_cvalue (expr.inner);
+				if (!is_supra_raw_self (expr.inner)) {
+					obj = new CCodeMemberAccess.pointer (obj, "self");
+				}
+				set_cvalue (expr, build_supra_dynamic_fat_pointer (iface, obj, heap));
 			} else {
 				set_cvalue (expr, get_cvalue (expr.inner));
 			}
@@ -983,6 +1196,12 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 	}
 
 	public override bool generate_method_declaration (Method m, CCodeFile decl_space) {
+		if (context.profile == Profile.POSIX && m.parent_symbol is Interface
+		    && m.binding == MemberBinding.INSTANCE) {
+			generate_interface_declaration ((Interface) m.parent_symbol, decl_space);
+			return true;
+		}
+
 		var cl = m.parent_symbol as Class;
 		if (cl != null && cl.is_supraklass) {
 			if (add_symbol_declaration (decl_space, m, get_ccode_name (m))) {
@@ -995,9 +1214,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			if (m is CreationMethod) {
 				var func = new CCodeFunction(get_ccode_name(m), get_ccode_name(cl) + "*");
 				add_supra_typeinfo_params (func, cl);
-				foreach (Parameter param in m.get_parameters()) {
-					func.add_parameter(new CCodeParameter(param.name, get_ccode_name(param.variable_type)));
-				}
+				add_supra_parameters (func, m);
 				add_supra_error_param (func, m);
 				decl_space.add_function_declaration(func);
 				return true;
@@ -1005,9 +1222,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			if (m.binding == MemberBinding.INSTANCE) {
 				var func = new CCodeFunction(get_ccode_name(m), get_ccode_name(m.return_type));
 				func.add_parameter(new CCodeParameter("self", get_ccode_name(cl) + "*"));
-				foreach (Parameter param in m.get_parameters()) {
-					func.add_parameter(new CCodeParameter(param.name, get_ccode_name(param.variable_type)));
-				}
+				add_supra_parameters (func, m);
 				add_supra_error_param (func, m);
 				decl_space.add_function_declaration(func);
 				return true;
@@ -1026,9 +1241,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		}
 		var func = new CCodeFunction (get_ccode_real_name (m), get_ccode_name (m.return_type));
 		func.add_parameter (new CCodeParameter ("self", "%s*".printf (get_ccode_name (owner))));
-		foreach (Parameter param in m.get_parameters ()) {
-			func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
-		}
+		add_supra_parameters (func, m);
 		add_supra_error_param (func, m);
 		decl_space.add_function_declaration (func);
 	}
@@ -1059,9 +1272,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		if (m is CreationMethod) {
 			add_supra_typeinfo_params (func_wrapper, cl);
 		}
-		foreach (Parameter param in m.get_parameters ()) {
-			func_wrapper.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
-		}
+		add_supra_parameters (func_wrapper, m);
 		add_supra_error_param (func_wrapper, m);
 
 		cfile.add_function_declaration (func_wrapper);
@@ -1090,9 +1301,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 
 		var wrapper_func = new CCodeFunction (cname, get_ccode_name (m.return_type));
 		wrapper_func.add_parameter (new CCodeParameter ("base", "%s*".printf (get_ccode_name (cl))));
-		foreach (Parameter param in m.get_parameters ()) {
-			wrapper_func.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
-		}
+		add_supra_parameters (wrapper_func, m);
 		add_supra_error_param (wrapper_func, m);
 
 		push_function (wrapper_func);
@@ -1103,9 +1312,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		var vcall = new CCodeFunctionCall (method_ptr);
 		vcall.add_argument (new CCodeIdentifier ("base"));
 
-		foreach (Parameter param in m.get_parameters ()) {
-			vcall.add_argument (new CCodeIdentifier (param.name));
-		}
+		add_supra_forward_arguments (vcall, m);
 		if (m.has_error_type_parameter ()) {
 			vcall.add_argument (new CCodeIdentifier ("error"));
 		}
@@ -1199,7 +1406,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		// private struct
 		var private_struct = new CCodeStruct ("s_%sPrivate".printf (cname));
 		foreach (Field f in cl.get_fields ()) {
-			if (f.is_private_symbol ()) {
+			if (f.access == SymbolAccessibility.PRIVATE) {
 				append_field (private_struct, f, decl_space);
 			}
 		}
@@ -1222,6 +1429,11 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 
 		string cname = get_ccode_name (cl);
 
+		if (decl_space != cfile && cl.is_internal_symbol ()) {
+			decl_space.add_type_declaration (new CCodeTypeDefinition ("struct _%s".printf (cname), new CCodeVariableDeclarator (cname)));
+			return;
+		}
+
 		// public struct
 		{
 			var struct_public = new CCodeStruct ("_%s".printf (cname));
@@ -1234,7 +1446,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			}
 
 			foreach (Field f in cl.get_fields ()) {
-				if (f.binding == MemberBinding.INSTANCE && !f.is_private_symbol ()) {
+				if (f.binding == MemberBinding.INSTANCE && f.access != SymbolAccessibility.PRIVATE) {
 					append_field (struct_public, f, decl_space);
 				}
 			}
@@ -1242,7 +1454,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				StringBuilder sb = new StringBuilder();
 				sb.append("struct {");
 				foreach (Field f in cl.get_fields ()) {
-					if (f.is_private_symbol ()) {
+					if (f.access == SymbolAccessibility.PRIVATE) {
 						sb.append_printf("%s %s;", get_ccode_name (f.variable_type), get_ccode_name (f));
 						if (f.variable_type is ArrayType && get_ccode_array_length (f)) {
 							var array_type = (ArrayType) f.variable_type;
@@ -1253,6 +1465,14 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 								}
 								if (array_type.rank == 1 && f.is_internal_symbol ()) {
 									sb.append_printf("%s %s;", length_ctype, get_array_size_cname (get_ccode_name (f)));
+								}
+							}
+						} else if (get_ccode_delegate_target (f)) {
+							var delegate_type = (DelegateType) f.variable_type;
+							if (delegate_type.delegate_symbol.has_target) {
+								sb.append_printf("%s %s;", get_ccode_name (delegate_target_type), get_ccode_delegate_target_name (f));
+								if (delegate_type.is_disposable ()) {
+									sb.append_printf("%s %s;", get_ccode_name (delegate_target_destroy_type), get_ccode_delegate_target_destroy_notify_name (f));
 								}
 							}
 						}
@@ -1308,7 +1528,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				continue;
 			}
 			if ((!(f.variable_type is DelegateType) || get_ccode_delegate_target (f)) && requires_destroy (f.variable_type)) {
-				if (f.is_private_symbol ()) {
+				if (f.access == SymbolAccessibility.PRIVATE) {
 					needs_priv = true;
 				}
 			}
@@ -1378,9 +1598,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		var function_new = new CCodeFunction(new_func_name, "%s*".printf(cname));
 
 		add_supra_typeinfo_params (function_new, cl);
-		foreach (var param in m.get_parameters()) {
-			function_new.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
-		}
+		add_supra_parameters (function_new, m);
 		add_supra_error_param (function_new, m);
 
 		push_function(function_new);
@@ -1394,9 +1612,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		foreach (var name in supra_generic_names (cl)) {
 			init_call.add_argument (new CCodeIdentifier (name));
 		}
-		foreach (var param in m.get_parameters()) {
-			init_call.add_argument (new CCodeIdentifier (param.name));
-		}
+		add_supra_forward_arguments (init_call, m);
 		if (m.has_error_type_parameter ()) {
 			init_call.add_argument (new CCodeIdentifier ("error"));
 		}
@@ -1426,9 +1642,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 		function_init.add_parameter (new CCodeParameter ("self", "%s*".printf (cname)));
 
 		add_supra_typeinfo_params (function_init, cl);
-		foreach (Parameter param in m.get_parameters ()) {
-			function_init.add_parameter (new CCodeParameter (param.name, get_ccode_name (param.variable_type)));
-		}
+		add_supra_parameters (function_init, m);
 		add_supra_error_param (function_init, m);
 
 		push_function (function_init);
@@ -1531,21 +1745,29 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				continue;
 			}
 
-			CCodeExpression field_access;
-			if (f.is_private_symbol ()) {
-				field_access = new CCodeMemberAccess.pointer (
-						new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv"),
-						get_ccode_name (f)
-						);
+			CCodeExpression field_owner;
+			if (f.access == SymbolAccessibility.PRIVATE) {
+				field_owner = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), "priv");
 			} else {
-				field_access = new CCodeMemberAccess.pointer (new CCodeIdentifier ("self"), get_ccode_name (f));
+				field_owner = new CCodeIdentifier ("self");
 			}
+			CCodeExpression field_access = new CCodeMemberAccess.pointer (field_owner, get_ccode_name (f));
 
 			if (f.initializer != null) {
 				f.initializer.emit (this);
 				ccode.add_assignment (field_access, get_cvalue (f.initializer));
 			} else {
 				ccode.add_assignment (field_access, new CCodeConstant ("0"));
+			}
+
+			unowned DelegateType? dt = f.variable_type as DelegateType;
+			if (dt != null && get_ccode_delegate_target (f) && dt.delegate_symbol.has_target) {
+				ccode.add_assignment (new CCodeMemberAccess.pointer (field_owner, get_ccode_delegate_target_name (f)),
+					new CCodeConstant ("NULL"));
+				if (dt.is_disposable ()) {
+					ccode.add_assignment (new CCodeMemberAccess.pointer (field_owner, get_ccode_delegate_target_destroy_notify_name (f)),
+						new CCodeConstant ("NULL"));
+				}
 			}
 		}
 		emit_supra_signal_init (cl);
@@ -1580,10 +1802,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 
 				var sig = new StringBuilder ();
 				sig.append ("void*");
-				foreach (Parameter param in m.get_parameters ()) {
-					sig.append (", ");
-					sig.append (get_ccode_name (param.variable_type));
-				}
+				sig.append (supra_parameter_type_suffix (m));
 				sig.append (supra_error_param_suffix (m));
 
 				vtable_struct.add_field (get_ccode_name (m.return_type), "(*%s)(%s)".printf (field_name, sig.str));
@@ -1834,6 +2053,9 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			    && current_method != null && current_method.parent_symbol == iface && current_method.body != null) {
 				var ccall = new CCodeFunctionCall (new CCodeIdentifier (get_ccode_name (m)));
 				ccall.add_argument (build_supra_dynamic_fat_pointer (iface, new CCodeIdentifier ("self")));
+				foreach (TypeParameter tp in iface.get_type_parameters ()) {
+					ccall.add_argument (new CCodeIdentifier ("%s_typeinfo".printf (tp.name.ascii_down ())));
+				}
 				add_supra_call_arguments (ccall, expr);
 				if (m.return_type is VoidType) {
 					ccode.add_expression (ccall);

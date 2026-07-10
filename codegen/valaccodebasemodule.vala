@@ -3117,6 +3117,9 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 	protected CCodeExpression get_generic_type_expression (string identifier, GenericType type, bool is_chainup = false) {
 		if (type.type_parameter.parent_symbol is Interface) {
 			unowned Interface iface = (Interface) type.type_parameter.parent_symbol;
+			if (context.profile == Profile.POSIX) {
+				return get_variable_cexpression (identifier);
+			}
 			require_generic_accessors (iface);
 
 			var cast_self = new CCodeFunctionCall (new CCodeIdentifier (get_ccode_type_get_function (iface)));
@@ -3956,7 +3959,13 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			var cisnull = new CCodeBinaryExpression (CCodeBinaryOperator.EQUALITY, delegate_target_destroy_notify, new CCodeConstant ("NULL"));
 
 			var ccomma = new CCodeCommaExpression ();
-			ccomma.append_expression (new CCodeConditionalExpression (cisnull, new CCodeConstant ("NULL"), destroy_call));
+			if (context.profile == Profile.POSIX) {
+				ccomma.append_expression (new CCodeConditionalExpression (cisnull,
+					new CCodeCastExpression (new CCodeConstant ("0"), "void"),
+					new CCodeCastExpression (ccall, "void")));
+			} else {
+				ccomma.append_expression (new CCodeConditionalExpression (cisnull, new CCodeConstant ("NULL"), destroy_call));
+			}
 			ccomma.append_expression (new CCodeAssignment (cvar, new CCodeConstant ("NULL")));
 			ccomma.append_expression (new CCodeAssignment (delegate_target, new CCodeConstant ("NULL")));
 			ccomma.append_expression (new CCodeAssignment (delegate_target_destroy_notify, new CCodeConstant ("NULL")));
@@ -5094,12 +5103,15 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 	protected void emit_supra_typeinfo_decl (CCodeFile? decl_space = null) {
 		unowned CCodeFile f = decl_space ?? cfile;
 		f.add_include ("string.h");
-		if (!add_wrapper ("t_TypeInfo")) {
+		if (f.add_declaration ("t_TypeInfo")) {
 			return;
 		}
 		f.add_type_declaration (new CCodeIdentifier (
-			"typedef struct { size_t size; void* (*dup)(void*); void (*free)(void*); const void* vtable; const char* name; } t_TypeInfo;\n"
-			+ "#define VALA_TYPEOF_EQ(a, b) ((a) == (b) || ((a)->vtable ? (a)->vtable == (b)->vtable : (b)->vtable == NULL && strcmp ((a)->name, (b)->name) == 0))\n"));
+			"#ifndef VALA_TYPEINFO_DEFINED\n"
+			+ "#define VALA_TYPEINFO_DEFINED\n"
+			+ "typedef struct { size_t size; void* (*dup)(void*); void (*free)(void*); const void* vtable; const char* name; } t_TypeInfo;\n"
+			+ "#define VALA_TYPEOF_EQ(a, b) ((a) == (b) || ((a)->vtable ? (a)->vtable == (b)->vtable : (b)->vtable == NULL && strcmp ((a)->name, (b)->name) == 0))\n"
+			+ "#endif\n"));
 	}
 
 	protected string get_supra_typeinfo (DataType type) {
@@ -5142,6 +5154,31 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				"static const t_TypeInfo %s = { sizeof (%s), %s, %s, %s, \"%s\" };\n".printf (id, cname, dup, destroy, vtable, cname)));
 		}
 		return id;
+	}
+
+	protected DataType? get_base_interface_type (DataType instance_type, Interface iface, CodeNode node) {
+		if (instance_type.type_symbol == iface) {
+			return instance_type;
+		}
+		unowned ObjectTypeSymbol? ots = instance_type.type_symbol as ObjectTypeSymbol;
+		if (ots == null) {
+			return null;
+		}
+		List<DataType> base_types;
+		if (ots is Class) {
+			base_types = ((Class) ots).get_base_types ();
+		} else if (ots is Interface) {
+			base_types = ((Interface) ots).get_prerequisites ();
+		} else {
+			return null;
+		}
+		foreach (DataType base_type in base_types) {
+			var result = get_base_interface_type (base_type, iface, node);
+			if (result != null) {
+				return result.get_actual_type (instance_type, null, node);
+			}
+		}
+		return null;
 	}
 
 	public void add_generic_type_arguments (Method m, Map<int,CCodeExpression> arg_map, List<DataType> type_args, CodeNode expr, bool is_chainup = false, List<TypeParameter>? type_parameters = null) {

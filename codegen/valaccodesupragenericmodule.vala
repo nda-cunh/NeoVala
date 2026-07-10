@@ -141,7 +141,7 @@ public class Vala.CCodeSupraGenericModule : CCodeSupraWeakRefModule {
 		if (context.profile == Profile.POSIX && expression_type != null && target_type != null) {
 			unowned Interface? iface = target_type.type_symbol as Interface;
 			if (iface != null) {
-				bool heap = target_type.value_owned;
+				bool heap = target_type.value_owned && expression_type.value_owned;
 				if (expression_type is GenericType) {
 					unowned GenericType gt = (GenericType) expression_type;
 					if (gt.type_parameter.constraint_type != null) {
@@ -157,6 +157,10 @@ public class Vala.CCodeSupraGenericModule : CCodeSupraWeakRefModule {
 				if (expression_type.type_symbol == iface) {
 					// already a fat pointer of the same interface
 					return source_cexpr;
+				}
+				if (expression_type.type_symbol is Interface) {
+					return build_supra_dynamic_fat_pointer (iface,
+						new CCodeMemberAccess.pointer (source_cexpr, "self"), heap);
 				}
 			}
 		}
