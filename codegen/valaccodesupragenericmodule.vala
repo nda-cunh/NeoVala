@@ -12,13 +12,9 @@ public class Vala.CCodeSupraGenericModule : CCodeSupraWeakRefModule {
 
 	// Build a fat pointer for a constrained erased generic from the witness
 	// vtable threaded in alongside the t_TypeInfo: (IFoo){ (void*) g, g_witness }.
-	private CCodeExpression build_supra_witness_fat_pointer (Interface iface, CCodeExpression cexpr, CCodeExpression witness) {
+	private CCodeExpression build_supra_witness_fat_pointer (Interface iface, CCodeExpression cexpr, CCodeExpression witness, bool heap = false) {
 		generate_interface_declaration (iface, cfile);
-		var init = new CCodeInitializerList ();
-		init.append (new CCodeCastExpression (cexpr, "void*"));
-		init.append (new CCodeCastExpression (witness, "const t_%sVtable*".printf (get_ccode_name (iface))));
-		var literal = new CCodeCastExpression (init, get_ccode_name (iface));
-		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, literal);
+		return store_supra_fat_pointer (iface, cexpr, witness, heap);
 	}
 
 	// The erased ABI bit-packs integral values into the void* payload; strings
@@ -145,17 +141,18 @@ public class Vala.CCodeSupraGenericModule : CCodeSupraWeakRefModule {
 		if (context.profile == Profile.POSIX && expression_type != null && target_type != null) {
 			unowned Interface? iface = target_type.type_symbol as Interface;
 			if (iface != null) {
+				bool heap = target_type.value_owned;
 				if (expression_type is GenericType) {
 					unowned GenericType gt = (GenericType) expression_type;
 					if (gt.type_parameter.constraint_type != null) {
 						var wname = "%s_witness".printf (gt.type_parameter.name.ascii_down ());
-						return build_supra_witness_fat_pointer (iface, source_cexpr, get_generic_type_expression (wname, gt));
+						return build_supra_witness_fat_pointer (iface, source_cexpr, get_generic_type_expression (wname, gt), heap);
 					}
-					return build_supra_dynamic_fat_pointer (iface, source_cexpr);
+					return build_supra_dynamic_fat_pointer (iface, source_cexpr, heap);
 				}
 				unowned Class? cl = expression_type.type_symbol as Class;
 				if (cl != null && cl.is_supraklass) {
-					return build_supra_fat_pointer (cl, iface, source_cexpr);
+					return build_supra_fat_pointer (cl, iface, source_cexpr, heap);
 				}
 				if (expression_type.type_symbol == iface) {
 					// already a fat pointer of the same interface

@@ -684,7 +684,7 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 	// vtable at runtime by walking its vptr chain. Used for constrained erased
 	// generics and for `this` inside a default interface method (where `self`
 	// is the raw object, not a fat pointer).
-	protected CCodeExpression build_supra_dynamic_fat_pointer (Interface iface, CCodeExpression cexpr) {
+	protected CCodeExpression build_supra_dynamic_fat_pointer (Interface iface, CCodeExpression cexpr, bool heap = false) {
 		generate_interface_declaration (iface, cfile);
 		declare_interface_id (iface, cfile);
 		emit_interface_is_a_helper ();
@@ -694,14 +694,10 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 		lookup.add_argument (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF,
 			new CCodeIdentifier (interface_id_name (iface))));
 
-		var init = new CCodeInitializerList ();
-		init.append (new CCodeCastExpression (cexpr, "void*"));
-		init.append (new CCodeCastExpression (lookup, "const t_%sVtable*".printf (get_ccode_name (iface))));
-		var literal = new CCodeCastExpression (init, get_ccode_name (iface));
-		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, literal);
+		return store_supra_fat_pointer (iface, cexpr, lookup, heap);
 	}
 
-	protected CCodeExpression build_supra_fat_pointer (Class cl, Interface iface, CCodeExpression cexpr) {
+	protected CCodeExpression build_supra_fat_pointer (Class cl, Interface iface, CCodeExpression cexpr, bool heap = false) {
 		generate_interface_declaration (iface, cfile);
 		generate_class_declaration (cl, cfile);
 
@@ -712,12 +708,44 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 		cfile.add_type_member_declaration (new CCodeIdentifier (
 			"extern const t_%sVtable %s;\n".printf (get_ccode_name (iface), vtable_var)));
 
+		return store_supra_fat_pointer (iface, cexpr,
+			new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeIdentifier (vtable_var)), heap);
+	}
+
+	// An interface value is a pointer to a { self, vtable } pair. Built as
+	// &(IFoo) { ... } the pair has block lifetime, which is all a borrowed value
+	// (a call argument) needs. A value that escapes its block -- returned, stored
+	// in a field or in an owned variable -- must own its pair, so box it instead.
+	protected CCodeExpression store_supra_fat_pointer (Interface iface, CCodeExpression self_expr, CCodeExpression vtable_expr, bool heap) {
+		string cname = get_ccode_name (iface);
+		if (heap) {
+			emit_supra_fat_pointer_box (iface);
+			var box = new CCodeFunctionCall (new CCodeIdentifier ("_vala_supra_%s_box".printf (get_ccode_lower_case_name (iface))));
+			box.add_argument (new CCodeCastExpression (self_expr, "void*"));
+			box.add_argument (new CCodeCastExpression (vtable_expr, "const t_%sVtable*".printf (cname)));
+			return box;
+		}
+
 		var init = new CCodeInitializerList ();
-		init.append (new CCodeCastExpression (cexpr, "void*"));
-		init.append (new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeIdentifier (vtable_var)));
-		// &(IFoo){ ... } : interface values are pointers to the fat-pointer struct
-		var literal = new CCodeCastExpression (init, get_ccode_name (iface));
-		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, literal);
+		init.append (new CCodeCastExpression (self_expr, "void*"));
+		init.append (new CCodeCastExpression (vtable_expr, "const t_%sVtable*".printf (cname)));
+		return new CCodeUnaryExpression (CCodeUnaryOperator.ADDRESS_OF, new CCodeCastExpression (init, cname));
+	}
+
+	private void emit_supra_fat_pointer_box (Interface iface) {
+		string cname = get_ccode_name (iface);
+		string func = "_vala_supra_%s_box".printf (get_ccode_lower_case_name (iface));
+		if (!add_wrapper (func)) {
+			return;
+		}
+		cfile.add_include ("stdlib.h");
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"""static inline %s* %s (void* self, const t_%sVtable* vtable) {
+	%s* fat = (%s*) malloc (sizeof (%s));
+	fat->self = self;
+	fat->vtable = vtable;
+	return fat;
+}""".printf (cname, func, cname, cname, cname, cname)));
 	}
 
 	private bool is_supra_interface_type (DataType? type) {
@@ -735,9 +763,9 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 	public override CCodeExpression destroy_value (TargetValue value, bool is_macro_definition = false) {
 		if (is_supra_interface_type (value.value_type)) {
 			if (value.value_type != null && value.value_type.value_owned) {
-				emit_supra_object_unref_helper ();
-				var unref_call = new CCodeFunctionCall (new CCodeIdentifier ("_vala_supra_object_unref"));
-				unref_call.add_argument (new CCodeMemberAccess.pointer (get_cvalue_ (value), "self"));
+				emit_supra_fat_pointer_unref_helper ();
+				var unref_call = new CCodeFunctionCall (new CCodeIdentifier ("_vala_supra_iface_unref"));
+				unref_call.add_argument (get_cvalue_ (value));
 				return unref_call;
 			}
 			return new CCodeConstant ("((void) 0)");
@@ -759,6 +787,26 @@ static inline int vala_atomic_inc (int* p) { return __atomic_add_fetch (p, 1, __
 static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch (p, 1, __ATOMIC_SEQ_CST) == 0; }
 #endif
 """));
+	}
+
+	// Releases both halves of an owned interface value: the referenced instance
+	// and the boxed { self, vtable } pair itself.
+	private void emit_supra_fat_pointer_unref_helper () {
+		if (!add_wrapper ("_vala_supra_iface_unref")) {
+			return;
+		}
+		emit_supra_object_unref_helper ();
+		cfile.add_type_member_declaration (new CCodeIdentifier (
+			"""static inline void _vala_supra_iface_unref (void* fat) {
+	struct _supra_fat { void* self; const void* vtable; };
+	struct _supra_fat* _fat;
+	if (fat == NULL) {
+		return;
+	}
+	_fat = (struct _supra_fat*) fat;
+	_vala_supra_object_unref (_fat->self);
+	free (fat);
+}"""));
 	}
 
 	private void emit_supra_object_unref_helper () {
@@ -788,7 +836,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			expr.inner.accept (this);
 			unowned Class? cl = expr.inner.value_type.type_symbol as Class;
 			if (cl != null && cl.is_supraklass) {
-				set_cvalue (expr, build_supra_fat_pointer (cl, iface, get_cvalue (expr.inner)));
+				set_cvalue (expr, build_supra_fat_pointer (cl, iface, get_cvalue (expr.inner), expr.target_type.value_owned));
 			} else {
 				set_cvalue (expr, get_cvalue (expr.inner));
 			}
