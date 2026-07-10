@@ -23,7 +23,13 @@ public class Vala.CCodeSupraErrorModule : CCodeDelegateModule {
 		cfile.add_type_member_declaration (new CCodeIdentifier (
 			"""typedef struct { const void* domain; int code; char* message; } t_vala_Error;
 
-static t_vala_Error* _vala_error_new_literal (const void* domain, int code, const char* message) {
+#if defined(__GNUC__)
+#define VALA_UNUSED __attribute__((unused))
+#else
+#define VALA_UNUSED
+#endif
+
+VALA_UNUSED static t_vala_Error* _vala_error_new_literal (const void* domain, int code, const char* message) {
 	t_vala_Error* e = (t_vala_Error*) malloc (sizeof (t_vala_Error));
 	e->domain = domain;
 	e->code = code;
@@ -31,7 +37,7 @@ static t_vala_Error* _vala_error_new_literal (const void* domain, int code, cons
 	return e;
 }
 
-static t_vala_Error* _vala_error_new (const void* domain, int code, const char* format, ...) {
+VALA_UNUSED static t_vala_Error* _vala_error_new (const void* domain, int code, const char* format, ...) {
 	char buf[1024];
 	va_list ap;
 	va_start (ap, format);
@@ -40,14 +46,14 @@ static t_vala_Error* _vala_error_new (const void* domain, int code, const char* 
 	return _vala_error_new_literal (domain, code, buf);
 }
 
-static t_vala_Error* _vala_error_copy (t_vala_Error* e) {
+VALA_UNUSED static t_vala_Error* _vala_error_copy (t_vala_Error* e) {
 	if (e == NULL) {
 		return NULL;
 	}
 	return _vala_error_new_literal (e->domain, e->code, e->message);
 }
 
-static void _vala_error_free (t_vala_Error* e) {
+VALA_UNUSED static void _vala_error_free (t_vala_Error* e) {
 	if (e != NULL) {
 		free (e->message);
 		free (e);

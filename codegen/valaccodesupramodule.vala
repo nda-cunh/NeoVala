@@ -751,6 +751,17 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 	// synthetic POSIX Error type (see SemanticAnalyzer) out of codegen entirely.
 	public override void visit_member_access (MemberAccess expr) {
 		if (context.profile == Profile.POSIX && expr.inner != null
+		    && expr.member_name == "name"
+		    && context.analyzer.type_type != null && expr.inner.value_type != null
+		    && expr.inner.value_type.type_symbol == context.analyzer.type_type.type_symbol) {
+			// typeof(x).name: read the descriptor's name field off the t_TypeInfo.
+			emit_supra_typeinfo_decl ();
+			expr.inner.accept (this);
+			var info = new CCodeCastExpression (get_cvalue (expr.inner), "const t_TypeInfo*");
+			set_cvalue (expr, new CCodeMemberAccess.pointer (info, "name"));
+			return;
+		}
+		if (context.profile == Profile.POSIX && expr.inner != null
 		    && expr.inner.value_type is ErrorType
 		    && expr.symbol_reference is Field) {
 			emit_supra_error_runtime ();
@@ -938,8 +949,8 @@ static const void* _vala_get_interface (void* obj, const void* interface_id) {
 static inline int vala_atomic_inc (int* p) { return _InterlockedIncrement ((long volatile*) p); }
 static inline int vala_atomic_dec_and_test (int* p) { return _InterlockedDecrement ((long volatile*) p) == 0; }
 #else
-static inline int vala_atomic_inc (int* p) { return __atomic_add_fetch (p, 1, __ATOMIC_SEQ_CST); }
-static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch (p, 1, __ATOMIC_SEQ_CST) == 0; }
+__attribute__((unused)) static inline int vala_atomic_inc (int* p) { return __atomic_add_fetch (p, 1, __ATOMIC_SEQ_CST); }
+__attribute__((unused)) static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch (p, 1, __ATOMIC_SEQ_CST) == 0; }
 #endif
 """));
 	}

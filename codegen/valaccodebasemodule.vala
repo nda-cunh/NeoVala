@@ -2178,8 +2178,8 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 static inline int vala_atomic_inc (int* p) { return _InterlockedIncrement ((long volatile*) p); }
 static inline int vala_atomic_dec_and_test (int* p) { return _InterlockedDecrement ((long volatile*) p) == 0; }
 #else
-static inline int vala_atomic_inc (int* p) { return __atomic_add_fetch (p, 1, __ATOMIC_SEQ_CST); }
-static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch (p, 1, __ATOMIC_SEQ_CST) == 0; }
+__attribute__((unused)) static inline int vala_atomic_inc (int* p) { return __atomic_add_fetch (p, 1, __ATOMIC_SEQ_CST); }
+__attribute__((unused)) static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch (p, 1, __ATOMIC_SEQ_CST) == 0; }
 #endif
 """));
 	}
@@ -5143,7 +5143,13 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			// vtable: the class's shared CLASS_VTABLE address for a supraklass
 			// (cross-TU type identity), NULL for value types / strings.
 			string vtable = "NULL";
+			// display name (the .name field): plain type name for object types
+			// (no trailing `*`), the raw C name for value types.
+			string display_name = cname;
 			unowned var ots = type.type_symbol as ObjectTypeSymbol;
+			if (ots != null) {
+				display_name = get_ccode_name (ots);
+			}
 			if (ots != null && ots.is_supraklass) {
 				string vtable_var = "%s_VTABLE".printf (get_ccode_upper_case_name (ots));
 				cfile.add_type_member_declaration (new CCodeIdentifier (
@@ -5151,7 +5157,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 				vtable = "&%s".printf (vtable_var);
 			}
 			cfile.add_type_member_declaration (new CCodeIdentifier (
-				"static const t_TypeInfo %s = { sizeof (%s), %s, %s, %s, \"%s\" };\n".printf (id, cname, dup, destroy, vtable, cname)));
+				"static const t_TypeInfo %s = { sizeof (%s), %s, %s, %s, \"%s\" };\n".printf (id, cname, dup, destroy, vtable, display_name)));
 		}
 		return id;
 	}
@@ -6106,6 +6112,26 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 			}
 			return;
 		}
+		if (context.profile == Profile.POSIX
+		    && (expr.operator == BinaryOperator.EQUALITY || expr.operator == BinaryOperator.INEQUALITY)
+		    && context.analyzer.type_type != null && expr.left.value_type != null && expr.right.value_type != null
+		    && expr.left.value_type.type_symbol == context.analyzer.type_type.type_symbol
+		    && expr.right.value_type.type_symbol == context.analyzer.type_type.type_symbol) {
+			// typeof(a) == typeof(b): use VALA_TYPEOF_EQ, which falls back to
+			// comparing the descriptor name for value types (whose per-TU static
+			// t_TypeInfo has a different address in each translation unit).
+			emit_supra_typeinfo_decl ();
+			var ccall = new CCodeFunctionCall (new CCodeIdentifier ("VALA_TYPEOF_EQ"));
+			ccall.add_argument (new CCodeCastExpression (cleft, "const t_TypeInfo*"));
+			ccall.add_argument (new CCodeCastExpression (cright, "const t_TypeInfo*"));
+			if (expr.operator == BinaryOperator.INEQUALITY) {
+				set_cvalue (expr, new CCodeUnaryExpression (CCodeUnaryOperator.LOGICAL_NEGATION, ccall));
+			} else {
+				set_cvalue (expr, ccall);
+			}
+			return;
+		}
+
 		if (expr.operator == BinaryOperator.EQUALITY ||
 		    expr.operator == BinaryOperator.INEQUALITY) {
 			var left_type = expr.left.target_type;
