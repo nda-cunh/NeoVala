@@ -946,6 +946,7 @@ static inline int vala_atomic_dec_and_test (int* p) { return __atomic_sub_fetch 
 
 			if (m is CreationMethod) {
 				var func = new CCodeFunction(get_ccode_name(m), get_ccode_name(cl) + "*");
+				add_supra_typeinfo_params (func, cl);
 				foreach (Parameter param in m.get_parameters()) {
 					func.add_parameter(new CCodeParameter(param.name, get_ccode_name(param.variable_type)));
 				}
