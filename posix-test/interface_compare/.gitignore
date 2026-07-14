@@ -1,0 +1,5 @@
+*.c
+*.h
+main
+
+compile_commands.json
