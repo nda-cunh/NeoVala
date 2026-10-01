@@ -39,7 +39,7 @@ fi
 vapidir=$abs_top_srcdir/vapi
 run_prefix=""
 
-VALAC=$abs_top_builddir/compiler/valac$EXEEXT
+VALAC=${TEST_VALAC:-$abs_top_builddir/compiler/valac$EXEEXT}
 VALAFLAGS="$VALAFLAGS \
 	--vapidir $vapidir \
 	--enable-checking \
@@ -52,7 +52,7 @@ VALAFLAGS="$VALAFLAGS \
 	-X -pipe \
 	-X -lm \
 	-X -DGETTEXT_PACKAGE=\"valac\""
-VAPIGEN=$abs_top_builddir/vapigen/vapigen$EXEEXT
+VAPIGEN=${TEST_VAPIGEN:-$abs_top_builddir/vapigen/vapigen$EXEEXT}
 VAPIGENFLAGS="--vapidir $vapidir"
 
 # Incorporate the TEST_CFLAGS.

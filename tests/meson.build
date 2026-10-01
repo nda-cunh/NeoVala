@@ -1412,135 +1412,42 @@ test_cases += [
 	'genie/verbatim-template.gs',
 ]
 
-vala_flags = [
-	'--vapidir', join_paths(meson.project_source_root(), 'vapi'),
-	'--enable-checking',
-	'--disable-version-header',
-	'--disable-warnings',
-	'--save-temps',
-	'--cc', cc.cmd_array()[-1],
-	'-X', '-g',
-	'-X', '-O0',
-	'-X', '-pipe',
-	'-X', '-lm',
-	'-X', '-lgmodule-2.0', # undefined reference to `g_module_open_full'
-	'-X', '-DGETTEXT_PACKAGE="valac"',
+testrunner = find_program(join_paths(meson.project_source_root(), 'build-aux', 'testrunner.sh'))
+
+test_cflags_list = supported_test_cflags + [
+	'-lgmodule-2.0', # undefined reference to `g_module_open_full'
 ]
 
 test_envars = [
-	'G_DEBUG=fatal-warnings',
 	'LD_LIBRARY_PATH=' + join_paths(meson.project_build_root(), 'vala') + ':' + join_paths(meson.project_build_root(), 'codegen'),
+	'TEST_VALAC=' + valac_exe.full_path(),
+	'TEST_VAPIGEN=' + vapigen_exe.full_path(),
+	'srcdir=' + meson.current_source_dir(),
+	'abs_srcdir=' + meson.current_source_dir(),
+	'abs_top_srcdir=' + meson.project_source_root(),
+	'abs_top_builddir=' + meson.project_build_root(),
+	'CC=' + cc.cmd_array()[-1],
+	'TEST_CFLAGS=' + ' '.join(test_cflags_list),
 ]
 
-foreach flag : supported_test_cflags
-	vala_flags += ['-X', flag]
-endforeach
+all_tests = test_cases + test_cases_non_null + test_cases_linux + test_cases_posix + test_cases_version_check + gir_test_cases
 
-preparetest = find_program('prepare-test.py')
+if find_program('dbus-run-session', required: false).found()
+	all_tests += dbus_test_cases
+endif
 
-foreach case : test_cases
-	suite = case.split('/')
-	if case.endswith('.vala') or case.endswith('.gs')
-		test(case,
-			valac_exe,
-			workdir: meson.current_build_dir(),
-			args: vala_flags + ['--pkg', 'gio-2.0', join_paths(meson.current_source_dir(), case)],
-			env: test_envars,
-			suite: suite[0],
-		)
-	else
-		invalid_case = run_command(preparetest,
-			join_paths(meson.current_source_dir(), case),
-			join_paths(meson.current_build_dir(), case.underscorify() + '.vala'),
-			check: true,
-		)
-		test(case,
-			valac_exe,
-			workdir: meson.current_build_dir(),
-			should_fail: true,
-			args: vala_flags + ['--pkg', 'gio-2.0', case.underscorify() + '.vala'],
-			env: test_envars,
-			suite: suite[0],
-		)
-	endif
-endforeach
+if dependency('gtk+-3.0', required: false).found()
+	all_tests += gtk_test_cases
+endif
 
-foreach case : test_cases_non_null
-	suite = case.split('/')
-	if case.endswith('.vala') or case.endswith('.gs')
-		test(case,
-			valac_exe,
-			workdir: meson.current_build_dir(),
-			args: vala_flags + ['--enable-experimental-non-null', '--pkg', 'gio-2.0', join_paths(meson.current_source_dir(), case)],
-			env: test_envars,
-			suite: suite[0],
-		)
-	else
-		invalid_case = run_command(preparetest,
-			join_paths(meson.current_source_dir(), case),
-			join_paths(meson.current_build_dir(), case.underscorify() + '.vala'),
-			check: true,
-		)
-		test(case,
-			valac_exe,
-			workdir: meson.current_build_dir(),
-			should_fail: true,
-			args: vala_flags + ['--enable-experimental-non-null', '--pkg', 'gio-2.0', case.underscorify() + '.vala'],
-			env: test_envars,
-			suite: suite[0],
-		)
-	endif
-endforeach
-
-foreach case : test_cases_linux
-	suite = case.split('/')
-	if case.endswith('.vala') or case.endswith('.gs')
-		test(case,
-			valac_exe,
-			workdir: meson.current_build_dir(),
-			args: vala_flags + ['--pkg', 'linux', join_paths(meson.current_source_dir(), case)],
-			env: test_envars,
-			suite: suite[0],
-		)
-	endif
-endforeach
-
-foreach case : test_cases_posix
-	suite = case.split('/')
-	if case.endswith('.vala') or case.endswith('.gs')
-		test(case,
-			valac_exe,
-			workdir: meson.current_build_dir(),
-			args: vala_flags + ['--profile', 'posix', '--pkg', 'posix', '--pkg', 'linux', join_paths(meson.current_source_dir(), case)],
-			env: test_envars,
-			suite: suite[0],
-		)
-	endif
-endforeach
-
-foreach case : test_cases_version_check
-	suite = case.split('/')
-	if case.endswith('.vala') or case.endswith('.gs')
-		test(case,
-			valac_exe,
-			workdir: meson.current_build_dir(),
-			args: vala_flags + [join_paths(meson.current_source_dir(), case)],
-			env: test_envars + ['PKG_CONFIG_PATH=' + join_paths(meson.current_source_dir(), 'version')],
-			suite: suite[0],
-		)
-	else
-		invalid_case = run_command(preparetest,
-			join_paths(meson.current_source_dir(), case),
-			join_paths(meson.current_build_dir(), case.underscorify() + '.vala'),
-			check: true,
-		)
-		test(case,
-			valac_exe,
-			workdir: meson.current_build_dir(),
-			should_fail: true,
-			args: vala_flags + [case.underscorify() + '.vala'],
-			env: test_envars + ['PKG_CONFIG_PATH=' + join_paths(meson.current_source_dir(), 'version')],
-			suite: suite[0],
-		)
-	endif
+foreach case : all_tests
+	test(case,
+		testrunner,
+		args: [join_paths(meson.current_source_dir(), case)],
+		workdir: meson.current_build_dir(),
+		env: test_envars,
+		depends: [valac_exe, vapigen_exe],
+		timeout: 120,
+		suite: case.split('/')[0],
+	)
 endforeach
