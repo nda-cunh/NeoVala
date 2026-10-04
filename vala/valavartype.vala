@@ -36,6 +36,7 @@ public class Vala.VarType : DataType {
 		var result = new VarType (value_owned);
 		result.nullable = nullable;
 		result.is_dynamic = is_dynamic;
+		result.is_weak_ref = is_weak_ref;
 		return result;
 	}
 }

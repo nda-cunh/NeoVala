@@ -317,6 +317,12 @@ public class Vala.ArrayType : ReferenceType {
 			return false;
 		}
 
+		if (is_weak_ref || element_type.is_weak_ref) {
+			error = true;
+			Report.error (source_reference, "arrays of weak references are not allowed");
+			return false;
+		}
+
 		if (fixed_length && length != null) {
 			length.check (context);
 

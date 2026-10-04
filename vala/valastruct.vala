@@ -537,6 +537,12 @@ public class Vala.Struct : TypeSymbol, GenericSymbol {
 				return false;
 			}
 
+			if (f.variable_type.is_weak_ref == true) {
+				error = true;
+				Report.error (f.source_reference, "Weak references are not allowed in structs");
+				return false;
+			}
+
 			if (f.binding == MemberBinding.INSTANCE && f.initializer != null) {
 				error = true;
 				Report.error (f.source_reference, "Instance field initializers not supported");

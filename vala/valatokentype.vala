@@ -154,6 +154,7 @@ public enum Vala.TokenType {
 	VOID,
 	VOLATILE,
 	WEAK,
+	WEAKREF,
 	WHILE,
 	WITH,
 	YIELD;

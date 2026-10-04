@@ -3763,7 +3763,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		return null;
 	}
 
-	public CCodeExpression destroy_local (LocalVariable local) {
+	public virtual CCodeExpression destroy_local (LocalVariable local) {
 		return destroy_value (get_local_cvalue (local));
 	}
 

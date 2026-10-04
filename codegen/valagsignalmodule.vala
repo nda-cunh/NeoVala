@@ -23,7 +23,7 @@
  */
 
 
-public class Vala.GSignalModule : GObjectModule {
+public class Vala.GSignalModule : Vala.WeakRefModule {
 	string get_marshaller_function (Signal sig, List<Parameter> params, DataType return_type, string? prefix = null) {
 		var signature = get_marshaller_signature (sig, params, return_type);
 		string ret;

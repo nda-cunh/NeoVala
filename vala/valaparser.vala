@@ -480,6 +480,7 @@ public class Vala.Parser : CodeVisitor {
 		accept (TokenType.OWNED);
 		accept (TokenType.UNOWNED);
 		accept (TokenType.WEAK);
+		accept (TokenType.WEAKREF);
 
 		if (is_inner_array_type ()) {
 			expect (TokenType.OPEN_PARENS);
@@ -528,6 +529,8 @@ public class Vala.Parser : CodeVisitor {
 
 		bool is_dynamic = accept (TokenType.DYNAMIC);
 
+		bool is_weak_ref = false;
+
 		bool value_owned = owned_by_default;
 
 		if (require_unowned) {
@@ -536,6 +539,9 @@ public class Vala.Parser : CodeVisitor {
 			if (owned_by_default) {
 				if (accept (TokenType.UNOWNED)) {
 					value_owned = false;
+				} else if (accept (TokenType.WEAKREF)) {
+					value_owned = false;
+					is_weak_ref = true;
 				} else if (accept (TokenType.WEAK)) {
 					if (!can_weak_ref && !context.deprecated) {
 						Report.warning (get_last_src (), "deprecated syntax, use `unowned` modifier");
@@ -634,6 +640,7 @@ public class Vala.Parser : CodeVisitor {
 		}
 
 		type.is_dynamic = is_dynamic;
+		type.is_weak_ref = is_weak_ref;
 		type.value_owned = value_owned;
 		return type;
 	}
@@ -1799,6 +1806,10 @@ public class Vala.Parser : CodeVisitor {
 						stmt = parse_statement (current ());
 					}
 					break;
+				case TokenType.WEAKREF:
+					is_decl = true;
+					parse_local_variable_declarations (block);
+					break;
 				case TokenType.VAR:
 					is_decl = true;
 					parse_local_variable_declarations (block);
@@ -2053,11 +2064,35 @@ public class Vala.Parser : CodeVisitor {
 		return new EmptyStatement (get_src (begin));
 	}
 
+	bool next_is_var_implicit () throws ParseError {
+		var begin = get_location ();
+		next ();
+		bool result = (current () == TokenType.ASSIGN || current () == TokenType.COMMA || current () == TokenType.SEMICOLON);
+		rollback (begin);
+		return result;
+	}
+
 	void parse_local_variable_declarations (Block block) throws ParseError {
 		var begin = get_location ();
 		DataType variable_type;
 		bool is_dynamic = accept (TokenType.DYNAMIC);
-		if (accept (TokenType.UNOWNED) && accept (TokenType.VAR)) {
+		bool is_weak_ref = accept (TokenType.WEAKREF);
+
+		if (is_weak_ref) {
+			if (accept (TokenType.VAR)) {
+				variable_type = new VarType (false);
+				variable_type.is_dynamic = is_dynamic;
+			}
+			else if (current () == TokenType.IDENTIFIER && next_is_var_implicit ()) {
+				variable_type = new VarType (false);
+			}
+			else {
+				variable_type = parse_type (true, true);
+			}
+			variable_type.nullable = true;
+			variable_type.is_weak_ref = true;
+			variable_type.value_owned = false;
+		} else if (accept (TokenType.UNOWNED) && accept (TokenType.VAR)) {
 			variable_type = new VarType (false);
 			variable_type.nullable = accept (TokenType.INTERR);
 			variable_type.is_dynamic = is_dynamic;
@@ -2110,6 +2145,7 @@ public class Vala.Parser : CodeVisitor {
 			DataType type_copy = null;
 			if (variable_type != null) {
 				type_copy = variable_type.copy ();
+				type_copy.is_weak_ref =  is_weak_ref;
 			}
 			var local = parse_local_variable (type_copy);
 			block.add_statement (new DeclarationStatement (local, get_src (begin)));

@@ -29,6 +29,7 @@ using GLib;
  * expressions.
  */
 public abstract class Vala.DataType : CodeNode {
+	public bool is_weak_ref { get; set; }
 	/**
 	 * Specifies that the expression or variable owns the value.
 	 */
@@ -699,8 +700,33 @@ public abstract class Vala.DataType : CodeNode {
 	 * @return true if successful
 	 */
 	public bool check_type_arguments (CodeContext context, bool allow_none = false) {
+		if (error) {
+			return false;
+		}
 		int n_type_args = get_type_arguments ().size;
 		int expected_n_type_args = 0;
+
+		if (is_weak_ref) {
+			if ((type_symbol is Class) == false) {
+				error = true;
+				Report.error (source_reference, "weak references are only allowed for class types");
+				return false;
+			}
+			var class_type = (Class) type_symbol;
+			var add_sym = SemanticAnalyzer.symbol_lookup_inherited (class_type, "add_weak_pointer");
+			var remove_sym = SemanticAnalyzer.symbol_lookup_inherited (class_type, "remove_weak_pointer");
+
+			if (!(add_sym is Method)) {
+				error = true;
+				Report.error (source_reference, "weak references are only allowed for class types that implement `add_weak_pointer'");
+				return false;
+			}
+			if (!(remove_sym is Method)) {
+				error = true;
+				Report.error (source_reference, "weak references are only allowed for class types that implement `remove_weak_pointer'");
+				return false;
+			}
+		}
 
 		if (type_symbol is GenericSymbol) {
 			expected_n_type_args = ((GenericSymbol) type_symbol).get_type_parameters ().size;

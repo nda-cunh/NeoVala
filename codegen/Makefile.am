@@ -54,6 +54,7 @@ libvalaccodegen_la_VALASOURCES = \
 	valagtypemodule.vala \
 	valagvaluemodule.vala \
 	valagvariantmodule.vala \
+	valaweakrefmodule.vala \
 	valainterfaceregisterfunction.vala \
 	valastructregisterfunction.vala \
 	valatyperegisterfunction.vala \

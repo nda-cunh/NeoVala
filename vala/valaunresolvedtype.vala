@@ -69,6 +69,7 @@ public class Vala.UnresolvedType : DataType {
 		result.value_owned = value_owned;
 		result.nullable = nullable;
 		result.is_dynamic = is_dynamic;
+		result.is_weak_ref = is_weak_ref;
 		result.unresolved_symbol = unresolved_symbol.copy ();
 
 		foreach (DataType arg in get_type_arguments ()) {
