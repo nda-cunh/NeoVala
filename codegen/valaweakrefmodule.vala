@@ -37,7 +37,7 @@ public class Vala.WeakRefModule : Vala.GObjectModule {
 		if (instance != null && variable is Field) {
 			location = get_cvalue_ (get_field_cvalue ((Field) variable, instance));
 		} else {
-			location = new CCodeIdentifier (get_variable_cname (variable.name));
+			location = get_cvalue_ (get_local_cvalue((LocalVariable) variable));
 		}
 
 		var call = new CCodeFunctionCall (new CCodeIdentifier (macro_name));
@@ -59,6 +59,28 @@ public class Vala.WeakRefModule : Vala.GObjectModule {
 
 	private CCodeExpression generate_weak_ref_unregister (Variable local, TargetValue? instance = null) {
 		return generate_function (local, "remove_weak_pointer", instance);
+	}
+
+	public override CCodeExpression destroy_field (Field field, TargetValue? instance) {
+		if (field.variable_type != null && field.variable_type.is_weak_ref) {
+			return generate_weak_ref_unregister (field, instance);
+		}
+		return base.destroy_field (field, instance);
+	}
+
+	public override void store_field (Field field, TargetValue? instance, TargetValue value, bool initializer, SourceReference? source_reference = null) {
+		if (field.variable_type.is_weak_ref == false) {
+			base.store_field (field, instance, value, initializer, source_reference);
+			return;
+		}
+
+		if (!initializer) {
+			ccode.add_expression (generate_weak_ref_unregister (field, instance));
+		}
+
+		base.store_field (field, instance, value, initializer, source_reference);
+
+		ccode.add_expression (generate_weak_ref_register (field, instance));
 	}
 
 	public override CCodeExpression destroy_local (LocalVariable local) {

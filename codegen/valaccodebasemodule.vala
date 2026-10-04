@@ -3771,7 +3771,7 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 		return destroy_value (get_parameter_cvalue (param));
 	}
 
-	public CCodeExpression destroy_field (Field field, TargetValue? instance) {
+	public virtual CCodeExpression destroy_field (Field field, TargetValue? instance) {
 		return destroy_value (get_field_cvalue (field, instance));
 	}
 
@@ -4701,6 +4701,9 @@ public abstract class Vala.CCodeBaseModule : CodeGenerator {
 	}
 
 	public static bool requires_destroy (DataType type) {
+		if (type.is_weak_ref == true) {
+			return true;
+		}
 		if (!type.is_disposable ()) {
 			return false;
 		}
