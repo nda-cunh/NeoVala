@@ -1,0 +1,7 @@
+Invalid Code
+
+class Foo : Object {}
+
+void main () {
+    owned weakref Foo w = new Foo ();
+}

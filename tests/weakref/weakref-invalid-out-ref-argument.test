@@ -1,0 +1,13 @@
+Invalid Code
+
+class Foo : Object {}
+
+void replace_object (out Foo target) {
+    target = new Foo ();
+}
+
+void main () {
+	var foo = new Foo();
+    weakref Foo w = foo;
+    replace_object (out w); 
+}

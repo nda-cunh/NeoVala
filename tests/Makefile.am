@@ -1517,6 +1517,36 @@ TESTS = \
 	genie/while.gs \
 	glib/conditional-glib-api.vala \
 	bindings/gio/memoryoutputstream.vala \
+	weakref/weakref-invalid-array-type.test \
+	weakref/weakref-invalid-class.test \
+	weakref/weakref-invalid-out-ref-argument.test \
+	weakref/weakref-invalid-owned.test \
+	weakref/weakref-invalid-primitive-type.test \
+	weakref/weakref-invalid-struct-field.test \
+	weakref/weakref-invalid-struct-type.test \
+	weakref/weakref-auto-invalidation.vala \
+	weakref/weakref-balance-async.vala \
+	weakref/weakref-balance-closure.vala \
+	weakref/weakref-balance-control-flow.vala \
+	weakref/weakref-balance-field-finalize.vala \
+	weakref/weakref-balance-field-reassign.vala \
+	weakref/weakref-balance-local-reassign.vala \
+	weakref/weakref-balance-local-scope.vala \
+	weakref/weakref-compact-class.vala \
+	weakref/weakref-exception-scope.vala \
+	weakref/weakref-explicit-null.vala \
+	weakref/weakref-field-auto-invalidation.vala \
+	weakref/weakref-field-basic.vala \
+	weakref/weakref-field-finalize-cleanup.vala \
+	weakref/weakref-field-reassign-old-dies.vala \
+	weakref/weakref-field-reassignment.vala \
+	weakref/weakref-local-reassign-old-dies.vala \
+	weakref/weakref-loop-reassignment.vala \
+	weakref/weakref-multiple-references.vala \
+	weakref/weakref-reassignment.vala \
+	weakref/weakref-return-statement.vala \
+	weakref/weakref-self-assignment.vala \
+	weakref/weakref-simple-node.vala \
 	$(LINUX_TESTS) \
 	$(NULL)
 

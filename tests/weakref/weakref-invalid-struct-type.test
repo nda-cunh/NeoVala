@@ -1,0 +1,10 @@
+Invalid Code
+
+struct Foo {
+    public int val;
+}
+
+void main () {
+	Foo foo = {};
+	weakref Foo w = foo;
+}

@@ -1,0 +1,11 @@
+Invalid Code
+
+class Foo : Object {}
+
+struct Container {
+    public weakref Foo objet; 
+}
+
+void main () {
+    var c = Container ();
+}

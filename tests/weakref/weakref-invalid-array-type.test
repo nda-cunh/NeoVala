@@ -1,0 +1,10 @@
+Invalid Code
+
+class Foo : Object {}
+
+void main () {
+	var foo = new Foo();
+    weakref Foo array[4];
+
+	array[0] = foo;
+}
