@@ -177,6 +177,7 @@ valacore_lib = library(
 	'vala@0@'.format(vala_version_suffix),
 	valacore_sources,
 	valaversion_source,
+	config_vala_file,
 	dependencies: [gobject_dep, gmodule_dep, valagee_dep],
 	version: '0.0.0',
 	install: true,

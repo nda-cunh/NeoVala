@@ -41,7 +41,7 @@ conf.set_quoted('VERSION', vala_version)
 conf.set_quoted('API_VERSION', vala_api_version)
 conf.set_quoted('BUILD_VERSION', vala_version)
 conf.set_quoted('GI_GIRDIR', gi_dep.get_variable('girdir'))
-configure_file(input: 'config.h.meson', output: 'config.h', configuration: conf)
+config_vala_file = configure_file(input: 'config.vala.in', output: 'config.vala', configuration: conf)
 
 pkgconf = configuration_data()
 pkgconf.set('prefix', get_option('prefix'))
@@ -77,7 +77,6 @@ versionconf.set('PACKAGE_VERSION', '@VCS_TAG@')
 add_project_arguments([
 		'--disable-version-header',
 		'--vapidir', join_paths(meson.project_source_root(), 'vapi'),
-		'--pkg', 'config',
 	],
 	language: 'vala'
 )
