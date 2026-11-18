@@ -1,0 +1,14 @@
+[
+{
+	"directory": "/home/nda-cunh/Desktop/NeoVala/posix-test",
+	"command": "valac -X -w -X -O3 -X -flto main.vala -o test",
+	"file": "main.vala",
+	"output": "main.c"
+},
+{
+	"directory": "/home/nda-cunh/Desktop/NeoVala/posix-test",
+	"command": "valac -X -w -X -O3 -X -flto main.vala -o test",
+	"file": "main.vala",
+	"output": "main.c"
+}
+]
