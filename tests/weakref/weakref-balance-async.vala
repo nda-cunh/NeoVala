@@ -49,7 +49,7 @@ void check_balanced () {
 }
 
 async void run (Tracked n) {
-	weakref Tracked? w = n;
+	weak Tracked? w = n;
 	Idle.add (run.callback);
 	yield;
 	assert (w != null);

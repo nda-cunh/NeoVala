@@ -25,11 +25,11 @@ namespace FastVapi {
 
 		public int field;
 
-		public weak Test weak_field;
+		public unowned Test weak_field;
 
 		public string property { get; construct set; }
 
-		public weak Test weak_property { get; private set; }
+		public unowned Test weak_property { get; private set; }
 
 		public Test.sub () {
 		}

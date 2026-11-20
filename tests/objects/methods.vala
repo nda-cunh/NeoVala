@@ -61,7 +61,7 @@ class Maman.SubBar : Bar {
 		BaseAccess.test ();
 
 		string str, str2;
-		weak string weak_str;
+		unowned string weak_str;
 		string[] array;
 
 		test_out (out str);
@@ -179,7 +179,7 @@ void test_out (out string bar) {
 	bar = "hello";
 }
 
-void test_out_weak (out weak string bar) {
+void test_out_weak (out unowned string bar) {
 	bar = "hello";
 }
 
@@ -188,7 +188,7 @@ void test_ref (ref string bar) {
 	bar = "world";
 }
 
-void test_ref_weak (ref weak string bar) {
+void test_ref_weak (ref unowned string bar) {
 	assert (bar == "hello");
 	bar = "world";
 }

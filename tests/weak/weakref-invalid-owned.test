@@ -1,0 +1,7 @@
+Invalid Code
+
+class Foo : Object {}
+
+void main () {
+    owned weak Foo w = new Foo ();
+}

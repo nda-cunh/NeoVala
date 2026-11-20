@@ -49,7 +49,7 @@ void check_balanced () {
 }
 
 int early_return (Tracked n, bool flag) {
-	weakref Tracked? w = n;
+	weak Tracked? w = n;
 	if (flag) {
 		return 1;
 	}
@@ -58,7 +58,7 @@ int early_return (Tracked n, bool flag) {
 
 void loop_break_continue (Tracked n) {
 	for (int i = 0; i < 6; i++) {
-		weakref Tracked? w = n;
+		weak Tracked? w = n;
 		if (i == 1) {
 			continue;
 		}
@@ -71,14 +71,14 @@ void loop_break_continue (Tracked n) {
 
 void try_finally (Tracked n) {
 	try {
-		weakref Tracked? w = n;
+		weak Tracked? w = n;
 		assert (w != null);
 		throw new IOError.FAILED ("x");
 	} catch (IOError e) {
-		weakref Tracked? w2 = n;
+		weak Tracked? w2 = n;
 		assert (w2 != null);
 	} finally {
-		weakref Tracked? w3 = n;
+		weak Tracked? w3 = n;
 		assert (w3 != null);
 	}
 }

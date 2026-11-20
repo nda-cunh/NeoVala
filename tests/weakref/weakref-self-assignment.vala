@@ -8,7 +8,7 @@ class Foo : Object {
 
 void main () {
     var f = new Foo ("Object 6");
-    weakref Foo? w = f;
+    weak Foo? w = f;
     
     w = w;
     

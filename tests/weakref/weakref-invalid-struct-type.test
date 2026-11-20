@@ -6,5 +6,5 @@ struct Foo {
 
 void main () {
 	Foo foo = {};
-	weakref Foo w = foo;
+	weak Foo w = foo;
 }

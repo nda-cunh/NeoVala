@@ -49,7 +49,7 @@ void check_balanced () {
 }
 
 class Holder {
-	public weakref Tracked? target;
+	public weak Tracked? target;
 }
 
 void main () {

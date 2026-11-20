@@ -51,7 +51,7 @@ void check_balanced () {
 delegate int Getter ();
 
 Getter make_getter (Tracked n) {
-	weakref Tracked? w = n;
+	weak Tracked? w = n;
 	return () => { return w != null ? 1 : 0; };
 }
 

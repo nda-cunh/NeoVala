@@ -2,7 +2,7 @@
 namespace Test {
 	[CCode (cheader_filename = "test.h", has_type_id = false)]
 	public struct Foo {
-		public weak Test.FooBarCallbackFunc bar_callback;
+		public unowned Test.FooBarCallbackFunc bar_callback;
 	}
 	[CCode (cheader_filename = "test.h", has_target = false, has_typedef = false)]
 	public delegate void* FooBarCallbackFunc (GLib.SourceFunc func) throws GLib.Error;

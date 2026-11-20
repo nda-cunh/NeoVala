@@ -2,5 +2,5 @@ Invalid Code
 
 void main () {
 	int x = 42;
-    weakref int w = x; 
+    weak int w = x;
 }

@@ -137,6 +137,7 @@ VALA_EXTERN Foo* foo_construct (GType object_type);
 static GType foo_get_type_once (void);
 VALA_EXTERN GType bar_get_type (void) G_GNUC_CONST ;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (Bar, g_object_unref)
+#define vala_g_object_remove_weak_pointer0(var, var2) ((var == NULL) ? NULL : (g_object_remove_weak_pointer (var, var2), var))
 VALA_EXTERN Bar* bar_new (void);
 VALA_EXTERN Bar* bar_construct (GType object_type);
 VALA_EXTERN Foo* bar_get_foo (Bar* self);
@@ -148,6 +149,7 @@ VALA_EXTERN void bar_set_foo_owned (Bar* self,
 VALA_EXTERN Foo* bar_get_foo_weak (Bar* self);
 VALA_EXTERN void bar_set_foo_weak (Bar* self,
                        Foo* value);
+#define vala_g_object_add_weak_pointer0(var, var2) ((var == NULL) ? NULL : (g_object_add_weak_pointer (var, var2), var))
 VALA_EXTERN Foo* bar_get_foo_weak_owned (Bar* self);
 VALA_EXTERN void bar_set_foo_weak_owned (Bar* self,
                              Foo* value);
@@ -343,7 +345,9 @@ bar_set_foo_weak (Bar* self,
 	g_return_if_fail (IS_BAR (self));
 	old_value = bar_get_foo_weak (self);
 	if (old_value != value) {
+		vala_g_object_remove_weak_pointer0 ((GObject*) self->priv->_foo_weak, (void**) (&self->priv->_foo_weak));
 		self->priv->_foo_weak = value;
+		vala_g_object_add_weak_pointer0 ((GObject*) self->priv->_foo_weak, (void**) (&self->priv->_foo_weak));
 		g_object_notify_by_pspec ((GObject *) self, bar_properties[BAR_FOO_WEAK_PROPERTY]);
 	}
 }
@@ -369,7 +373,9 @@ bar_set_foo_weak_owned (Bar* self,
 	g_return_if_fail (IS_BAR (self));
 	old_value = bar_get_foo_weak_owned (self);
 	if (old_value != value) {
+		vala_g_object_remove_weak_pointer0 ((GObject*) self->priv->_foo_weak_owned, (void**) (&self->priv->_foo_weak_owned));
 		self->priv->_foo_weak_owned = value;
+		vala_g_object_add_weak_pointer0 ((GObject*) self->priv->_foo_weak_owned, (void**) (&self->priv->_foo_weak_owned));
 		g_object_notify_by_pspec ((GObject *) self, bar_properties[BAR_FOO_WEAK_OWNED_PROPERTY]);
 	}
 	_g_object_unref0 (old_value);
@@ -404,6 +410,8 @@ bar_finalize (GObject * obj)
 	self = G_TYPE_CHECK_INSTANCE_CAST (obj, TYPE_BAR, Bar);
 	_g_object_unref0 (self->priv->_foo);
 	_g_object_unref0 (self->priv->_foo_owned);
+	vala_g_object_remove_weak_pointer0 ((GObject*) self->priv->_foo_weak, (void**) (&self->priv->_foo_weak));
+	vala_g_object_remove_weak_pointer0 ((GObject*) self->priv->_foo_weak_owned, (void**) (&self->priv->_foo_weak_owned));
 	G_OBJECT_CLASS (bar_parent_class)->finalize (obj);
 }
 
@@ -565,7 +573,9 @@ manam_set_foo_weak (Manam* self,
                     Foo* value)
 {
 	g_return_if_fail (IS_MANAM (self));
+	vala_g_object_remove_weak_pointer0 ((GObject*) self->priv->_foo_weak, (void**) (&self->priv->_foo_weak));
 	self->priv->_foo_weak = value;
+	vala_g_object_add_weak_pointer0 ((GObject*) self->priv->_foo_weak, (void**) (&self->priv->_foo_weak));
 }
 
 Foo*
@@ -586,7 +596,9 @@ manam_set_foo_weak_owned (Manam* self,
                           Foo* value)
 {
 	g_return_if_fail (IS_MANAM (self));
+	vala_g_object_remove_weak_pointer0 ((GObject*) self->priv->_foo_weak_owned, (void**) (&self->priv->_foo_weak_owned));
 	self->priv->_foo_weak_owned = value;
+	vala_g_object_add_weak_pointer0 ((GObject*) self->priv->_foo_weak_owned, (void**) (&self->priv->_foo_weak_owned));
 }
 
 static void
@@ -747,6 +759,8 @@ manam_finalize (Manam * obj)
 	g_signal_handlers_destroy (self);
 	_g_object_unref0 (self->priv->_foo);
 	_g_object_unref0 (self->priv->_foo_owned);
+	vala_g_object_remove_weak_pointer0 ((GObject*) self->priv->_foo_weak, (void**) (&self->priv->_foo_weak));
+	vala_g_object_remove_weak_pointer0 ((GObject*) self->priv->_foo_weak_owned, (void**) (&self->priv->_foo_weak_owned));
 }
 
 static GType

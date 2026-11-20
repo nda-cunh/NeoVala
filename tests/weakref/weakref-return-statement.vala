@@ -8,7 +8,7 @@ class Foo : Object {
 
 Foo? helper5 () {
     var f = new Foo ("Object 5");
-    weakref Foo? w = f;
+    weak Foo? w = f;
     
     return w;
 }

@@ -7,8 +7,8 @@ class Foo : Object {
 }
 
 void main () {
-    weakref Foo? w1 = null;
-    weakref Foo? w2 = null;
+    weak Foo? w1 = null;
+    weak Foo? w2 = null;
     
     {
         var f = new Foo ("Shared Object");

@@ -13,7 +13,7 @@ class Foo : Object {
 
 void main () {
     var f = new Foo ("Object 4");
-    weakref Foo? w = f;
+    weak Foo? w = f;
     
     assert (w != null);
     

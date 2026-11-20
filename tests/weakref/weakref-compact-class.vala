@@ -32,12 +32,12 @@ class Node {
 }
 
 class Holder {
-	public weakref Node? target;
+	public weak Node? target;
 }
 
 void test_local () {
 	var n = new Node ("local");
-	weakref Node? w = n;
+	weak Node? w = n;
 
 	assert (w != null);
 	assert (w.name == "local");

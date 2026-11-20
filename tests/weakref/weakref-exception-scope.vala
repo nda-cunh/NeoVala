@@ -20,7 +20,7 @@ void may_throw () throws TestError {
 }
 
 void main () {
-    weakref Foo? w = null;
+    weak Foo? w = null;
 
     try {
         var f = new Foo ("Objet Exception");

@@ -12,7 +12,7 @@ class Foo : Object {
 }
 
 class Holder : Object {
-    public weakref Foo? target;
+    public weak Foo? target;
 }
 
 void main () {

@@ -51,7 +51,7 @@ void check_balanced () {
 void main () {
 	var n = new Tracked ();
 	{
-		weakref Tracked? w = n;
+		weak Tracked? w = n;
 		assert (w != null);
 		assert (Tracked.registered == 1);
 	}

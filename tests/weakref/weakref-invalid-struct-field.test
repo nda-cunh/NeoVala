@@ -3,7 +3,7 @@ Invalid Code
 class Foo : Object {}
 
 struct Container {
-    public weakref Foo objet; 
+    public weak Foo objet;
 }
 
 void main () {

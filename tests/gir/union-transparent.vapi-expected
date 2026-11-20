@@ -4,6 +4,6 @@ namespace Test {
 	public struct Foo {
 		public uint u;
 		[CCode (array_length = false)]
-		public weak int a[2];
+		public unowned int a[2];
 	}
 }

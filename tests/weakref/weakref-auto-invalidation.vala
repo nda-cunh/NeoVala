@@ -12,7 +12,7 @@ class Foo : Object {
 }
 
 void main () {
-    weakref Foo? w = null;
+    weak Foo? w = null;
     
     {
         var f = new Foo ("Object 1");

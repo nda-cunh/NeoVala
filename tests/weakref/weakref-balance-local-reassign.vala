@@ -52,7 +52,7 @@ void main () {
 	var a = new Tracked ();
 	var b = new Tracked ();
 	{
-		weakref Tracked? w = a;
+		weak Tracked? w = a;
 		assert (Tracked.registered == 1);
 		w = b;
 		assert (Tracked.registered == 1);

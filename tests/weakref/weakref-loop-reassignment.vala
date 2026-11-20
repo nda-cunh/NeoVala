@@ -7,7 +7,7 @@ class Foo : Object {
 }
 
 void main () {
-    weakref Foo? w = null;
+    weak Foo? w = null;
 
     for (int i = 0; i < 5; i++) {
         var f = new Foo (i);

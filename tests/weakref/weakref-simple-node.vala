@@ -21,7 +21,7 @@ class Lst : Object {
 	}
 
 	public Lst? next = null;
-	public weakref Lst prev = null;
+	public weak Lst prev = null;
 }
 
 void main () {
@@ -30,7 +30,7 @@ void main () {
 	test.add(2);
 	test.add(3);
 
-	weakref Lst num_2 = test.next.next.next.prev;
+	weak Lst num_2 = test.next.next.next.prev;
 
 	assert (num_2 != null);
 	assert (num_2?.idx == 2);

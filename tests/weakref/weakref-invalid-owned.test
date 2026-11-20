@@ -3,5 +3,5 @@ Invalid Code
 class Foo : Object {}
 
 void main () {
-    owned weakref Foo w = new Foo ();
+    owned weak Foo w = new Foo ();
 }

@@ -214,7 +214,7 @@ namespace GirTest {
 	}
 	[CCode (cheader_filename = "girtest.h", cname = "GirTestNamedCompactClass", has_type_id = false)]
 	public struct RenamedCompactClass {
-		public weak string s;
+		public unowned string s;
 		public int i;
 		[CCode (cname = "gir_test_named_compactclass_new", has_construct_function = false, type = "GirTestNamedCompactClass*")]
 		public RenamedCompactClass ();
