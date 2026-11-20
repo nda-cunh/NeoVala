@@ -618,8 +618,10 @@ public class Vala.CodeWriter : CodeVisitor {
 			write_string ("class ");
 		}
 
-		if (f.variable_type.is_weak ()) {
+		if (f.variable_type.is_weak_ref) {
 			write_string ("weak ");
+		} else if (f.variable_type.is_weak ()) {
+			write_string ("unowned ");
 		}
 
 		write_type (f.variable_type);
@@ -890,8 +892,10 @@ public class Vala.CodeWriter : CodeVisitor {
 			write_string ("override ");
 		}
 
-		if (prop.property_type.is_weak ()) {
+		if (prop.property_type.is_weak_ref) {
 			write_string ("weak ");
+		} else if (prop.property_type.is_weak ()) {
+			write_string ("unowned ");
 		}
 
 		write_type (prop.property_type);

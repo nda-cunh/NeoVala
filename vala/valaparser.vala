@@ -480,7 +480,6 @@ public class Vala.Parser : CodeVisitor {
 		accept (TokenType.OWNED);
 		accept (TokenType.UNOWNED);
 		accept (TokenType.WEAK);
-		accept (TokenType.WEAKREF);
 
 		if (is_inner_array_type ()) {
 			expect (TokenType.OPEN_PARENS);
@@ -539,14 +538,9 @@ public class Vala.Parser : CodeVisitor {
 			if (owned_by_default) {
 				if (accept (TokenType.UNOWNED)) {
 					value_owned = false;
-				} else if (accept (TokenType.WEAKREF)) {
+				} else if (accept (TokenType.WEAK)) {
 					value_owned = false;
 					is_weak_ref = true;
-				} else if (accept (TokenType.WEAK)) {
-					if (!can_weak_ref && !context.deprecated) {
-						Report.warning (get_last_src (), "deprecated syntax, use `unowned` modifier");
-					}
-					value_owned = false;
 				} else if (accept (TokenType.OWNED)) {
 					Report.warning (get_last_src (), "`owned' is default in this context");
 				}
@@ -1806,7 +1800,7 @@ public class Vala.Parser : CodeVisitor {
 						stmt = parse_statement (current ());
 					}
 					break;
-				case TokenType.WEAKREF:
+				case TokenType.WEAK:
 					is_decl = true;
 					parse_local_variable_declarations (block);
 					break;
@@ -2076,7 +2070,7 @@ public class Vala.Parser : CodeVisitor {
 		var begin = get_location ();
 		DataType variable_type;
 		bool is_dynamic = accept (TokenType.DYNAMIC);
-		bool is_weak_ref = accept (TokenType.WEAKREF);
+		bool is_weak_ref = accept (TokenType.WEAK);
 
 		if (is_weak_ref) {
 			if (accept (TokenType.VAR)) {
@@ -2426,6 +2420,8 @@ public class Vala.Parser : CodeVisitor {
 			} else {
 				rollback (var_or_type);
 				type = parse_type (true, true);
+				// `weak' on an iteration variable is a borrow, not a weak reference
+				type.is_weak_ref = false;
 				if (accept (TokenType.IN)) {
 					Report.error (type.source_reference, "syntax error, expected `unowned var', `var' or type");
 					throw new ParseError.SYNTAX ("expected `unowned var', `var' or type");

@@ -1,4 +1,4 @@
-/* valaweakrefmodule.vala
+/* valaweakmodule.vala
  *
  * Copyright (C) 2026 Da Cunha Nathan
  *
@@ -20,7 +20,7 @@
  * 	Da Cunha Nathan <hydraldev@gmail.com>
  */
 
-public class Vala.WeakRefModule : Vala.GObjectModule {
+public class Vala.WeakModule : Vala.GObjectModule {
 
 	private CCodeExpression generate_function (Variable variable, string function_name, TargetValue? instance = null) {
 		var method = variable.variable_type.get_member (function_name) as Method;

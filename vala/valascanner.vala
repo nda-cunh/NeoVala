@@ -560,9 +560,6 @@ public class Vala.Scanner {
 			case 'v':
 				if (matches (begin, "virtual")) return TokenType.VIRTUAL;
 				break;
-			case 'w':
-				if (matches (begin, "weakref")) return TokenType.WEAKREF;
-				break;
 			}
 			break;
 		case 8:
