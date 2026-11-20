@@ -47,9 +47,9 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/pbutils/pbutils.h", cname = "GstAudioVisualizer", lower_case_cprefix = "gst_audio_visualizer_", type_id = "gst_audio_visualizer_get_type ()")]
 		[GIR (name = "AudioVisualizer")]
 		public abstract class AudioVisualizer : Gst.Element {
-			public weak Gst.Audio.Info ainfo;
+			public unowned Gst.Audio.Info ainfo;
 			public uint req_spf;
-			public weak Gst.Video.Info vinfo;
+			public unowned Gst.Video.Info vinfo;
 			[CCode (has_construct_function = false)]
 			protected AudioVisualizer ();
 			[NoWrapper]

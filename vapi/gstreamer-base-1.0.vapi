@@ -58,7 +58,7 @@ namespace Gst {
 		[GIR (name = "Aggregator")]
 		[Version (since = "1.14")]
 		public abstract class Aggregator : Gst.Element {
-			public weak Gst.Pad srcpad;
+			public unowned Gst.Pad srcpad;
 			[CCode (has_construct_function = false)]
 			protected Aggregator ();
 			[NoWrapper]
@@ -142,7 +142,7 @@ namespace Gst {
 		[GIR (name = "AggregatorPad")]
 		[Version (since = "1.14")]
 		public class AggregatorPad : Gst.Pad {
-			public weak Gst.Segment segment;
+			public unowned Gst.Segment segment;
 			[CCode (has_construct_function = false)]
 			protected AggregatorPad ();
 			public bool drop_buffer ();
@@ -169,7 +169,7 @@ namespace Gst {
 			public uint bit;
 			public uint byte;
 			[CCode (array_length_cname = "size", array_length_type = "guint")]
-			public weak uint8[] data;
+			public unowned uint8[] data;
 			public uint size;
 			[CCode (cname = "gst_bit_reader_new", has_construct_function = false)]
 			public BitReader ([CCode (array_length_cname = "size", array_length_pos = 1.1, array_length_type = "guint")] uint8[] data);
@@ -213,7 +213,7 @@ namespace Gst {
 		public class ByteReader {
 			public uint byte;
 			[CCode (array_length_cname = "size", array_length_type = "guint")]
-			public weak uint8[] data;
+			public unowned uint8[] data;
 			public uint size;
 			[CCode (cname = "gst_byte_reader_new", has_construct_function = false)]
 			public ByteReader ([CCode (array_length_cname = "size", array_length_pos = 1.1, array_length_type = "guint")] uint8[] data);
@@ -355,7 +355,7 @@ namespace Gst {
 			public uint alloc_size;
 			public bool fixed;
 			public bool @owned;
-			public weak Gst.Base.ByteReader parent;
+			public unowned Gst.Base.ByteReader parent;
 			[CCode (cname = "gst_byte_writer_new", has_construct_function = false)]
 			public ByteWriter ();
 			[CCode (cname = "gst_byte_writer_ensure_free_space")]
@@ -447,7 +447,7 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/base/base.h", cname = "GstCollectPads", lower_case_cprefix = "gst_collect_pads_", type_id = "gst_collect_pads_get_type ()")]
 		[GIR (name = "CollectPads")]
 		public class CollectPads : Gst.Object {
-			public weak GLib.SList<Gst.Base.CollectData?> data;
+			public unowned GLib.SList<Gst.Base.CollectData?> data;
 			[CCode (has_construct_function = false)]
 			public CollectPads ();
 			public unowned Gst.Base.CollectData? add_pad (Gst.Pad pad, uint size, [CCode (scope = "async")] Gst.Base.CollectDataDestroyNotify destroy_notify, bool @lock);
@@ -518,9 +518,9 @@ namespace Gst {
 		[GIR (name = "BaseParse")]
 		public abstract class Parse : Gst.Element {
 			public uint flags;
-			public weak Gst.Segment segment;
-			public weak Gst.Pad sinkpad;
-			public weak Gst.Pad srcpad;
+			public unowned Gst.Segment segment;
+			public unowned Gst.Pad sinkpad;
+			public unowned Gst.Pad srcpad;
 			[CCode (has_construct_function = false)]
 			protected Parse ();
 			public bool add_index_entry (uint64 offset, Gst.ClockTime ts, bool key, bool force);
@@ -574,10 +574,10 @@ namespace Gst {
 		[Compact]
 		[GIR (name = "BaseParseFrame")]
 		public class ParseFrame {
-			public weak Gst.Buffer buffer;
+			public unowned Gst.Buffer buffer;
 			public uint flags;
 			public uint64 offset;
-			public weak Gst.Buffer out_buffer;
+			public unowned Gst.Buffer out_buffer;
 			public int overhead;
 			[CCode (has_construct_function = false)]
 			public ParseFrame (Gst.Buffer buffer, Gst.Base.ParseFrameFlags flags, int overhead);
@@ -612,8 +612,8 @@ namespace Gst {
 			public bool playing_async;
 			public GLib.Cond preroll_cond;
 			public GLib.Mutex preroll_lock;
-			public weak Gst.Segment segment;
-			public weak Gst.Pad sinkpad;
+			public unowned Gst.Segment segment;
+			public unowned Gst.Pad sinkpad;
 			[CCode (has_construct_function = false)]
 			protected Sink ();
 			[NoWrapper]
@@ -721,11 +721,11 @@ namespace Gst {
 			public bool live_running;
 			public bool need_newsegment;
 			public int num_buffers_left;
-			public weak Gst.Event pending_seek;
+			public unowned Gst.Event pending_seek;
 			public bool random_access;
 			public bool running;
-			public weak Gst.Segment segment;
-			public weak Gst.Pad srcpad;
+			public unowned Gst.Segment segment;
+			public unowned Gst.Pad srcpad;
 			[CCode (has_construct_function = false)]
 			protected Src ();
 			[NoWrapper]
@@ -801,10 +801,10 @@ namespace Gst {
 		[GIR (name = "BaseTransform")]
 		public abstract class Transform : Gst.Element {
 			public bool have_segment;
-			public weak Gst.Buffer queued_buf;
-			public weak Gst.Segment segment;
-			public weak Gst.Pad sinkpad;
-			public weak Gst.Pad srcpad;
+			public unowned Gst.Buffer queued_buf;
+			public unowned Gst.Segment segment;
+			public unowned Gst.Pad sinkpad;
+			public unowned Gst.Pad srcpad;
 			[CCode (has_construct_function = false)]
 			protected Transform ();
 			[NoWrapper]
@@ -923,11 +923,11 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/base/base.h", cname = "GstCollectData", has_type_id = false)]
 		[GIR (name = "CollectData")]
 		public struct CollectData {
-			public weak Gst.Base.CollectPads collect;
-			public weak Gst.Pad pad;
-			public weak Gst.Buffer buffer;
+			public unowned Gst.Base.CollectPads collect;
+			public unowned Gst.Pad pad;
+			public unowned Gst.Buffer buffer;
 			public uint pos;
-			public weak Gst.Segment segment;
+			public unowned Gst.Segment segment;
 			[CCode (cname = "ABI.abi.dts")]
 			public int64 ABI_abi_dts;
 		}

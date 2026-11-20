@@ -197,10 +197,10 @@ namespace Geocode {
 	[CCode (cheader_filename = "geocode-glib/geocode-glib.h", has_type_id = false)]
 	[Version (since = "3.23.1")]
 	public struct MockBackendQuery {
-		public weak GLib.HashTable<void*,void*> @params;
+		public unowned GLib.HashTable<void*,void*> @params;
 		public bool is_forward;
-		public weak GLib.List<Geocode.Place> results;
-		public weak GLib.Error error;
+		public unowned GLib.List<Geocode.Place> results;
+		public unowned GLib.Error error;
 	}
 	[CCode (cheader_filename = "geocode-glib/geocode-glib.h", cprefix = "GEOCODE_LOCATION_CRS_", type_id = "geocode_location_crs_get_type ()")]
 	public enum LocationCRS {

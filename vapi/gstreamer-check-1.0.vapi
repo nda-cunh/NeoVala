@@ -61,7 +61,7 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/check/check.h", has_type_id = false)]
 		[GIR (name = "CheckABIStruct")]
 		public struct ABIStruct {
-			public weak string name;
+			public unowned string name;
 			public int size;
 			public int abi_size;
 		}
@@ -69,9 +69,9 @@ namespace Gst {
 		[GIR (name = "Harness")]
 		[Version (since = "1.6")]
 		public struct Harness {
-			public weak Gst.Element element;
-			public weak Gst.Pad srcpad;
-			public weak Gst.Pad sinkpad;
+			public unowned Gst.Element element;
+			public unowned Gst.Pad srcpad;
+			public unowned Gst.Pad sinkpad;
 			[CCode (cname = "gst_harness_add_element_sink_pad")]
 			public void add_element_sink_pad (Gst.Pad sinkpad);
 			[CCode (cname = "gst_harness_add_element_src_pad")]

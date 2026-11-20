@@ -8,8 +8,8 @@ namespace Gst {
 		[GIR (name = "RTSPAuthCredential")]
 		[Version (since = "1.12")]
 		public class AuthCredential {
-			public weak string authorization;
-			public weak Gst.RTSP.AuthParam @params;
+			public unowned string authorization;
+			public unowned Gst.RTSP.AuthParam @params;
 			public Gst.RTSP.AuthMethod scheme;
 		}
 		[CCode (cheader_filename = "gst/rtsp/rtsp.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gst_rtsp_auth_param_get_type ()")]
@@ -17,8 +17,8 @@ namespace Gst {
 		[GIR (name = "RTSPAuthParam")]
 		[Version (since = "1.12")]
 		public class AuthParam {
-			public weak string name;
-			public weak string value;
+			public unowned string name;
+			public unowned string value;
 			public Gst.RTSP.AuthParam copy ();
 			public void free ();
 		}
@@ -119,13 +119,13 @@ namespace Gst {
 			[CCode (cname = "type_data.request.method")]
 			public Gst.RTSP.Method type_data_request_method;
 			[CCode (cname = "type_data.request.uri")]
-			public weak string type_data_request_uri;
+			public unowned string type_data_request_uri;
 			[CCode (cname = "type_data.request.version")]
 			public Gst.RTSP.Version type_data_request_version;
 			[CCode (cname = "type_data.response.code")]
 			public Gst.RTSP.StatusCode type_data_response_code;
 			[CCode (cname = "type_data.response.reason")]
-			public weak string type_data_response_reason;
+			public unowned string type_data_response_reason;
 			[CCode (cname = "type_data.response.version")]
 			public Gst.RTSP.Version type_data_response_version;
 			[CCode (cname = "gst_rtsp_message_add_header")]
@@ -206,14 +206,14 @@ namespace Gst {
 		[Compact]
 		[GIR (name = "RTSPUrl")]
 		public class Url {
-			public weak string abspath;
+			public unowned string abspath;
 			public Gst.RTSP.Family family;
-			public weak string host;
-			public weak string passwd;
+			public unowned string host;
+			public unowned string passwd;
 			public uint16 port;
-			public weak string query;
+			public unowned string query;
 			public Gst.RTSP.LowerTrans transports;
-			public weak string user;
+			public unowned string user;
 			public Gst.RTSP.Url copy ();
 			[CCode (array_length = false, array_null_terminated = true)]
 			public string[] decode_path_components ();
@@ -304,8 +304,8 @@ namespace Gst {
 			public Gst.RTSP.TransMode trans;
 			public Gst.RTSP.Profile profile;
 			public Gst.RTSP.LowerTrans lower_transport;
-			public weak string destination;
-			public weak string source;
+			public unowned string destination;
+			public unowned string source;
 			public uint layers;
 			public bool mode_play;
 			public bool mode_record;

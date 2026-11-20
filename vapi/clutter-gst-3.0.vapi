@@ -166,13 +166,13 @@ namespace ClutterGst {
 	[Compact]
 	[Version (since = "3.0")]
 	public class Overlay {
-		public weak ClutterGst.Box position;
+		public unowned ClutterGst.Box position;
 	}
 	[CCode (cheader_filename = "clutter-gst/clutter-gst.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "clutter_gst_overlays_get_type ()")]
 	[Compact]
 	[Version (since = "3.0")]
 	public class Overlays {
-		public weak GLib.GenericArray<void*> overlays;
+		public unowned GLib.GenericArray<void*> overlays;
 	}
 	[CCode (cheader_filename = "clutter-gst/clutter-gst.h", type_id = "clutter_gst_playback_get_type ()")]
 	public class Playback : GLib.Object, ClutterGst.Player {

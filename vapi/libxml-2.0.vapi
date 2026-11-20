@@ -302,7 +302,7 @@ namespace Xml {
 	public class Attr {
 		public ElementType type;
 		[CCode (type = "xmlChar*")]
-		public weak string name;
+		public unowned string name;
 		public Node* children;
 		public Node* last;
 		public Node* parent;
@@ -321,7 +321,7 @@ namespace Xml {
 	public class Attribute {
 		public ElementType type;
 		[CCode (type = "xmlChar*")]
-		public weak string name;
+		public unowned string name;
 		public Node* children;
 		public Node* last;
 		public Dtd* parent;
@@ -332,11 +332,11 @@ namespace Xml {
 		public AttributeType atype;
 		public AttributeDefault def;
 		[CCode (cname = "defaultValue", type = "xmlChar*")]
-		public weak string default_value;
+		public unowned string default_value;
 		[CCode (type = "xmlChar*")]
-		public weak string prefix;
+		public unowned string prefix;
 		[CCode (type = "xmlChar*")]
-		public weak string elem;
+		public unowned string elem;
 	}
 
 	[CCode (cname = "xmlAttributeDefault", cprefix = "XML_ATTRIBUTE_", cheader_filename = "libxml/tree.h", has_type_id = false)]
@@ -394,11 +394,11 @@ namespace Xml {
 		[CCode (cname = "oldNs")]
 		public Ns* old_ns;
 		[CCode (type = "xmlChar*")]
-		public weak string version;
+		public unowned string version;
 		[CCode (type = "xmlChar*")]
-		public weak string encoding;
+		public unowned string encoding;
 		[CCode (cname = "URL", type = "xmlChar*")]
-		public weak string url;
+		public unowned string url;
 		public int charset;
 
 		[CCode (cname = "xmlCopyDoc")]
@@ -540,9 +540,9 @@ namespace Xml {
 		public Xml.HashTable* entities;
 
 		[CCode (cname = "ExternalID", type = "xmlChar*")]
-		public weak string external_id;
+		public unowned string external_id;
 		[CCode (cname = "SystemID", type = "xmlChar*")]
-		public weak string system_id;
+		public unowned string system_id;
 
 		[CCode (cname = "xmlNewDtd")]
 		public Dtd (Doc* doc, [CCode (type = "xmlChar*")] string name, [CCode (type = "xmlChar*")] string external_id, [CCode (type = "xmlChar*")] string system_id);
@@ -556,7 +556,7 @@ namespace Xml {
 	public class Element {
 		public ElementType type;
 		[CCode (type = "xmlChar*")]
-		public weak string name;
+		public unowned string name;
 		public Node* children;
 		public Node* last;
 		public Dtd* parent;
@@ -565,7 +565,7 @@ namespace Xml {
 		public Doc* doc;
 		public Attribute* attributes;
 		[CCode (type = "xmlChar*")]
-		public weak string prefix;
+		public unowned string prefix;
 	}
 
 	[CCode (cname = "xmlElementType", cprefix = "XML_", cheader_filename = "libxml/tree.h", has_type_id = false)]
@@ -602,12 +602,12 @@ namespace Xml {
 		public ElementContentType type;
 		public ElementContentOccur ocur;
 		[CCode (type = "xmlChar*")]
-		public weak string name;
+		public unowned string name;
 		public ElementContent c1;
 		public ElementContent c2;
 		public ElementContent parent;
 		[CCode (type = "xmlChar*")]
-		public weak string prefix;
+		public unowned string prefix;
 	}
 
 	[CCode (cname = "xmlElementContentType", cprefix = "XML_ELEMENT_CONTENT_", cheader_filename = "libxml/tree.h", has_type_id = false)]
@@ -632,7 +632,7 @@ namespace Xml {
 		public void* _private;
 		public ElementType type;
 		[CCode (type = "xmlChar*")]
-		public weak string name;
+		public unowned string name;
 		public Node* children;
 		public Node* last;
 		public Dtd* parent;
@@ -646,12 +646,12 @@ namespace Xml {
 		public int length;
 		public EntityType etype;
 		[CCode (cname = "ExternalID", type = "xmlChar*")]
-		public weak string external_id;
+		public unowned string external_id;
 		[CCode (cname = "SystemID", type = "xmlChar*")]
-		public weak string system_id;
+		public unowned string system_id;
 		public Entity* nexte;
 		[CCode (cname = "URI", type = "xmlChar*")]
-		public weak string uri;
+		public unowned string uri;
 		public int owner;
 		public int checked;
 	}
@@ -671,7 +671,7 @@ namespace Xml {
 	public struct Enumeration {
 		public Enumeration* next;
 		[CCode (type = "xmlChar*")]
-		public weak string name;
+		public unowned string name;
 	}
 
 	[CCode (has_target = false, cname = "xmlHashScannerFull", cheader_filename = "libxml/hash.h")]
@@ -710,7 +710,7 @@ namespace Xml {
 	public class Node {
 		public ElementType type;
 		[CCode (type = "xmlChar*")]
-		public weak string name;
+		public unowned string name;
 		public Node* children;
 		public Node* last;
 		public Node* parent;
@@ -2011,7 +2011,7 @@ namespace Html {
 	[Compact]
 	[CCode (cname = "htmlElemDesc", cheader_filename = "libxml/HTMLparser.h")]
 	public class ElemDesc {
-		public weak string name;
+		public unowned string name;
 		[CCode (cname = "startTag")]
 		public bool start_tag;
 		[CCode (cname = "endTag")]
@@ -2022,16 +2022,16 @@ namespace Html {
 		public bool depr;
 		public char dtd;
 		public bool isinline;
-		public weak string desc;
+		public unowned string desc;
 		[CCode (array_length = false)]
-		public weak string[] subelts;
-		public weak string defaultsubelt;
+		public unowned string[] subelts;
+		public unowned string defaultsubelt;
 		[CCode (array_length = false)]
-		public weak string[] attrs_opt;
+		public unowned string[] attrs_opt;
 		[CCode (array_length = false)]
-		public weak string[] attrs_depr;
+		public unowned string[] attrs_depr;
 		[CCode (array_length = false)]
-		public weak string[] attrs_req;
+		public unowned string[] attrs_req;
 
 		[CCode (cname = "htmlTagLookup")]
 		public static ElemDesc* tag_lookup ([CCode (type = "xmlChar*")] string tag);
@@ -2060,8 +2060,8 @@ namespace Html {
 	public class EntityDesc
 	{
 		public uint value;
-		public weak string name;
-		public weak string desc;
+		public unowned string name;
+		public unowned string desc;
 
 		[CCode (cname = "htmlEntityLookup")]
 		public static EntityDesc* lookup ([CCode (type = "xmlChar*")] string name);

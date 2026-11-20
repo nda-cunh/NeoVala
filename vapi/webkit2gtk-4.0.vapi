@@ -74,12 +74,12 @@ namespace WebKit {
 		[CCode (has_construct_function = false)]
 		protected BackForwardList ();
 		public unowned WebKit.BackForwardListItem? get_back_item ();
-		public GLib.List<weak WebKit.BackForwardListItem> get_back_list ();
-		public GLib.List<weak WebKit.BackForwardListItem> get_back_list_with_limit (uint limit);
+		public GLib.List<unowned WebKit.BackForwardListItem> get_back_list ();
+		public GLib.List<unowned WebKit.BackForwardListItem> get_back_list_with_limit (uint limit);
 		public unowned WebKit.BackForwardListItem? get_current_item ();
 		public unowned WebKit.BackForwardListItem? get_forward_item ();
-		public GLib.List<weak WebKit.BackForwardListItem> get_forward_list ();
-		public GLib.List<weak WebKit.BackForwardListItem> get_forward_list_with_limit (uint limit);
+		public GLib.List<unowned WebKit.BackForwardListItem> get_forward_list ();
+		public GLib.List<unowned WebKit.BackForwardListItem> get_forward_list_with_limit (uint limit);
 		public uint get_length ();
 		public unowned WebKit.BackForwardListItem? get_nth_item (int index);
 		public signal void changed (WebKit.BackForwardListItem? item_added, void* items_removed);

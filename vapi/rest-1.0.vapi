@@ -88,7 +88,7 @@ namespace Rest {
 		public Params ();
 		public void add (owned Rest.Param param);
 		public bool are_strings ();
-		public GLib.HashTable<weak string,weak string> as_string_hash_table ();
+		public GLib.HashTable<unowned string,unowned string> as_string_hash_table ();
 		public Rest.Params copy ();
 		public unowned Rest.Param? @get (string name);
 		public unowned Rest.Params @ref ();
@@ -163,7 +163,7 @@ namespace Rest {
 		public unowned Rest.Params get_params ();
 		public unowned string get_payload ();
 		public int64 get_payload_length ();
-		public GLib.HashTable<weak string,weak string> get_response_headers ();
+		public GLib.HashTable<unowned string,unowned string> get_response_headers ();
 		public uint get_status_code ();
 		public unowned string get_status_message ();
 		public async bool invoke_async (GLib.Cancellable? cancellable) throws GLib.Error;
@@ -185,11 +185,11 @@ namespace Rest {
 	[CCode (cheader_filename = "rest/rest-xml-node.h", ref_function = "rest_xml_node_ref", type_id = "rest_xml_node_get_type ()", unref_function = "rest_xml_node_unref")]
 	[Compact]
 	public class XmlNode {
-		public weak GLib.HashTable<void*,void*> attrs;
-		public weak GLib.HashTable<void*,void*> children;
-		public weak string content;
-		public weak string name;
-		public weak Rest.XmlNode next;
+		public unowned GLib.HashTable<void*,void*> attrs;
+		public unowned GLib.HashTable<void*,void*> children;
+		public unowned string content;
+		public unowned string name;
+		public unowned Rest.XmlNode next;
 		public void add_attr (string attribute, string value);
 		public unowned Rest.XmlNode add_child (string tag);
 		public Rest.XmlNode find (string tag);

@@ -156,9 +156,9 @@ namespace HarfBuzz {
 	[Version (since = "7.0.0")]
 	public class ColorLine {
 		public void* data;
-		public weak HarfBuzz.ColorLineGetColorStopsFunc get_color_stops;
+		public unowned HarfBuzz.ColorLineGetColorStopsFunc get_color_stops;
 		public void* get_color_stops_user_data;
-		public weak HarfBuzz.ColorLineGetExtendFunc get_extend;
+		public unowned HarfBuzz.ColorLineGetExtendFunc get_extend;
 		public void* get_extend_user_data;
 		public void* reserved0;
 		public void* reserved1;
@@ -623,7 +623,7 @@ namespace HarfBuzz {
 	[GIR (name = "segment_properties_t")]
 	public class SegmentProperties {
 		public HarfBuzz.Direction direction;
-		public weak HarfBuzz.Language language;
+		public unowned HarfBuzz.Language language;
 		public HarfBuzz.Script script;
 		[Version (since = "0.9.7")]
 		public HarfBuzz.Bool equal (HarfBuzz.SegmentProperties b);
@@ -833,7 +833,7 @@ namespace HarfBuzz {
 	[Version (since = "2.1.0")]
 	public struct OtNameEntry {
 		public HarfBuzz.OtNameId name_id;
-		public weak HarfBuzz.Language language;
+		public unowned HarfBuzz.Language language;
 	}
 	[CCode (cheader_filename = "hb-gobject.h", cname = "hb_ot_name_id_t")]
 	[GIR (name = "ot_name_id_t")]
@@ -894,13 +894,13 @@ namespace HarfBuzz {
 		public uint32 u32;
 		public int32 i32;
 		[CCode (array_length = false)]
-		public weak uint16 u16[2];
+		public unowned uint16 u16[2];
 		[CCode (array_length = false)]
-		public weak int16 i16[2];
+		public unowned int16 i16[2];
 		[CCode (array_length = false)]
-		public weak uint8 u8[4];
+		public unowned uint8 u8[4];
 		[CCode (array_length = false)]
-		public weak int8 i8[4];
+		public unowned int8 i8[4];
 	}
 	[CCode (cheader_filename = "hb-gobject.h")]
 	public struct var_num_t {
@@ -908,13 +908,13 @@ namespace HarfBuzz {
 		public uint32 u32;
 		public int32 i32;
 		[CCode (array_length = false)]
-		public weak uint16 u16[2];
+		public unowned uint16 u16[2];
 		[CCode (array_length = false)]
-		public weak int16 i16[2];
+		public unowned int16 i16[2];
 		[CCode (array_length = false)]
-		public weak uint8 u8[4];
+		public unowned uint8 u8[4];
 		[CCode (array_length = false)]
-		public weak int8 i8[4];
+		public unowned int8 i8[4];
 	}
 	[CCode (cheader_filename = "hb-gobject.h", cname = "hb_aat_layout_feature_selector_t", cprefix = "HB_AAT_LAYOUT_FEATURE_SELECTOR_", type_id = "hb_gobject_aat_layout_feature_selector_get_type ()")]
 	[GIR (name = "aat_layout_feature_selector_t")]

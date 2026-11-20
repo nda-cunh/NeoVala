@@ -84,14 +84,14 @@ namespace Gst {
 		[GIR (name = "NetAddressMeta")]
 		public struct AddressMeta {
 			public Gst.Meta meta;
-			public weak GLib.SocketAddress addr;
+			public unowned GLib.SocketAddress addr;
 			public static unowned Gst.MetaInfo? get_info ();
 		}
 		[CCode (cheader_filename = "gst/net/net.h", has_type_id = false)]
 		[GIR (name = "NetControlMessageMeta")]
 		public struct ControlMessageMeta {
 			public Gst.Meta meta;
-			public weak GLib.SocketControlMessage message;
+			public unowned GLib.SocketControlMessage message;
 			public static unowned Gst.MetaInfo? get_info ();
 		}
 		[CCode (cheader_filename = "gst/net/net.h", cname = "GstPtpStatisticsCallback", instance_pos = 2.9)]

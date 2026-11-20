@@ -209,8 +209,8 @@ namespace Wnck {
 		[NoAccessorMethod]
 		public Wnck.Handle handle { owned get; construct; }
 		public bool tooltips_enabled { get; set; }
-		public signal void task_enter_notify ([CCode (type = "gpointer")] GLib.List<weak Wnck.Window> windows);
-		public signal void task_leave_notify ([CCode (type = "gpointer")] GLib.List<weak Wnck.Window> windows);
+		public signal void task_enter_notify ([CCode (type = "gpointer")] GLib.List<unowned Wnck.Window> windows);
+		public signal void task_leave_notify ([CCode (type = "gpointer")] GLib.List<unowned Wnck.Window> windows);
 	}
 	[CCode (cheader_filename = "libwnck/libwnck.h", type_id = "wnck_window_get_type ()")]
 	public class Window : GLib.Object {

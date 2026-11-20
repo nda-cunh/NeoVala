@@ -92,7 +92,7 @@ namespace Gst {
 			[CCode (has_construct_function = false)]
 			protected TimedValueControlSource ();
 			public unowned GLib.SequenceIter? find_control_point_iter (Gst.ClockTime timestamp);
-			public GLib.List<weak Gst.TimedValue?> get_all ();
+			public GLib.List<unowned Gst.TimedValue?> get_all ();
 			public int get_count ();
 			public bool @set (Gst.ClockTime timestamp, double value);
 			public bool set_from_list (GLib.SList<Gst.TimedValue?> timedvalues);

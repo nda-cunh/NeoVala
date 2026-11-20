@@ -7,7 +7,7 @@ namespace Gst {
 		[GIR (name = "AudioAggregator")]
 		[Version (since = "1.14")]
 		public abstract class Aggregator : Gst.Base.Aggregator {
-			public weak Gst.Caps current_caps;
+			public unowned Gst.Caps current_caps;
 			[CCode (has_construct_function = false)]
 			protected Aggregator ();
 			[NoWrapper]
@@ -44,7 +44,7 @@ namespace Gst {
 		[GIR (name = "AudioAggregatorPad")]
 		[Version (since = "1.14")]
 		public class AggregatorPad : Gst.Base.AggregatorPad {
-			public weak Gst.Audio.Info info;
+			public unowned Gst.Audio.Info info;
 			[CCode (has_construct_function = false)]
 			protected AggregatorPad ();
 			[NoWrapper]
@@ -61,7 +61,7 @@ namespace Gst {
 			public bool eos_rendering;
 			public uint64 next_sample;
 			public Gst.Clock provided_clock;
-			public weak Gst.Audio.RingBuffer ringbuffer;
+			public unowned Gst.Audio.RingBuffer ringbuffer;
 			[CCode (has_construct_function = false)]
 			protected BaseSink ();
 			public virtual unowned Gst.Audio.RingBuffer? create_ringbuffer ();
@@ -96,9 +96,9 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/audio/audio.h", type_id = "gst_audio_base_src_get_type ()")]
 		[GIR (name = "AudioBaseSrc")]
 		public class BaseSrc : Gst.Base.PushSrc {
-			public weak Gst.Clock clock;
+			public unowned Gst.Clock clock;
 			public uint64 next_sample;
-			public weak Gst.Audio.RingBuffer ringbuffer;
+			public unowned Gst.Audio.RingBuffer ringbuffer;
 			[CCode (has_construct_function = false)]
 			protected BaseSrc ();
 			public virtual unowned Gst.Audio.RingBuffer? create_ringbuffer ();
@@ -120,7 +120,7 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/audio/audio.h", type_id = "gst_audio_cd_src_get_type ()")]
 		[GIR (name = "AudioCdSrc")]
 		public class CdSrc : Gst.Base.PushSrc, Gst.URIHandler {
-			public weak Gst.TagList tags;
+			public unowned Gst.TagList tags;
 			[CCode (has_construct_function = false)]
 			protected CdSrc ();
 			public bool add_track (Gst.Audio.CdSrcTrack track);
@@ -180,10 +180,10 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/audio/audio.h", type_id = "gst_audio_decoder_get_type ()")]
 		[GIR (name = "AudioDecoder")]
 		public abstract class Decoder : Gst.Element {
-			public weak Gst.Segment input_segment;
-			public weak Gst.Segment output_segment;
-			public weak Gst.Pad sinkpad;
-			public weak Gst.Pad srcpad;
+			public unowned Gst.Segment input_segment;
+			public unowned Gst.Segment output_segment;
+			public unowned Gst.Pad sinkpad;
+			public unowned Gst.Pad srcpad;
 			public GLib.RecMutex stream_lock;
 			[CCode (has_construct_function = false)]
 			protected Decoder ();
@@ -267,10 +267,10 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/audio/audio.h", type_id = "gst_audio_encoder_get_type ()")]
 		[GIR (name = "AudioEncoder")]
 		public abstract class Encoder : Gst.Element, Gst.Preset {
-			public weak Gst.Segment input_segment;
-			public weak Gst.Segment output_segment;
-			public weak Gst.Pad sinkpad;
-			public weak Gst.Pad srcpad;
+			public unowned Gst.Segment input_segment;
+			public unowned Gst.Segment output_segment;
+			public unowned Gst.Pad sinkpad;
+			public unowned Gst.Pad srcpad;
 			public GLib.RecMutex stream_lock;
 			[CCode (has_construct_function = false)]
 			protected Encoder ();
@@ -347,7 +347,7 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/audio/audio.h", type_id = "gst_audio_filter_get_type ()")]
 		[GIR (name = "AudioFilter")]
 		public abstract class Filter : Gst.Base.Transform {
-			public weak Gst.Audio.Info info;
+			public unowned Gst.Audio.Info info;
 			[CCode (has_construct_function = false)]
 			protected Filter ();
 			[CCode (cname = "gst_audio_filter_class_add_pad_templates")]
@@ -365,7 +365,7 @@ namespace Gst {
 			public Gst.Audio.Flags flags;
 			public Gst.Audio.Layout layout;
 			[CCode (array_length = false)]
-			public weak Gst.Audio.ChannelPosition position[64];
+			public unowned Gst.Audio.ChannelPosition position[64];
 			public int rate;
 			[CCode (has_construct_function = false)]
 			public Info ();
@@ -545,11 +545,11 @@ namespace Gst {
 		[GIR (name = "AudioBuffer")]
 		[Version (since = "1.16")]
 		public struct Buffer {
-			public weak Gst.Audio.Info info;
+			public unowned Gst.Audio.Info info;
 			public size_t n_samples;
 			public int n_planes;
 			public void* planes;
-			public weak Gst.Buffer buffer;
+			public unowned Gst.Buffer buffer;
 			public static Gst.Buffer? clip (owned Gst.Buffer buffer, Gst.Segment segment, int rate, int bpf);
 			public bool map (Gst.Audio.Info info, Gst.Buffer gstbuffer, Gst.MapFlags flags);
 			public static bool reorder_channels (Gst.Buffer buffer, Gst.Audio.Format format, [CCode (array_length_cname = "channels", array_length_pos = 2.5)] Gst.Audio.ChannelPosition[] from, [CCode (array_length_cname = "channels", array_length_pos = 2.5)] Gst.Audio.ChannelPosition[] to);
@@ -563,7 +563,7 @@ namespace Gst {
 			public uint num;
 			public uint start;
 			public uint end;
-			public weak Gst.TagList tags;
+			public unowned Gst.TagList tags;
 		}
 		[CCode (cheader_filename = "gst/audio/audio.h", has_type_id = false)]
 		[GIR (name = "AudioClippingMeta")]
@@ -590,17 +590,17 @@ namespace Gst {
 		[GIR (name = "AudioFormatInfo")]
 		public struct FormatInfo {
 			public Gst.Audio.Format format;
-			public weak string name;
-			public weak string description;
+			public unowned string name;
+			public unowned string description;
 			public Gst.Audio.FormatFlags flags;
 			public int endianness;
 			public int width;
 			public int depth;
 			[CCode (array_length = false)]
-			public weak uint8 silence[8];
+			public unowned uint8 silence[8];
 			public Gst.Audio.Format unpack_format;
-			public weak Gst.Audio.FormatUnpack unpack_func;
-			public weak Gst.Audio.FormatPack pack_func;
+			public unowned Gst.Audio.FormatUnpack unpack_func;
+			public unowned Gst.Audio.FormatPack pack_func;
 			[Version (since = "1.20")]
 			public void fill_silence ([CCode (array_length_cname = "length", array_length_pos = 1.1, array_length_type = "gsize")] uint8[] dest);
 		}
@@ -618,7 +618,7 @@ namespace Gst {
 		[Version (since = "1.16")]
 		public struct Meta {
 			public Gst.Meta meta;
-			public weak Gst.Audio.Info info;
+			public unowned Gst.Audio.Info info;
 			public size_t samples;
 			public size_t offsets;
 			public static unowned Gst.MetaInfo? get_info ();
@@ -626,9 +626,9 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/audio/audio.h", has_type_id = false)]
 		[GIR (name = "AudioRingBufferSpec")]
 		public struct RingBufferSpec {
-			public weak Gst.Caps caps;
+			public unowned Gst.Caps caps;
 			public Gst.Audio.RingBufferFormatType type;
-			public weak Gst.Audio.Info info;
+			public unowned Gst.Audio.Info info;
 			public uint64 latency_time;
 			public uint64 buffer_time;
 			public int segsize;

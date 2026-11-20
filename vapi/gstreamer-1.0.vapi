@@ -29,7 +29,7 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/gst.h")]
 		public static int construct_win_color (uint colorinfo);
 		[CCode (cheader_filename = "gst/gst.h")]
-		public static GLib.SList<weak Gst.DebugCategory?> get_all_categories ();
+		public static GLib.SList<unowned Gst.DebugCategory?> get_all_categories ();
 		[CCode (cheader_filename = "gst/gst.h")]
 		[Version (since = "1.2")]
 		public static Gst.DebugColorMode get_color_mode ();
@@ -612,14 +612,14 @@ namespace Gst {
 	}
 	[CCode (cheader_filename = "gst/gst.h", type_id = "gst_allocator_get_type ()")]
 	public abstract class Allocator : Gst.Object {
-		public weak Gst.MemoryCopyFunction mem_copy;
-		public weak Gst.MemoryIsSpanFunction mem_is_span;
-		public weak Gst.MemoryMapFunction mem_map;
-		public weak Gst.MemoryMapFullFunction mem_map_full;
-		public weak Gst.MemoryShareFunction mem_share;
-		public weak string mem_type;
-		public weak Gst.MemoryUnmapFunction mem_unmap;
-		public weak Gst.MemoryUnmapFullFunction mem_unmap_full;
+		public unowned Gst.MemoryCopyFunction mem_copy;
+		public unowned Gst.MemoryIsSpanFunction mem_is_span;
+		public unowned Gst.MemoryMapFunction mem_map;
+		public unowned Gst.MemoryMapFullFunction mem_map_full;
+		public unowned Gst.MemoryShareFunction mem_share;
+		public unowned string mem_type;
+		public unowned Gst.MemoryUnmapFunction mem_unmap;
+		public unowned Gst.MemoryUnmapFullFunction mem_unmap_full;
 		[CCode (has_construct_function = false)]
 		protected Allocator ();
 		public virtual Gst.Memory? alloc (size_t size, Gst.AllocationParams? @params);
@@ -708,7 +708,7 @@ namespace Gst {
 		public Gst.ClockTime duration;
 		public uint64 offset;
 		public uint64 offset_end;
-		public weak Gst.BufferPool pool;
+		public unowned Gst.BufferPool pool;
 		public Gst.ClockTime pts;
 		[CCode (has_construct_function = false)]
 		public Buffer ();
@@ -1086,7 +1086,7 @@ namespace Gst {
 	}
 	[CCode (cheader_filename = "gst/gst.h", type_id = "gst_control_binding_get_type ()")]
 	public abstract class ControlBinding : Gst.Object {
-		public weak GLib.ParamSpec pspec;
+		public unowned GLib.ParamSpec pspec;
 		[CCode (has_construct_function = false)]
 		protected ControlBinding ();
 		public virtual bool get_g_value_array (Gst.ClockTime timestamp, Gst.ClockTime interval, [CCode (array_length_cname = "n_values", array_length_pos = 2.5, array_length_type = "guint")] GLib.Value[] values);
@@ -1103,9 +1103,9 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/gst.h", type_id = "gst_control_source_get_type ()")]
 	public abstract class ControlSource : Gst.Object {
 		[CCode (cname = "get_value_array")]
-		public weak Gst.ControlSourceGetValueArray get_value_array_func;
+		public unowned Gst.ControlSourceGetValueArray get_value_array_func;
 		[CCode (cname = "get_value")]
-		public weak Gst.ControlSourceGetValue get_value_func;
+		public unowned Gst.ControlSourceGetValue get_value_func;
 		[CCode (has_construct_function = false)]
 		protected ControlSource ();
 		public bool get_value (Gst.ClockTime timestamp, out double value);
@@ -1212,7 +1212,7 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/gst.h", type_id = "gst_device_provider_get_type ()")]
 	[Version (since = "1.4")]
 	public abstract class DeviceProvider : Gst.Object {
-		public weak GLib.List<void*> devices;
+		public unowned GLib.List<void*> devices;
 		[CCode (has_construct_function = false)]
 		protected DeviceProvider ();
 		[CCode (cname = "gst_device_provider_class_add_metadata")]
@@ -1282,7 +1282,7 @@ namespace Gst {
 		public Gst.ClockTimeDiff base_time;
 		public Gst.Bus bus;
 		public Gst.Clock clock;
-		public weak GLib.List<Gst.Context> contexts;
+		public unowned GLib.List<Gst.Context> contexts;
 		public Gst.State current_state;
 		public Gst.StateChangeReturn last_return;
 		public Gst.State next_state;
@@ -1292,8 +1292,8 @@ namespace Gst {
 		public GLib.List<Gst.Pad> pads;
 		public uint32 pads_cookie;
 		public Gst.State pending_state;
-		public GLib.List<weak Gst.Pad> sinkpads;
-		public GLib.List<weak Gst.Pad> srcpads;
+		public GLib.List<unowned Gst.Pad> sinkpads;
+		public GLib.List<unowned Gst.Pad> srcpads;
 		public Gst.ClockTime start_time;
 		public GLib.Cond state_cond;
 		public uint32 state_cookie;
@@ -1645,10 +1645,10 @@ namespace Gst {
 	[Compact]
 	public class Iterator {
 		public uint32 cookie;
-		public weak Gst.IteratorItemFunction item;
+		public unowned Gst.IteratorItemFunction item;
 		public GLib.Mutex @lock;
 		public uint32 master_cookie;
-		public weak Gst.Iterator pushed;
+		public unowned Gst.Iterator pushed;
 		public uint size;
 		public GLib.Type type;
 		public Gst.Iterator copy ();
@@ -1669,10 +1669,10 @@ namespace Gst {
 	[Compact]
 	public class Memory : Gst.MiniObject {
 		public size_t align;
-		public weak Gst.Allocator allocator;
+		public unowned Gst.Allocator allocator;
 		public size_t maxsize;
 		public size_t offset;
-		public weak Gst.Memory parent;
+		public unowned Gst.Memory parent;
 		public size_t size;
 		public Gst.Memory? copy (ssize_t offset, ssize_t size);
 		public size_t get_sizes (out size_t offset, out size_t maxsize);
@@ -1692,7 +1692,7 @@ namespace Gst {
 	[Compact]
 	public class Message : Gst.MiniObject {
 		public uint32 seqnum;
-		public weak Gst.Object src;
+		public unowned Gst.Object src;
 		public uint64 timestamp;
 		public Gst.MessageType type;
 		[Version (since = "1.10")]
@@ -1875,9 +1875,9 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/gst.h", get_value_function = "g_value_get_boxed", ref_function = "gst_mini_object_ref", set_value_function = "g_value_set_boxed", take_value_function = "g_value_take_boxed", type_id = "G_TYPE_BOXED", unref_function = "gst_mini_object_unref")]
 	[Compact]
 	public abstract class MiniObject {
-		public weak Gst.MiniObjectDisposeFunction dispose;
+		public unowned Gst.MiniObjectDisposeFunction dispose;
 		public uint flags;
-		public weak Gst.MiniObjectFreeFunction free;
+		public unowned Gst.MiniObjectFreeFunction free;
 		public int lockstate;
 		public int refcount;
 		public GLib.Type type;
@@ -1946,7 +1946,7 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/gst.h", type_id = "gst_pad_get_type ()")]
 	public class Pad : Gst.Object {
 		public void* element_private;
-		public weak Gst.PadTemplate padtemplate;
+		public unowned Gst.PadTemplate padtemplate;
 		[CCode (has_construct_function = false, returns_floating_reference = true)]
 		public Pad (string? name, Gst.PadDirection direction);
 		public bool activate_mode (Gst.PadMode mode, bool active);
@@ -2120,7 +2120,7 @@ namespace Gst {
 	}
 	[CCode (cheader_filename = "gst/gst.h", type_id = "gst_pipeline_get_type ()")]
 	public class Pipeline : Gst.Bin, Gst.ChildProxy {
-		public weak Gst.Clock fixed_clock;
+		public unowned Gst.Clock fixed_clock;
 		public Gst.ClockTime stream_time;
 		[CCode (has_construct_function = false, returns_floating_reference = true, type = "GstElement*")]
 		public Pipeline (string? name);
@@ -2818,7 +2818,7 @@ namespace Gst {
 		public uint get_port ();
 		public static string? get_protocol (string uri);
 		[Version (since = "1.6")]
-		public GLib.List<weak string> get_query_keys ();
+		public GLib.List<unowned string> get_query_keys ();
 		[Version (since = "1.6")]
 		public string? get_query_string ();
 		[Version (since = "1.24")]
@@ -2988,7 +2988,7 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/gst.h", has_type_id = false)]
 	public struct ClockEntry {
 		public int refcount;
-		public weak Gst.Clock clock;
+		public unowned Gst.Clock clock;
 		public Gst.ClockEntryType type;
 		public Gst.ClockTime time;
 		public Gst.ClockTime interval;
@@ -3035,25 +3035,25 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/gst.h", has_type_id = false)]
 	public struct FormatDefinition {
 		public Gst.Format value;
-		public weak string nick;
-		public weak string description;
+		public unowned string nick;
+		public unowned string description;
 		public GLib.Quark quark;
 	}
 	[CCode (cheader_filename = "gst/gst.h", has_type_id = false)]
 	public struct MapInfo {
-		public weak Gst.Memory memory;
+		public unowned Gst.Memory memory;
 		public Gst.MapFlags flags;
 		[CCode (array_length_cname = "size", array_length_type = "gsize")]
-		public weak uint8[] data;
+		public unowned uint8[] data;
 		public size_t size;
 		public size_t maxsize;
 		[CCode (array_length = false)]
-		public weak void* user_data[4];
+		public unowned void* user_data[4];
 	}
 	[CCode (cheader_filename = "gst/gst.h", has_type_id = false)]
 	public struct Meta {
 		public Gst.MetaFlags flags;
-		public weak Gst.MetaInfo? info;
+		public unowned Gst.MetaInfo? info;
 		[CCode (array_length = false, array_null_terminated = true)]
 		[Version (since = "1.2")]
 		public static unowned string[] api_type_get_tags (GLib.Type api);
@@ -3073,9 +3073,9 @@ namespace Gst {
 		public GLib.Type api;
 		public GLib.Type type;
 		public size_t size;
-		public weak Gst.MetaInitFunction init_func;
-		public weak Gst.MetaFreeFunction free_func;
-		public weak Gst.MetaTransformFunction transform_func;
+		public unowned Gst.MetaInitFunction init_func;
+		public unowned Gst.MetaFreeFunction free_func;
+		public unowned Gst.MetaTransformFunction transform_func;
 		[Version (since = "1.20")]
 		public bool is_custom ();
 	}
@@ -3101,7 +3101,7 @@ namespace Gst {
 	[Version (since = "1.6")]
 	public struct ParentBufferMeta {
 		public Gst.Meta parent;
-		public weak Gst.Buffer buffer;
+		public unowned Gst.Buffer buffer;
 		public static GLib.Type api_get_type ();
 		public static unowned Gst.MetaInfo? get_info ();
 	}
@@ -3109,15 +3109,15 @@ namespace Gst {
 	public struct PluginDesc {
 		public int major_version;
 		public int minor_version;
-		public weak string name;
-		public weak string description;
-		public weak Gst.PluginInitFunc plugin_init;
-		public weak string version;
-		public weak string license;
-		public weak string source;
-		public weak string package;
-		public weak string origin;
-		public weak string release_datetime;
+		public unowned string name;
+		public unowned string description;
+		public unowned Gst.PluginInitFunc plugin_init;
+		public unowned string version;
+		public unowned string license;
+		public unowned string source;
+		public unowned string package;
+		public unowned string origin;
+		public unowned string release_datetime;
 	}
 	[CCode (cheader_filename = "gst/gst.h", has_type_id = false)]
 	public struct PollFD {
@@ -3128,7 +3128,7 @@ namespace Gst {
 	[Version (since = "1.6")]
 	public struct ProtectionMeta {
 		public Gst.Meta meta;
-		public weak Gst.Structure info;
+		public unowned Gst.Structure info;
 		public static GLib.Type api_get_type ();
 		public static unowned Gst.MetaInfo? get_info ();
 	}
@@ -3136,7 +3136,7 @@ namespace Gst {
 	[Version (since = "1.14")]
 	public struct ReferenceTimestampMeta {
 		public Gst.Meta parent;
-		public weak Gst.Caps reference;
+		public unowned Gst.Caps reference;
 		public Gst.ClockTime timestamp;
 		public Gst.ClockTime duration;
 		public static GLib.Type api_get_type ();
@@ -3144,15 +3144,15 @@ namespace Gst {
 	}
 	[CCode (cheader_filename = "gst/gst.h", has_type_id = false)]
 	public struct StaticCaps {
-		public weak Gst.Caps caps;
-		public weak global::string string;
+		public unowned Gst.Caps caps;
+		public unowned global::string string;
 		public void cleanup ();
 		public Gst.Caps? @get ();
 		public static GLib.Type get_type ();
 	}
 	[CCode (cheader_filename = "gst/gst.h", has_type_id = false)]
 	public struct StaticPadTemplate {
-		public weak string name_template;
+		public unowned string name_template;
 		public Gst.PadDirection direction;
 		public Gst.PadPresence presence;
 		public Gst.StaticCaps static_caps;
@@ -3168,12 +3168,12 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/gst.h", has_type_id = false, lower_case_csuffix = "type_find")]
 	public struct TypeFind {
 		[CCode (cname = "peek")]
-		public weak Gst.TypeFindPeekVFunc peek_v;
+		public unowned Gst.TypeFindPeekVFunc peek_v;
 		[CCode (cname = "suggest")]
-		public weak Gst.TypeFindSuggestVFunc suggest_v;
+		public unowned Gst.TypeFindSuggestVFunc suggest_v;
 		public void* data;
 		[CCode (cname = "get_length")]
-		public weak Gst.TypeFindGetLengthVFunc get_length_v;
+		public unowned Gst.TypeFindGetLengthVFunc get_length_v;
 		public uint64 get_length ();
 		public static GLib.Type get_type ();
 		public unowned uint8? peek (int64 offset, uint size);
@@ -3186,11 +3186,11 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/gst.h", has_type_id = false)]
 	public struct ValueTable {
 		public GLib.Type type;
-		public weak Gst.ValueCompareFunc compare;
-		public weak Gst.ValueSerializeFunc serialize;
-		public weak Gst.ValueDeserializeFunc deserialize;
+		public unowned Gst.ValueCompareFunc compare;
+		public unowned Gst.ValueSerializeFunc serialize;
+		public unowned Gst.ValueDeserializeFunc deserialize;
 		[Version (since = "1.20")]
-		public weak Gst.ValueDeserializeWithPSpecFunc deserialize_with_pspec;
+		public unowned Gst.ValueDeserializeWithPSpecFunc deserialize_with_pspec;
 	}
 	[CCode (cheader_filename = "gst/gst.h", cprefix = "GST_ALLOCATOR_FLAG_", type_id = "gst_allocator_flags_get_type ()")]
 	[Flags]

@@ -290,7 +290,7 @@ namespace CCss {
 	/*[Compact]
 	[CCode (cname = "ccss_property_generic_t")]
 	public class PropertyGeneric: Property {
-		public weak string name;
+		public unowned string name;
 		public void* values;
 	}*/
 

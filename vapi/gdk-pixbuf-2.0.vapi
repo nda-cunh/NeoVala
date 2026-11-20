@@ -69,13 +69,13 @@ namespace Gdk {
 		[Version (since = "2.32")]
 		public static async unowned Gdk.PixbufFormat? get_file_info_async (string filename, GLib.Cancellable? cancellable, out int width, out int height) throws GLib.Error;
 		[Version (since = "2.2")]
-		public static GLib.SList<weak Gdk.PixbufFormat> get_formats ();
+		public static GLib.SList<unowned Gdk.PixbufFormat> get_formats ();
 		public bool get_has_alpha ();
 		public int get_height ();
 		public int get_n_channels ();
 		public unowned string? get_option (string key);
 		[Version (since = "2.32")]
-		public GLib.HashTable<weak string,weak string> get_options ();
+		public GLib.HashTable<unowned string,unowned string> get_options ();
 		[CCode (array_length = false)]
 		public unowned uint8[] get_pixels ();
 		[CCode (array_length_pos = 0.1, array_length_type = "guint")]
@@ -169,16 +169,16 @@ namespace Gdk {
 	[Compact]
 	[Version (since = "2.2")]
 	public class PixbufFormat {
-		public weak string description;
+		public unowned string description;
 		public bool disabled;
-		public weak string domain;
+		public unowned string domain;
 		[CCode (array_length = false, array_null_terminated = true)]
-		public weak string[] extensions;
+		public unowned string[] extensions;
 		public uint32 flags;
-		public weak string license;
+		public unowned string license;
 		[CCode (array_length = false, array_null_terminated = true)]
-		public weak string[] mime_types;
-		public weak string name;
+		public unowned string[] mime_types;
+		public unowned string name;
 		public Gdk.PixbufModulePattern signature;
 		[Version (since = "2.22")]
 		public Gdk.PixbufFormat copy ();
@@ -252,27 +252,27 @@ namespace Gdk {
 	}
 	[CCode (cheader_filename = "gdk-pixbuf/gdk-pixbuf.h", has_type_id = false)]
 	public struct PixbufModule {
-		public weak string module_name;
-		public weak string module_path;
-		public weak GLib.Module module;
-		public weak Gdk.PixbufFormat info;
-		public weak Gdk.PixbufModuleLoadFunc load;
-		public weak Gdk.PixbufModuleLoadXpmDataFunc load_xpm_data;
+		public unowned string module_name;
+		public unowned string module_path;
+		public unowned GLib.Module module;
+		public unowned Gdk.PixbufFormat info;
+		public unowned Gdk.PixbufModuleLoadFunc load;
+		public unowned Gdk.PixbufModuleLoadXpmDataFunc load_xpm_data;
 		[CCode (delegate_target = false)]
-		public weak Gdk.PixbufModuleBeginLoadFunc begin_load;
-		public weak Gdk.PixbufModuleStopLoadFunc stop_load;
-		public weak Gdk.PixbufModuleLoadIncrementFunc load_increment;
-		public weak Gdk.PixbufModuleLoadAnimationFunc load_animation;
-		public weak Gdk.PixbufModuleSaveFunc save;
+		public unowned Gdk.PixbufModuleBeginLoadFunc begin_load;
+		public unowned Gdk.PixbufModuleStopLoadFunc stop_load;
+		public unowned Gdk.PixbufModuleLoadIncrementFunc load_increment;
+		public unowned Gdk.PixbufModuleLoadAnimationFunc load_animation;
+		public unowned Gdk.PixbufModuleSaveFunc save;
 		[CCode (delegate_target = false)]
-		public weak Gdk.PixbufModuleSaveToCallbackFunc save_to_callback;
-		public weak Gdk.PixbufModuleIsSaveOptionSupportedFunc is_save_option_supported;
+		public unowned Gdk.PixbufModuleSaveToCallbackFunc save_to_callback;
+		public unowned Gdk.PixbufModuleIsSaveOptionSupportedFunc is_save_option_supported;
 	}
 	[CCode (cheader_filename = "gdk-pixbuf/gdk-pixbuf.h", has_type_id = false)]
 	[Version (since = "2.2")]
 	public struct PixbufModulePattern {
-		public weak string prefix;
-		public weak string mask;
+		public unowned string prefix;
+		public unowned string mask;
 		public int relevance;
 	}
 	[CCode (cheader_filename = "gdk-pixbuf/gdk-pixdata.h", has_type_id = false)]
@@ -285,7 +285,7 @@ namespace Gdk {
 		public uint32 width;
 		public uint32 height;
 		[CCode (array_length = false)]
-		public weak uint8[] pixel_data;
+		public unowned uint8[] pixel_data;
 		public bool deserialize ([CCode (array_length_cname = "stream_length", array_length_pos = 0.5, array_length_type = "guint")] uint8[] stream) throws GLib.Error;
 		[CCode (array_length_pos = 0.1, array_length_type = "guint")]
 		public uint8[] serialize ();

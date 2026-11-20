@@ -289,9 +289,9 @@ namespace UDisks {
 	[Compact]
 	public class PartitionTypeInfo {
 		public UDisks.PartitionTypeInfoFlags flags;
-		public weak string table_subtype;
-		public weak string table_type;
-		public weak string type;
+		public unowned string table_subtype;
+		public unowned string table_type;
+		public unowned string type;
 		public void free ();
 	}
 	[CCode (cheader_filename = "udisks/udisks.h", type_id = "udisks_swapspace_proxy_get_type ()")]

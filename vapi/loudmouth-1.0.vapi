@@ -66,9 +66,9 @@ namespace Lm {
 	public class MessageNode {
 		public Lm.MessageNode children;
 		public string name;
-		public weak Lm.MessageNode next;
-		public weak Lm.MessageNode parent;
-		public weak Lm.MessageNode prev;
+		public unowned Lm.MessageNode next;
+		public unowned Lm.MessageNode parent;
+		public unowned Lm.MessageNode prev;
 		public bool raw_mode;
 		public string value;
 		public unowned Lm.MessageNode add_child (string name, string? value);

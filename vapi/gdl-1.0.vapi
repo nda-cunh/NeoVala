@@ -3,7 +3,7 @@
 namespace Gdl {
 	[CCode (cheader_filename = "gdl/gdl.h")]
 	public class Dock : Gdl.DockObject, Atk.Implementor, Gtk.Buildable {
-		public weak Gdl.DockObject root;
+		public unowned Gdl.DockObject root;
 		[CCode (has_construct_function = false, type = "GtkWidget*")]
 		public Dock ();
 		public void add_floating_item (Gdl.DockItem item, int x, int y, int width, int height);
@@ -31,7 +31,7 @@ namespace Gdl {
 	}
 	[CCode (cheader_filename = "gdl/gdl.h")]
 	public class DockBar : Gtk.Box, Atk.Implementor, Gtk.Buildable, Gtk.Orientable {
-		public weak Gdl.Dock dock;
+		public unowned Gdl.Dock dock;
 		[CCode (has_construct_function = false, type = "GtkWidget*")]
 		public DockBar (Gdl.Dock dock);
 		public Gtk.Orientation get_orientation ();
@@ -45,7 +45,7 @@ namespace Gdl {
 	}
 	[CCode (cheader_filename = "gdl/gdl.h")]
 	public class DockItem : Gdl.DockObject, Atk.Implementor, Gtk.Buildable {
-		public weak Gtk.Widget child;
+		public unowned Gtk.Widget child;
 		public int dragoff_x;
 		public int dragoff_y;
 		[CCode (has_construct_function = false, type = "GtkWidget*")]
@@ -88,7 +88,7 @@ namespace Gdl {
 	}
 	[CCode (cheader_filename = "gdl/gdl.h")]
 	public class DockItemGrip : Gtk.Container, Atk.Implementor, Gtk.Buildable {
-		public weak Gdk.Window title_window;
+		public unowned Gdk.Window title_window;
 		[CCode (has_construct_function = false, type = "GtkWidget*")]
 		public DockItemGrip (Gdl.DockItem item);
 		public void hide_handle ();
@@ -119,10 +119,10 @@ namespace Gdl {
 	}
 	[CCode (cheader_filename = "gdl/gdl.h")]
 	public class DockMaster : GLib.Object {
-		public weak Gdl.DockObject controller;
+		public unowned Gdl.DockObject controller;
 		public int dock_number;
-		public weak GLib.HashTable dock_objects;
-		public weak GLib.List toplevel_docks;
+		public unowned GLib.HashTable dock_objects;
+		public unowned GLib.List toplevel_docks;
 		[CCode (has_construct_function = false)]
 		protected DockMaster ();
 		public void add (Gdl.DockObject object);
@@ -217,18 +217,18 @@ namespace Gdl {
 	[CCode (cheader_filename = "gdl/gdl.h")]
 	[Compact]
 	public class DockRequest {
-		public weak Gdl.DockObject applicant;
+		public unowned Gdl.DockObject applicant;
 		public GLib.Value extra;
 		public Gdl.DockPlacement position;
 		public Gdk.Rectangle rect;
-		public weak Gdl.DockObject target;
+		public unowned Gdl.DockObject target;
 	}
 	[CCode (cheader_filename = "gdl/gdl.h")]
 	[Compact]
 	public class Pixmap {
-		public weak string fname;
-		public weak string path;
-		public weak string pixbuf;
+		public unowned string fname;
+		public unowned string path;
+		public unowned string pixbuf;
 	}
 	[CCode (cheader_filename = "gdl/gdl.h", cprefix = "GDL_DOCK_BAR_")]
 	public enum DockBarStyle {

@@ -22,10 +22,10 @@ namespace Unique {
 	}
 	[CCode (cheader_filename = "unique/unique.h")]
 	public class Backend : GLib.Object {
-		public weak string name;
-		public weak Unique.App parent;
-		public weak Gdk.Screen screen;
-		public weak string startup_id;
+		public unowned string name;
+		public unowned Unique.App parent;
+		public unowned Gdk.Screen screen;
+		public unowned string startup_id;
 		public uint workspace;
 		[CCode (has_construct_function = false)]
 		protected Backend ();

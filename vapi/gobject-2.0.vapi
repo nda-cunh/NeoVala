@@ -119,7 +119,7 @@ namespace GLib {
 		public int minimum;
 		public uint n_values;
 		[CCode (array_length_cname = "n_values", array_length_type = "guint")]
-		public weak GLib.EnumValue[] values;
+		public unowned GLib.EnumValue[] values;
 		public static void complete_type_info (GLib.Type g_enum_type, out GLib.TypeInfo info, [CCode (array_length = false, array_null_terminated = true, type = "const GEnumValue*")] GLib.EnumValue[] const_values);
 		public unowned GLib.EnumValue? get_value (int value);
 		public unowned GLib.EnumValue? get_value_by_name (string name);
@@ -133,7 +133,7 @@ namespace GLib {
 		public uint mask;
 		public uint n_values;
 		[CCode (array_length_cname = "n_values", array_length_type = "guint")]
-		public weak GLib.FlagsValue[] values;
+		public unowned GLib.FlagsValue[] values;
 		public static void complete_type_info (GLib.Type g_flags_type, out GLib.TypeInfo info, [CCode (array_length = false, array_null_terminated = true, type = "const GFlagsValue*")] GLib.FlagsValue[] const_values);
 		public unowned GLib.FlagsValue? get_first_value (uint value);
 		public unowned GLib.FlagsValue? get_value_by_name (string name);
@@ -325,14 +325,14 @@ namespace GLib {
 	[CCode (cheader_filename = "glib-object.h", type_id = "G_TYPE_PARAM_ENUM")]
 	public class ParamSpecEnum : GLib.ParamSpec {
 		public int default_value;
-		public weak GLib.EnumClass enum_class;
+		public unowned GLib.EnumClass enum_class;
 		[CCode (cname = "g_param_spec_enum", has_construct_function = false, type = "GParamSpec*")]
 		public ParamSpecEnum (string name, string? nick, string? blurb, GLib.Type enum_type, int default_value, GLib.ParamFlags flags);
 	}
 	[CCode (cheader_filename = "glib-object.h", type_id = "G_TYPE_PARAM_FLAGS")]
 	public class ParamSpecFlags : GLib.ParamSpec {
 		public uint default_value;
-		public weak GLib.FlagsClass flags_class;
+		public unowned GLib.FlagsClass flags_class;
 		[CCode (cname = "g_param_spec_flags", has_construct_function = false, type = "GParamSpec*")]
 		public ParamSpecFlags (string name, string? nick, string? blurb, GLib.Type flags_type, uint default_value, GLib.ParamFlags flags);
 	}
@@ -383,7 +383,7 @@ namespace GLib {
 	[CCode (cheader_filename = "glib-object.h", type_id = "G_TYPE_PARAM_OVERRIDE")]
 	[Version (since = "2.4")]
 	public class ParamSpecOverride : GLib.ParamSpec {
-		public weak GLib.ParamSpec overridden;
+		public unowned GLib.ParamSpec overridden;
 		[CCode (cname = "g_param_spec_override", has_construct_function = false, type = "GParamSpec*")]
 		public ParamSpecOverride (string name, GLib.ParamSpec overridden);
 	}
@@ -415,7 +415,7 @@ namespace GLib {
 #else
 		public unowned GLib.ParamSpec[] list (GLib.Type owner_type);
 #endif
-		public GLib.List<weak GLib.ParamSpec> list_owned (GLib.Type owner_type);
+		public GLib.List<unowned GLib.ParamSpec> list_owned (GLib.Type owner_type);
 		public unowned GLib.ParamSpec? lookup (string param_name, GLib.Type owner_type, bool walk_ancestors);
 		public void remove (GLib.ParamSpec pspec);
 	}
@@ -578,14 +578,14 @@ namespace GLib {
 	[CCode (cheader_filename = "glib-object.h", has_type_id = false)]
 	public struct EnumValue {
 		public int value;
-		public weak string value_name;
-		public weak string value_nick;
+		public unowned string value_name;
+		public unowned string value_nick;
 	}
 	[CCode (cheader_filename = "glib-object.h", has_type_id = false)]
 	public struct FlagsValue {
 		public uint value;
-		public weak string value_name;
-		public weak string value_nick;
+		public unowned string value_name;
+		public unowned string value_nick;
 	}
 	[CCode (cheader_filename = "glib-object.h", has_type_id = false)]
 	public struct InterfaceInfo {
@@ -601,7 +601,7 @@ namespace GLib {
 	[CCode (cheader_filename = "glib-object.h", has_copy_function = false, has_destroy_function = false, has_type_id = false)]
 	[Version (deprecated = true, deprecated_since = "2.54")]
 	public struct Parameter {
-		public weak string name;
+		public unowned string name;
 		public GLib.Value value;
 	}
 	[CCode (cheader_filename = "glib-object.h", cname = "guint")]
@@ -650,13 +650,13 @@ namespace GLib {
 	[CCode (cheader_filename = "glib-object.h", has_type_id = false)]
 	public struct SignalQuery {
 		public uint signal_id;
-		public weak string signal_name;
+		public unowned string signal_name;
 		public GLib.Type itype;
 		public GLib.SignalFlags signal_flags;
 		public GLib.Type return_type;
 		public uint n_params;
 		[CCode (array_length_cname = "n_params", array_length_type = "guint")]
-		public weak GLib.Type[] param_types;
+		public unowned GLib.Type[] param_types;
 	}
 	[CCode (cheader_filename = "glib-object.h", get_value_function = "g_value_get_gtype", marshaller_type_name = "GTYPE", set_value_function = "g_value_set_gtype", type_id = "G_TYPE_GTYPE", default_value = "G_TYPE_NONE", default_value_on_error = "G_TYPE_INVALID")]
 	[GIR (fullname = "GType")]
@@ -773,7 +773,7 @@ namespace GLib {
 	[CCode (cheader_filename = "glib-object.h", has_type_id = false)]
 	public struct TypeQuery {
 		public GLib.Type type;
-		public weak string type_name;
+		public unowned string type_name;
 		public uint class_size;
 		public uint instance_size;
 	}

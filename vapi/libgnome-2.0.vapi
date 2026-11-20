@@ -4,23 +4,23 @@ namespace Gnome {
 	[CCode (cheader_filename = "libgnome/libgnome.h", type_id = "gnome_module_info_get_type ()")]
 	[Compact]
 	public class ModuleInfo {
-		public weak Gnome.ModuleClassInitHook class_init;
-		public weak string description;
-		public weak Gnome.ModuleGetGOptionGroupFunc get_goption_group_func;
-		public weak Gnome.ModuleInitHook init_pass;
-		public weak Gnome.ModuleHook instance_init;
-		public weak string name;
-		public weak string opt_prefix;
-		public weak Gnome.ModuleHook post_args_parse;
-		public weak Gnome.ModuleHook pre_args_parse;
-		public weak Gnome.ModuleRequirement requirements;
-		public weak string version;
+		public unowned Gnome.ModuleClassInitHook class_init;
+		public unowned string description;
+		public unowned Gnome.ModuleGetGOptionGroupFunc get_goption_group_func;
+		public unowned Gnome.ModuleInitHook init_pass;
+		public unowned Gnome.ModuleHook instance_init;
+		public unowned string name;
+		public unowned string opt_prefix;
+		public unowned Gnome.ModuleHook post_args_parse;
+		public unowned Gnome.ModuleHook pre_args_parse;
+		public unowned Gnome.ModuleRequirement requirements;
+		public unowned string version;
 	}
 	[CCode (cheader_filename = "libgnome/libgnome.h")]
 	[Compact]
 	public class ModuleRequirement {
-		public weak Gnome.ModuleInfo module_info;
-		public weak string required_version;
+		public unowned Gnome.ModuleInfo module_info;
+		public unowned string required_version;
 	}
 	[CCode (cheader_filename = "libgnome/libgnome.h")]
 	public class Program : GLib.Object {
@@ -75,7 +75,7 @@ namespace Gnome {
 	[CCode (cheader_filename = "libgnome/libgnome.h")]
 	[Compact]
 	public class Trigger {
-		public weak string level;
+		public unowned string level;
 		public Gnome.TriggerType type;
 		public void* u;
 	}

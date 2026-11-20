@@ -4,28 +4,28 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h", free_function = "purple_account_destroy")]
 	[Compact]
 	public class Account {
-		public weak string alias;
-		public weak string buddy_icon_path;
-		public weak GLib.SList deny;
+		public unowned string alias;
+		public unowned string buddy_icon_path;
+		public unowned GLib.SList deny;
 		public bool disconnecting;
-		public weak Purple.Connection gc;
-		public weak string password;
+		public unowned Purple.Connection gc;
+		public unowned string password;
 		public Purple.PrivacyType perm_deny;
-		public weak GLib.SList permit;
-		public weak Purple.Presence presence;
+		public unowned GLib.SList permit;
+		public unowned Purple.Presence presence;
 		public void* priv;
-		public weak string protocol_id;
-		public weak Purple.ProxyInfo proxy_info;
-		public weak Purple.AccountRegistrationCb registration_cb;
+		public unowned string protocol_id;
+		public unowned Purple.ProxyInfo proxy_info;
+		public unowned Purple.AccountRegistrationCb registration_cb;
 		public void* registration_cb_user_data;
 		public bool remember_pass;
-		public weak GLib.HashTable settings;
-		public weak GLib.List status_types;
-		public weak Purple.Log system_log;
+		public unowned GLib.HashTable settings;
+		public unowned GLib.List status_types;
+		public unowned Purple.Log system_log;
 		public void* ui_data;
-		public weak GLib.HashTable ui_settings;
-		public weak string user_info;
-		public weak string username;
+		public unowned GLib.HashTable ui_settings;
+		public unowned string user_info;
+		public unowned string username;
 		[CCode (has_construct_function = false)]
 		public Account (string username, string protocol_id);
 		public void add_buddies (GLib.List buddies);
@@ -119,8 +119,8 @@ namespace Purple {
 	public class AccountOption {
 		public void* default_value;
 		public bool masked;
-		public weak string pref_name;
-		public weak string text;
+		public unowned string pref_name;
+		public unowned string text;
 		public Purple.PrefType type;
 		[CCode (has_construct_function = false)]
 		public AccountOption (Purple.PrefType type, string text, string pref_name);
@@ -146,29 +146,29 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class AccountPrefsUiOps {
-		public weak GLib.Callback load;
-		public weak GLib.Callback save;
-		public weak GLib.Callback schedule_save;
-		public weak GLib.Callback set_bool;
-		public weak GLib.Callback set_int;
-		public weak GLib.Callback set_string;
+		public unowned GLib.Callback load;
+		public unowned GLib.Callback save;
+		public unowned GLib.Callback schedule_save;
+		public unowned GLib.Callback set_bool;
+		public unowned GLib.Callback set_int;
+		public unowned GLib.Callback set_string;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class AccountUiOps {
-		public weak GLib.Callback close_account_request;
-		public weak GLib.Callback notify_added;
-		public weak GLib.Callback request_add;
-		public weak GLib.Callback request_authorize;
-		public weak GLib.Callback status_changed;
+		public unowned GLib.Callback close_account_request;
+		public unowned GLib.Callback notify_added;
+		public unowned GLib.Callback request_add;
+		public unowned GLib.Callback request_authorize;
+		public unowned GLib.Callback status_changed;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_account_user_split_destroy")]
 	[Compact]
 	public class AccountUserSplit {
-		public weak string default_value;
-		public weak GLib.ObjectPath field_sep;
+		public unowned string default_value;
+		public unowned GLib.ObjectPath field_sep;
 		public bool reverse;
-		public weak string text;
+		public unowned string text;
 		[CCode (has_construct_function = false)]
 		public AccountUserSplit (string text, string default_value, GLib.ObjectPath sep);
 		public unowned string get_default_value ();
@@ -180,11 +180,11 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class AttentionType {
-		public weak string icon_name;
-		public weak string incoming_description;
-		public weak string name;
-		public weak string outgoing_description;
-		public weak string unlocalized_name;
+		public unowned string icon_name;
+		public unowned string incoming_description;
+		public unowned string name;
+		public unowned string outgoing_description;
+		public unowned string unlocalized_name;
 		[CCode (has_construct_function = false)]
 		public AttentionType (string ulname, string name, string inc_desc, string out_desc);
 		public unowned string get_icon_name ();
@@ -201,11 +201,11 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class BlistNode {
-		public weak Purple.BlistNode child;
+		public unowned Purple.BlistNode child;
 		public Purple.BlistNodeFlags flags;
-		public weak Purple.BlistNode parent;
-		public weak Purple.BlistNode prev;
-		public weak GLib.HashTable settings;
+		public unowned Purple.BlistNode parent;
+		public unowned Purple.BlistNode prev;
+		public unowned GLib.HashTable settings;
 		public Purple.BlistNodeType type;
 		public void* ui_data;
 		public bool get_bool (string key);
@@ -229,32 +229,32 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class BlistUiOps {
-		public weak GLib.Callback destroy;
-		public weak GLib.Callback new_list;
-		public weak GLib.Callback new_node;
-		public weak GLib.Callback remove;
-		public weak GLib.Callback remove_node;
-		public weak GLib.Callback request_add_buddy;
-		public weak GLib.Callback request_add_chat;
-		public weak GLib.Callback request_add_group;
-		public weak GLib.Callback save_account;
-		public weak GLib.Callback save_node;
-		public weak GLib.Callback set_visible;
-		public weak GLib.Callback show;
-		public weak GLib.Callback update;
+		public unowned GLib.Callback destroy;
+		public unowned GLib.Callback new_list;
+		public unowned GLib.Callback new_node;
+		public unowned GLib.Callback remove;
+		public unowned GLib.Callback remove_node;
+		public unowned GLib.Callback request_add_buddy;
+		public unowned GLib.Callback request_add_chat;
+		public unowned GLib.Callback request_add_group;
+		public unowned GLib.Callback save_account;
+		public unowned GLib.Callback save_node;
+		public unowned GLib.Callback set_visible;
+		public unowned GLib.Callback show;
+		public unowned GLib.Callback update;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_buddy_destroy")]
 	[Compact]
 	public class Buddy {
-		public weak Purple.Account account;
-		public weak string alias;
-		public weak Purple.BuddyIcon icon;
+		public unowned Purple.Account account;
+		public unowned string alias;
+		public unowned Purple.BuddyIcon icon;
 		public Purple.MediaCaps media_caps;
-		public weak string name;
-		public weak Purple.BlistNode node;
-		public weak Purple.Presence presence;
+		public unowned string name;
+		public unowned Purple.BlistNode node;
+		public unowned Purple.Presence presence;
 		public void* proto_data;
-		public weak string server_alias;
+		public unowned string server_alias;
 		[CCode (has_construct_function = false)]
 		public Buddy (Purple.Account account, string name, string alias);
 		public unowned Purple.Account get_account ();
@@ -313,7 +313,7 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class BuddyIconSpec {
-		public weak string format;
+		public unowned string format;
 		public size_t max_filesize;
 		public int max_height;
 		public int max_width;
@@ -324,15 +324,15 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class BuddyList {
-		public weak GLib.HashTable buddies;
-		public weak Purple.BlistNode root;
+		public unowned GLib.HashTable buddies;
+		public unowned Purple.BlistNode root;
 		public void* ui_data;
 	}
 	[CCode (cheader_filename = "purple.h", copy_function = "purple_certificate_copy", free_function = "purple_certificate_destroy")]
 	[Compact]
 	public class Certificate {
 		public void* data;
-		public weak Purple.CertificateScheme scheme;
+		public unowned Purple.CertificateScheme scheme;
 		public static void add_ca_search_path (string path);
 		public static bool check_signature_chain (GLib.List chain);
 		public static bool check_signature_chain_with_failing (GLib.List chain, out unowned Purple.Certificate failing);
@@ -372,16 +372,16 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class CertificatePool {
-		public weak GLib.Callback cert_in_pool;
+		public unowned GLib.Callback cert_in_pool;
 		public void* data;
-		public weak GLib.Callback delete_cert;
-		public weak string fullname;
-		public weak GLib.Callback get_cert;
-		public weak GLib.Callback init;
-		public weak string name;
-		public weak GLib.Callback put_cert;
-		public weak string scheme_name;
-		public weak GLib.Callback uninit;
+		public unowned GLib.Callback delete_cert;
+		public unowned string fullname;
+		public unowned GLib.Callback get_cert;
+		public unowned GLib.Callback init;
+		public unowned string name;
+		public unowned GLib.Callback put_cert;
+		public unowned string scheme_name;
+		public unowned GLib.Callback uninit;
 		public bool contains (string id);
 		public bool @delete (string id);
 		public static void destroy_idlist (GLib.List idlist);
@@ -395,52 +395,52 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class CertificateScheme {
-		public weak GLib.Callback check_subject_name;
-		public weak GLib.Callback compare_pubkeys;
-		public weak GLib.Callback copy_certificate;
-		public weak GLib.Callback destroy_certificate;
-		public weak GLib.Callback export_certificate;
-		public weak string fullname;
-		public weak GLib.Callback get_fingerprint_sha1;
-		public weak GLib.Callback get_fingerprint_sha256;
-		public weak GLib.Callback get_issuer_unique_id;
-		public weak GLib.Callback get_subject_name;
-		public weak GLib.Callback get_times;
-		public weak GLib.Callback get_unique_id;
-		public weak GLib.Callback import_certificate;
-		public weak GLib.Callback import_certificates;
-		public weak string name;
-		public weak GLib.Callback register_trusted_tls_cert;
-		public weak GLib.Callback signed_by;
+		public unowned GLib.Callback check_subject_name;
+		public unowned GLib.Callback compare_pubkeys;
+		public unowned GLib.Callback copy_certificate;
+		public unowned GLib.Callback destroy_certificate;
+		public unowned GLib.Callback export_certificate;
+		public unowned string fullname;
+		public unowned GLib.Callback get_fingerprint_sha1;
+		public unowned GLib.Callback get_fingerprint_sha256;
+		public unowned GLib.Callback get_issuer_unique_id;
+		public unowned GLib.Callback get_subject_name;
+		public unowned GLib.Callback get_times;
+		public unowned GLib.Callback get_unique_id;
+		public unowned GLib.Callback import_certificate;
+		public unowned GLib.Callback import_certificates;
+		public unowned string name;
+		public unowned GLib.Callback register_trusted_tls_cert;
+		public unowned GLib.Callback signed_by;
 		public uint struct_size;
-		public weak GLib.Callback verify_cert;
+		public unowned GLib.Callback verify_cert;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class CertificateVerificationRequest {
-		public weak Purple.CertificateVerifiedCallback cb;
+		public unowned Purple.CertificateVerifiedCallback cb;
 		public void* cb_data;
-		public weak GLib.List cert_chain;
+		public unowned GLib.List cert_chain;
 		public void* data;
-		public weak Purple.CertificateScheme scheme;
-		public weak string subject_name;
-		public weak Purple.CertificateVerifier verifier;
+		public unowned Purple.CertificateScheme scheme;
+		public unowned string subject_name;
+		public unowned Purple.CertificateVerifier verifier;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class CertificateVerifier {
-		public weak GLib.Callback destroy_request;
-		public weak string name;
-		public weak string scheme_name;
-		public weak GLib.Callback start_verification;
+		public unowned GLib.Callback destroy_request;
+		public unowned string name;
+		public unowned string scheme_name;
+		public unowned GLib.Callback start_verification;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_chat_destroy")]
 	[Compact]
 	public class Chat {
-		public weak Purple.Account account;
-		public weak string alias;
-		public weak GLib.HashTable components;
-		public weak Purple.BlistNode node;
+		public unowned Purple.Account account;
+		public unowned string alias;
+		public unowned GLib.HashTable components;
+		public unowned Purple.BlistNode node;
 		[CCode (has_construct_function = false)]
 		public Chat (Purple.Account account, string alias, GLib.HashTable components);
 		public unowned Purple.Account get_account ();
@@ -487,34 +487,34 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class CipherOps {
-		public weak GLib.Callback append;
-		public weak GLib.Callback decrypt;
-		public weak GLib.Callback digest;
-		public weak GLib.Callback encrypt;
-		public weak GLib.Callback get_batch_mode;
-		public weak GLib.Callback get_block_size;
-		public weak GLib.Callback get_key_size;
-		public weak GLib.Callback get_option;
-		public weak GLib.Callback get_salt_size;
-		public weak GLib.Callback init;
-		public weak GLib.Callback reset;
-		public weak GLib.Callback set_batch_mode;
-		public weak GLib.Callback set_iv;
-		public weak GLib.Callback set_key;
-		public weak GLib.Callback set_key_with_len;
-		public weak GLib.Callback set_option;
-		public weak GLib.Callback set_salt;
-		public weak GLib.Callback uninit;
+		public unowned GLib.Callback append;
+		public unowned GLib.Callback decrypt;
+		public unowned GLib.Callback digest;
+		public unowned GLib.Callback encrypt;
+		public unowned GLib.Callback get_batch_mode;
+		public unowned GLib.Callback get_block_size;
+		public unowned GLib.Callback get_key_size;
+		public unowned GLib.Callback get_option;
+		public unowned GLib.Callback get_salt_size;
+		public unowned GLib.Callback init;
+		public unowned GLib.Callback reset;
+		public unowned GLib.Callback set_batch_mode;
+		public unowned GLib.Callback set_iv;
+		public unowned GLib.Callback set_key;
+		public unowned GLib.Callback set_key_with_len;
+		public unowned GLib.Callback set_option;
+		public unowned GLib.Callback set_salt;
+		public unowned GLib.Callback uninit;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_circ_buffer_destroy")]
 	[Compact]
 	public class CircBuffer {
-		public weak string buffer;
+		public unowned string buffer;
 		public size_t buflen;
 		public size_t bufused;
 		public size_t growsize;
-		public weak string inptr;
-		public weak string outptr;
+		public unowned string inptr;
+		public unowned string outptr;
 		[CCode (has_construct_function = false)]
 		public CircBuffer (size_t growsize);
 		public void append (void* src, size_t len);
@@ -538,23 +538,23 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class CommandsUiOps {
-		public weak GLib.Callback register_command;
-		public weak GLib.Callback unregister_command;
+		public unowned GLib.Callback register_command;
+		public unowned GLib.Callback unregister_command;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_connection_destroy")]
 	[Compact]
 	public class Connection {
-		public weak Purple.Account account;
-		public weak GLib.SList buddy_chats;
+		public unowned Purple.Account account;
+		public unowned GLib.SList buddy_chats;
 		public uint disconnect_timeout;
-		public weak string display_name;
+		public unowned string display_name;
 		public Purple.ConnectionFlags flags;
 		public int inpa;
 		public uint keepalive;
 		public time_t last_received;
-		public weak string password;
+		public unowned string password;
 		public void* proto_data;
-		public weak Purple.Plugin prpl;
+		public unowned Purple.Plugin prpl;
 		public Purple.ConnectionState state;
 		public bool wants_to_die;
 		[CCode (has_construct_function = false, type = "void")]
@@ -581,29 +581,29 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ConnectionErrorInfo {
-		public weak string description;
+		public unowned string description;
 		public Purple.ConnectionError type;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ConnectionUiOps {
-		public weak GLib.Callback connect_progress;
-		public weak GLib.Callback connected;
-		public weak GLib.Callback disconnected;
-		public weak GLib.Callback network_connected;
-		public weak GLib.Callback network_disconnected;
-		public weak GLib.Callback notice;
-		public weak GLib.Callback report_disconnect;
-		public weak GLib.Callback report_disconnect_reason;
+		public unowned GLib.Callback connect_progress;
+		public unowned GLib.Callback connected;
+		public unowned GLib.Callback disconnected;
+		public unowned GLib.Callback network_connected;
+		public unowned GLib.Callback network_disconnected;
+		public unowned GLib.Callback notice;
+		public unowned GLib.Callback report_disconnect;
+		public unowned GLib.Callback report_disconnect_reason;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_contact_destroy")]
 	[Compact]
 	public class Contact {
-		public weak string alias;
+		public unowned string alias;
 		public int currentsize;
-		public weak Purple.BlistNode node;
+		public unowned Purple.BlistNode node;
 		public int online;
-		public weak Purple.Buddy priority;
+		public unowned Purple.Buddy priority;
 		public bool priority_valid;
 		public int totalsize;
 		[CCode (has_construct_function = false)]
@@ -618,14 +618,14 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ConvChat {
-		public weak Purple.Conversation conv;
+		public unowned Purple.Conversation conv;
 		public int id;
-		public weak GLib.List ignored;
-		public weak GLib.List in_room;
-		public weak string nick;
-		public weak string topic;
-		public weak GLib.HashTable users;
-		public weak string who;
+		public unowned GLib.List ignored;
+		public unowned GLib.List in_room;
+		public unowned string nick;
+		public unowned string topic;
+		public unowned GLib.HashTable users;
+		public unowned string who;
 		public void add_user (string user, string extra_msg, Purple.ConvChatBuddyFlags flags, bool new_arrival);
 		public void add_users (GLib.List users, GLib.List extra_msgs, GLib.List flags, bool new_arrivals);
 		public static void cb_destroy (Purple.ConvChatBuddy cb);
@@ -668,19 +668,19 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ConvChatBuddy {
-		public weak string alias;
-		public weak string alias_key;
-		public weak GLib.HashTable attributes;
+		public unowned string alias;
+		public unowned string alias_key;
+		public unowned GLib.HashTable attributes;
 		public bool buddy;
 		public Purple.ConvChatBuddyFlags flags;
-		public weak string name;
+		public unowned string name;
 		public void* ui_data;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ConvIm {
-		public weak Purple.Conversation conv;
-		public weak Purple.BuddyIcon icon;
+		public unowned Purple.Conversation conv;
+		public unowned Purple.BuddyIcon icon;
 		public uint send_typed_timeout;
 		public time_t type_again;
 		public Purple.TypingState typing_state;
@@ -706,28 +706,28 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ConvMessage {
-		public weak string alias;
-		public weak Purple.Conversation conv;
+		public unowned string alias;
+		public unowned Purple.Conversation conv;
 		public Purple.MessageFlags flags;
-		public weak string what;
+		public unowned string what;
 		public time_t when;
-		public weak string who;
+		public unowned string who;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_conversation_destroy")]
 	[Compact]
 	public class Conversation {
-		public weak Purple.Account account;
-		public weak GLib.HashTable data;
+		public unowned Purple.Account account;
+		public unowned GLib.HashTable data;
 		public Purple.ConnectionFlags features;
 		public bool logging;
-		public weak GLib.List logs;
-		public weak GLib.List message_history;
-		public weak string name;
-		public weak string title;
+		public unowned GLib.List logs;
+		public unowned GLib.List message_history;
+		public unowned string name;
+		public unowned string title;
 		public Purple.ConversationType type;
 		public void* u;
 		public void* ui_data;
-		public weak Purple.ConversationUiOps ui_ops;
+		public unowned Purple.ConversationUiOps ui_ops;
 		[CCode (has_construct_function = false)]
 		public Conversation (Purple.ConversationType type, Purple.Account account, string name);
 		public void autoset_title ();
@@ -766,21 +766,21 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ConversationUiOps {
-		public weak GLib.Callback chat_add_users;
-		public weak GLib.Callback chat_remove_users;
-		public weak GLib.Callback chat_rename_user;
-		public weak GLib.Callback chat_update_user;
-		public weak GLib.Callback create_conversation;
-		public weak GLib.Callback custom_smiley_add;
-		public weak GLib.Callback custom_smiley_close;
-		public weak GLib.Callback custom_smiley_write;
-		public weak GLib.Callback destroy_conversation;
-		public weak GLib.Callback has_focus;
-		public weak GLib.Callback present;
-		public weak GLib.Callback send_confirm;
-		public weak GLib.Callback write_chat;
-		public weak GLib.Callback write_conv;
-		public weak GLib.Callback write_im;
+		public unowned GLib.Callback chat_add_users;
+		public unowned GLib.Callback chat_remove_users;
+		public unowned GLib.Callback chat_rename_user;
+		public unowned GLib.Callback chat_update_user;
+		public unowned GLib.Callback create_conversation;
+		public unowned GLib.Callback custom_smiley_add;
+		public unowned GLib.Callback custom_smiley_close;
+		public unowned GLib.Callback custom_smiley_write;
+		public unowned GLib.Callback destroy_conversation;
+		public unowned GLib.Callback has_focus;
+		public unowned GLib.Callback present;
+		public unowned GLib.Callback send_confirm;
+		public unowned GLib.Callback write_chat;
+		public unowned GLib.Callback write_conv;
+		public unowned GLib.Callback write_im;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
@@ -799,22 +799,22 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class CoreUiOps {
-		public weak GLib.Callback debug_ui_init;
-		public weak GLib.Callback get_ui_info;
-		public weak GLib.Callback quit;
-		public weak GLib.Callback ui_init;
-		public weak GLib.Callback ui_prefs_init;
+		public unowned GLib.Callback debug_ui_init;
+		public unowned GLib.Callback get_ui_info;
+		public unowned GLib.Callback quit;
+		public unowned GLib.Callback ui_init;
+		public unowned GLib.Callback ui_prefs_init;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class DBusType {
-		public weak Purple.DBusType parent;
+		public unowned Purple.DBusType parent;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class DebugUiOps {
-		public weak GLib.Callback is_enabled;
-		public weak GLib.Callback print;
+		public unowned GLib.Callback is_enabled;
+		public unowned GLib.Callback print;
 	}
 	[CCode (cheader_filename = "purple.h", copy_function = "purple_desktop_item_copy", unref_function = "purple_desktop_item_unref")]
 	[Compact]
@@ -832,25 +832,25 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class DnsQueryUiOps {
-		public weak GLib.Callback destroy;
-		public weak GLib.Callback resolve_host;
+		public unowned GLib.Callback destroy;
+		public unowned GLib.Callback resolve_host;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class EventLoopUiOps {
-		public weak GLib.Callback input_add;
-		public weak GLib.Callback input_get_error;
-		public weak GLib.Callback input_remove;
-		public weak GLib.Callback timeout_add;
-		public weak GLib.Callback timeout_add_seconds;
-		public weak GLib.Callback timeout_remove;
+		public unowned GLib.Callback input_add;
+		public unowned GLib.Callback input_get_error;
+		public unowned GLib.Callback input_remove;
+		public unowned GLib.Callback timeout_add;
+		public unowned GLib.Callback timeout_add_seconds;
+		public unowned GLib.Callback timeout_remove;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_group_destroy")]
 	[Compact]
 	public class Group {
 		public int currentsize;
-		public weak string name;
-		public weak Purple.BlistNode node;
+		public unowned string name;
+		public unowned Purple.BlistNode node;
 		public int online;
 		public int totalsize;
 		[CCode (has_construct_function = false)]
@@ -862,22 +862,22 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class IdleUiOps {
-		public weak GLib.Callback get_time_idle;
+		public unowned GLib.Callback get_time_idle;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class KeyValuePair {
-		public weak string key;
+		public unowned string key;
 		public void* value;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class Log {
-		public weak Purple.Account account;
-		public weak Purple.Conversation conv;
-		public weak Purple.LogLogger logger;
+		public unowned Purple.Account account;
+		public unowned Purple.Conversation conv;
+		public unowned Purple.LogLogger logger;
 		public void* logger_data;
-		public weak string name;
+		public unowned string name;
 		public time_t time;
 		public void* tm;
 		public Purple.LogType type;
@@ -909,24 +909,24 @@ namespace Purple {
 	[Compact]
 	public class LogCommonLoggerData {
 		public void* extra_data;
-		public weak GLib.FileStream file;
-		public weak string path;
+		public unowned GLib.FileStream file;
+		public unowned string path;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class LogLogger {
-		public weak GLib.Callback create;
-		public weak GLib.Callback finalize;
-		public weak GLib.Callback get_log_sets;
-		public weak string id;
-		public weak GLib.Callback is_deletable;
-		public weak GLib.Callback list;
-		public weak GLib.Callback list_syslog;
-		public weak string name;
-		public weak GLib.Callback read;
-		public weak GLib.Callback size;
-		public weak GLib.Callback total_size;
-		public weak GLib.Callback write;
+		public unowned GLib.Callback create;
+		public unowned GLib.Callback finalize;
+		public unowned GLib.Callback get_log_sets;
+		public unowned string id;
+		public unowned GLib.Callback is_deletable;
+		public unowned GLib.Callback list;
+		public unowned GLib.Callback list_syslog;
+		public unowned string name;
+		public unowned GLib.Callback read;
+		public unowned GLib.Callback size;
+		public unowned GLib.Callback total_size;
+		public unowned GLib.Callback write;
 		[CCode (has_construct_function = false)]
 		public LogLogger (string id, string name, int functions);
 		public void add ();
@@ -938,10 +938,10 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class LogSet {
-		public weak Purple.Account account;
+		public unowned Purple.Account account;
 		public bool buddy;
-		public weak string name;
-		public weak string normalized_name;
+		public unowned string name;
+		public unowned string normalized_name;
 		public Purple.LogType type;
 		public static int compare (void* y, void* z);
 	}
@@ -992,8 +992,8 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class MediaAppDataCallbacks {
-		public weak GLib.Callback readable;
-		public weak GLib.Callback writable;
+		public unowned GLib.Callback readable;
+		public unowned GLib.Callback writable;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
@@ -1014,20 +1014,20 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class MediaBackendIface {
-		public weak GLib.Callback add_remote_candidates;
-		public weak GLib.Callback add_stream;
-		public weak GLib.Callback codecs_ready;
-		public weak GLib.Callback get_available_params;
-		public weak GLib.Callback get_codecs;
-		public weak GLib.Callback get_local_candidates;
-		public weak GLib.TypeInterface parent_iface;
-		public weak GLib.Callback send_dtmf;
-		public weak GLib.Callback set_decryption_parameters;
-		public weak GLib.Callback set_encryption_parameters;
-		public weak GLib.Callback set_params;
-		public weak GLib.Callback set_remote_codecs;
-		public weak GLib.Callback set_send_codec;
-		public weak GLib.Callback set_send_rtcp_mux;
+		public unowned GLib.Callback add_remote_candidates;
+		public unowned GLib.Callback add_stream;
+		public unowned GLib.Callback codecs_ready;
+		public unowned GLib.Callback get_available_params;
+		public unowned GLib.Callback get_codecs;
+		public unowned GLib.Callback get_local_candidates;
+		public unowned GLib.TypeInterface parent_iface;
+		public unowned GLib.Callback send_dtmf;
+		public unowned GLib.Callback set_decryption_parameters;
+		public unowned GLib.Callback set_encryption_parameters;
+		public unowned GLib.Callback set_params;
+		public unowned GLib.Callback set_remote_codecs;
+		public unowned GLib.Callback set_send_codec;
+		public unowned GLib.Callback set_send_rtcp_mux;
 	}
 	[CCode (cheader_filename = "purple.h", copy_function = "purple_media_candidate_copy")]
 	[Compact]
@@ -1120,10 +1120,10 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class MenuAction {
-		public weak Purple.Callback callback;
-		public weak GLib.List children;
+		public unowned Purple.Callback callback;
+		public unowned GLib.List children;
 		public void* data;
-		public weak string label;
+		public unowned string label;
 		[CCode (has_construct_function = false)]
 		public MenuAction (string label, Purple.Callback callback, void* data, GLib.List children);
 	}
@@ -1157,8 +1157,8 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class Mood {
-		public weak string description;
-		public weak string mood;
+		public unowned string description;
+		public unowned string mood;
 		public void* padding;
 	}
 	[CCode (cheader_filename = "purple.h")]
@@ -1168,20 +1168,20 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class NotifySearchButton {
-		public weak Purple.NotifySearchResultsCallback callback;
-		public weak string label;
+		public unowned Purple.NotifySearchResultsCallback callback;
+		public unowned string label;
 		public Purple.NotifySearchButtonType type;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class NotifySearchColumn {
-		public weak string title;
+		public unowned string title;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_notify_searchresults_free")]
 	[Compact]
 	public class NotifySearchResults {
-		public weak GLib.List buttons;
-		public weak GLib.List columns;
+		public unowned GLib.List buttons;
+		public unowned GLib.List columns;
 		[CCode (cname = "purple_notify_searchresults_new", has_construct_function = false)]
 		public NotifySearchResults ();
 		[CCode (cname = "purple_notify_searchresults_button_add")]
@@ -1208,15 +1208,15 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class NotifyUiOps {
-		public weak GLib.Callback close_notify;
-		public weak GLib.Callback notify_email;
-		public weak GLib.Callback notify_emails;
-		public weak GLib.Callback notify_formatted;
-		public weak GLib.Callback notify_message;
-		public weak GLib.Callback notify_searchresults;
-		public weak GLib.Callback notify_searchresults_new_rows;
-		public weak GLib.Callback notify_uri;
-		public weak GLib.Callback notify_userinfo;
+		public unowned GLib.Callback close_notify;
+		public unowned GLib.Callback notify_email;
+		public unowned GLib.Callback notify_emails;
+		public unowned GLib.Callback notify_formatted;
+		public unowned GLib.Callback notify_message;
+		public unowned GLib.Callback notify_searchresults;
+		public unowned GLib.Callback notify_searchresults_new_rows;
+		public unowned GLib.Callback notify_uri;
+		public unowned GLib.Callback notify_userinfo;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_notify_user_info_destroy")]
 	[Compact]
@@ -1249,15 +1249,15 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h", free_function = "purple_plugin_destroy")]
 	[Compact]
 	public class Plugin {
-		public weak GLib.List dependent_plugins;
-		public weak string error;
+		public unowned GLib.List dependent_plugins;
+		public unowned string error;
 		public void* extra;
 		public void* handle;
-		public weak Purple.PluginInfo info;
+		public unowned Purple.PluginInfo info;
 		public void* ipc_data;
 		public bool loaded;
 		public bool native_plugin;
-		public weak string path;
+		public unowned string path;
 		public bool unloadable;
 		[CCode (has_construct_function = false)]
 		public Plugin (bool native, string path);
@@ -1285,10 +1285,10 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class PluginAction {
-		public weak GLib.Callback callback;
+		public unowned GLib.Callback callback;
 		public void* context;
-		public weak string label;
-		public weak Purple.Plugin plugin;
+		public unowned string label;
+		public unowned Purple.Plugin plugin;
 		public void* user_data;
 		[CCode (has_construct_function = false)]
 		public PluginAction (string label, GLib.Callback callback);
@@ -1296,37 +1296,37 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class PluginInfo {
-		public weak GLib.Callback actions;
-		public weak string author;
-		public weak GLib.List dependencies;
-		public weak string description;
-		public weak GLib.Callback destroy;
+		public unowned GLib.Callback actions;
+		public unowned string author;
+		public unowned GLib.List dependencies;
+		public unowned string description;
+		public unowned GLib.Callback destroy;
 		public void* extra_info;
 		public uint flags;
-		public weak string homepage;
-		public weak string id;
-		public weak GLib.Callback load;
+		public unowned string homepage;
+		public unowned string id;
+		public unowned GLib.Callback load;
 		public uint magic;
 		public uint major_version;
 		public uint minor_version;
-		public weak string name;
-		public weak Purple.PluginUiInfo prefs_info;
-		public weak Purple.PluginPriority priority;
-		public weak string summary;
+		public unowned string name;
+		public unowned Purple.PluginUiInfo prefs_info;
+		public unowned Purple.PluginPriority priority;
+		public unowned string summary;
 		public Purple.PluginType type;
 		public void* ui_info;
-		public weak string ui_requirement;
-		public weak GLib.Callback unload;
-		public weak string version;
+		public unowned string ui_requirement;
+		public unowned GLib.Callback unload;
+		public unowned string version;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class PluginLoaderInfo {
-		public weak GLib.Callback destroy;
-		public weak GLib.List exts;
-		public weak GLib.Callback load;
-		public weak GLib.Callback probe;
-		public weak GLib.Callback unload;
+		public unowned GLib.Callback destroy;
+		public unowned GLib.List exts;
+		public unowned GLib.Callback load;
+		public unowned GLib.Callback probe;
+		public unowned GLib.Callback unload;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_plugin_pref_destroy")]
 	[Compact]
@@ -1370,99 +1370,99 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class PluginProtocolInfo {
-		public weak GLib.Callback add_buddies;
-		public weak GLib.Callback add_buddies_with_invite;
-		public weak GLib.Callback add_buddy;
-		public weak GLib.Callback add_buddy_with_invite;
-		public weak GLib.Callback add_deny;
-		public weak GLib.Callback add_permit;
-		public weak GLib.Callback alias_buddy;
-		public weak GLib.Callback blist_node_menu;
-		public weak GLib.Callback buddy_free;
-		public weak GLib.Callback can_receive_file;
-		public weak GLib.Callback change_passwd;
-		public weak GLib.Callback chat_info;
-		public weak GLib.Callback chat_info_defaults;
-		public weak GLib.Callback chat_invite;
-		public weak GLib.Callback chat_leave;
-		public weak GLib.Callback chat_send;
-		public weak GLib.Callback chat_whisper;
-		public weak GLib.Callback close;
-		public weak GLib.Callback convo_closed;
-		public weak GLib.Callback find_blist_chat;
-		public weak GLib.Callback get_account_text_table;
-		public weak GLib.Callback get_attention_types;
-		public weak GLib.Callback get_cb_away;
-		public weak GLib.Callback get_cb_info;
-		public weak GLib.Callback get_cb_real_name;
-		public weak GLib.Callback get_chat_name;
-		public weak GLib.Callback get_info;
-		public weak GLib.Callback get_media_caps;
-		public weak GLib.Callback get_moods;
-		public weak GLib.Callback get_public_alias;
-		public weak GLib.Callback group_buddy;
-		public weak Purple.BuddyIconSpec icon_spec;
-		public weak GLib.Callback initiate_media;
-		public weak GLib.Callback join_chat;
-		public weak GLib.Callback keepalive;
-		public weak GLib.Callback list_emblem;
-		public weak GLib.Callback list_icon;
-		public weak GLib.Callback login;
-		public weak GLib.Callback new_xfer;
-		public weak GLib.Callback normalize;
-		public weak GLib.Callback offline_message;
+		public unowned GLib.Callback add_buddies;
+		public unowned GLib.Callback add_buddies_with_invite;
+		public unowned GLib.Callback add_buddy;
+		public unowned GLib.Callback add_buddy_with_invite;
+		public unowned GLib.Callback add_deny;
+		public unowned GLib.Callback add_permit;
+		public unowned GLib.Callback alias_buddy;
+		public unowned GLib.Callback blist_node_menu;
+		public unowned GLib.Callback buddy_free;
+		public unowned GLib.Callback can_receive_file;
+		public unowned GLib.Callback change_passwd;
+		public unowned GLib.Callback chat_info;
+		public unowned GLib.Callback chat_info_defaults;
+		public unowned GLib.Callback chat_invite;
+		public unowned GLib.Callback chat_leave;
+		public unowned GLib.Callback chat_send;
+		public unowned GLib.Callback chat_whisper;
+		public unowned GLib.Callback close;
+		public unowned GLib.Callback convo_closed;
+		public unowned GLib.Callback find_blist_chat;
+		public unowned GLib.Callback get_account_text_table;
+		public unowned GLib.Callback get_attention_types;
+		public unowned GLib.Callback get_cb_away;
+		public unowned GLib.Callback get_cb_info;
+		public unowned GLib.Callback get_cb_real_name;
+		public unowned GLib.Callback get_chat_name;
+		public unowned GLib.Callback get_info;
+		public unowned GLib.Callback get_media_caps;
+		public unowned GLib.Callback get_moods;
+		public unowned GLib.Callback get_public_alias;
+		public unowned GLib.Callback group_buddy;
+		public unowned Purple.BuddyIconSpec icon_spec;
+		public unowned GLib.Callback initiate_media;
+		public unowned GLib.Callback join_chat;
+		public unowned GLib.Callback keepalive;
+		public unowned GLib.Callback list_emblem;
+		public unowned GLib.Callback list_icon;
+		public unowned GLib.Callback login;
+		public unowned GLib.Callback new_xfer;
+		public unowned GLib.Callback normalize;
+		public unowned GLib.Callback offline_message;
 		public Purple.ProtocolOptions options;
-		public weak GLib.List protocol_options;
-		public weak GLib.Callback register_user;
-		public weak GLib.Callback reject_chat;
-		public weak GLib.Callback rem_deny;
-		public weak GLib.Callback rem_permit;
-		public weak GLib.Callback remove_buddies;
-		public weak GLib.Callback remove_buddy;
-		public weak GLib.Callback remove_group;
-		public weak GLib.Callback rename_group;
-		public weak GLib.Callback roomlist_cancel;
-		public weak GLib.Callback roomlist_expand_category;
-		public weak GLib.Callback roomlist_get_list;
-		public weak GLib.Callback roomlist_room_serialize;
-		public weak GLib.Callback send_attention;
-		public weak GLib.Callback send_file;
-		public weak GLib.Callback send_im;
-		public weak GLib.Callback send_raw;
-		public weak GLib.Callback send_typing;
-		public weak GLib.Callback set_buddy_icon;
-		public weak GLib.Callback set_chat_topic;
-		public weak GLib.Callback set_idle;
-		public weak GLib.Callback set_info;
-		public weak GLib.Callback set_permit_deny;
-		public weak GLib.Callback set_public_alias;
-		public weak GLib.Callback set_status;
-		public weak GLib.Callback status_text;
-		public weak GLib.Callback status_types;
+		public unowned GLib.List protocol_options;
+		public unowned GLib.Callback register_user;
+		public unowned GLib.Callback reject_chat;
+		public unowned GLib.Callback rem_deny;
+		public unowned GLib.Callback rem_permit;
+		public unowned GLib.Callback remove_buddies;
+		public unowned GLib.Callback remove_buddy;
+		public unowned GLib.Callback remove_group;
+		public unowned GLib.Callback rename_group;
+		public unowned GLib.Callback roomlist_cancel;
+		public unowned GLib.Callback roomlist_expand_category;
+		public unowned GLib.Callback roomlist_get_list;
+		public unowned GLib.Callback roomlist_room_serialize;
+		public unowned GLib.Callback send_attention;
+		public unowned GLib.Callback send_file;
+		public unowned GLib.Callback send_im;
+		public unowned GLib.Callback send_raw;
+		public unowned GLib.Callback send_typing;
+		public unowned GLib.Callback set_buddy_icon;
+		public unowned GLib.Callback set_chat_topic;
+		public unowned GLib.Callback set_idle;
+		public unowned GLib.Callback set_info;
+		public unowned GLib.Callback set_permit_deny;
+		public unowned GLib.Callback set_public_alias;
+		public unowned GLib.Callback set_status;
+		public unowned GLib.Callback status_text;
+		public unowned GLib.Callback status_types;
 		public uint struct_size;
-		public weak GLib.Callback tooltip_text;
-		public weak GLib.Callback unregister_user;
-		public weak GLib.List user_splits;
-		public weak Purple.WhiteboardPrplOps whiteboard_prpl_ops;
+		public unowned GLib.Callback tooltip_text;
+		public unowned GLib.Callback unregister_user;
+		public unowned GLib.List user_splits;
+		public unowned Purple.WhiteboardPrplOps whiteboard_prpl_ops;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class PluginUiInfo {
-		public weak Purple.PluginPrefFrame frame;
-		public weak GLib.Callback get_plugin_pref_frame;
+		public unowned Purple.PluginPrefFrame frame;
+		public unowned GLib.Callback get_plugin_pref_frame;
 		public int page_num;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_pounce_destroy")]
 	[Compact]
 	public class Pounce {
-		public weak GLib.HashTable actions;
+		public unowned GLib.HashTable actions;
 		public void* data;
 		public Purple.PounceEvent events;
 		public Purple.PounceOption options;
-		public weak string pouncee;
-		public weak Purple.Account pouncer;
+		public unowned string pouncee;
+		public unowned Purple.Account pouncer;
 		public bool save;
-		public weak string ui_type;
+		public unowned string ui_type;
 		[CCode (has_construct_function = false)]
 		public Pounce (string ui_type, Purple.Account pouncer, string pouncee, Purple.PounceEvent event, Purple.PounceOption option);
 		public unowned string action_get_attribute (string action, string attr);
@@ -1493,30 +1493,30 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class PrefsUiOps {
-		public weak GLib.Callback add_bool;
-		public weak GLib.Callback add_int;
-		public weak GLib.Callback add_none;
-		public weak GLib.Callback add_string;
-		public weak GLib.Callback add_string_list;
-		public weak GLib.Callback connect_callback;
-		public weak GLib.Callback disconnect_callback;
-		public weak GLib.Callback exists;
-		public weak GLib.Callback get_bool;
-		public weak GLib.Callback get_children_names;
-		public weak GLib.Callback get_int;
-		public weak GLib.Callback get_string;
-		public weak GLib.Callback get_string_list;
-		public weak GLib.Callback get_type;
-		public weak GLib.Callback load;
-		public weak GLib.Callback remove;
-		public weak GLib.Callback rename;
-		public weak GLib.Callback rename_boolean_toggle;
-		public weak GLib.Callback save;
-		public weak GLib.Callback schedule_save;
-		public weak GLib.Callback set_bool;
-		public weak GLib.Callback set_int;
-		public weak GLib.Callback set_string;
-		public weak GLib.Callback set_string_list;
+		public unowned GLib.Callback add_bool;
+		public unowned GLib.Callback add_int;
+		public unowned GLib.Callback add_none;
+		public unowned GLib.Callback add_string;
+		public unowned GLib.Callback add_string_list;
+		public unowned GLib.Callback connect_callback;
+		public unowned GLib.Callback disconnect_callback;
+		public unowned GLib.Callback exists;
+		public unowned GLib.Callback get_bool;
+		public unowned GLib.Callback get_children_names;
+		public unowned GLib.Callback get_int;
+		public unowned GLib.Callback get_string;
+		public unowned GLib.Callback get_string_list;
+		public unowned GLib.Callback get_type;
+		public unowned GLib.Callback load;
+		public unowned GLib.Callback remove;
+		public unowned GLib.Callback rename;
+		public unowned GLib.Callback rename_boolean_toggle;
+		public unowned GLib.Callback save;
+		public unowned GLib.Callback schedule_save;
+		public unowned GLib.Callback set_bool;
+		public unowned GLib.Callback set_int;
+		public unowned GLib.Callback set_string;
+		public unowned GLib.Callback set_string_list;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_presence_destroy")]
 	[Compact]
@@ -1555,10 +1555,10 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class PrivacyUiOps {
-		public weak GLib.Callback deny_added;
-		public weak GLib.Callback deny_removed;
-		public weak GLib.Callback permit_added;
-		public weak GLib.Callback permit_removed;
+		public unowned GLib.Callback deny_added;
+		public unowned GLib.Callback deny_removed;
+		public unowned GLib.Callback permit_added;
+		public unowned GLib.Callback permit_removed;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
@@ -1567,11 +1567,11 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h", free_function = "purple_proxy_info_destroy")]
 	[Compact]
 	public class ProxyInfo {
-		public weak string host;
-		public weak string password;
+		public unowned string host;
+		public unowned string password;
 		public int port;
 		public Purple.ProxyType type;
-		public weak string username;
+		public unowned string username;
 		[CCode (has_construct_function = false)]
 		public ProxyInfo ();
 		public unowned string get_host ();
@@ -1587,12 +1587,12 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h", free_function = "purple_request_field_destroy")]
 	[Compact]
 	public class RequestField {
-		public weak Purple.RequestFieldGroup group;
-		public weak string id;
-		public weak string label;
+		public unowned Purple.RequestFieldGroup group;
+		public unowned string id;
+		public unowned string label;
 		public bool required;
 		public Purple.RequestFieldType type;
-		public weak string type_hint;
+		public unowned string type_hint;
 		public void* u;
 		public void* ui_data;
 		public bool visible;
@@ -1670,9 +1670,9 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h", free_function = "purple_request_field_group_destroy")]
 	[Compact]
 	public class RequestFieldGroup {
-		public weak GLib.List fields;
-		public weak Purple.RequestFields fields_list;
-		public weak string title;
+		public unowned GLib.List fields;
+		public unowned Purple.RequestFields fields_list;
+		public unowned string title;
 		[CCode (has_construct_function = false)]
 		public RequestFieldGroup (string title);
 		public void add_field (Purple.RequestField field);
@@ -1682,9 +1682,9 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h", free_function = "purple_request_fields_destroy")]
 	[Compact]
 	public class RequestFields {
-		public weak GLib.HashTable fields;
-		public weak GLib.List groups;
-		public weak GLib.List required_fields;
+		public unowned GLib.HashTable fields;
+		public unowned GLib.List groups;
+		public unowned GLib.List required_fields;
 		public void* ui_data;
 		[CCode (has_construct_function = false)]
 		public RequestFields ();
@@ -1704,24 +1704,24 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class RequestUiOps {
-		public weak GLib.Callback close_request;
-		public weak GLib.Callback request_action;
-		public weak GLib.Callback request_action_with_icon;
-		public weak GLib.Callback request_choice;
-		public weak GLib.Callback request_fields;
-		public weak GLib.Callback request_file;
-		public weak GLib.Callback request_folder;
-		public weak GLib.Callback request_input;
+		public unowned GLib.Callback close_request;
+		public unowned GLib.Callback request_action;
+		public unowned GLib.Callback request_action_with_icon;
+		public unowned GLib.Callback request_choice;
+		public unowned GLib.Callback request_fields;
+		public unowned GLib.Callback request_file;
+		public unowned GLib.Callback request_folder;
+		public unowned GLib.Callback request_input;
 	}
 	[CCode (cheader_filename = "purple.h", ref_function = "purple_roomlist_ref", ref_function_void = true, unref_function = "purple_roomlist_unref")]
 	[Compact]
 	public class Roomlist {
-		public weak Purple.Account account;
-		public weak GLib.List fields;
+		public unowned Purple.Account account;
+		public unowned GLib.List fields;
 		public bool in_progress;
 		public void* proto_data;
 		public uint @ref;
-		public weak GLib.List rooms;
+		public unowned GLib.List rooms;
 		public void* ui_data;
 		[CCode (has_construct_function = false)]
 		public Roomlist (Purple.Account account);
@@ -1740,8 +1740,8 @@ namespace Purple {
 	[Compact]
 	public class RoomlistField {
 		public bool hidden;
-		public weak string label;
-		public weak string name;
+		public unowned string label;
+		public unowned string name;
 		public Purple.RoomlistFieldType type;
 		[CCode (has_construct_function = false)]
 		public RoomlistField (Purple.RoomlistFieldType type, string label, string name, bool hidden);
@@ -1752,9 +1752,9 @@ namespace Purple {
 	[Compact]
 	public class RoomlistRoom {
 		public bool expanded_once;
-		public weak GLib.List fields;
-		public weak string name;
-		public weak Purple.RoomlistRoom parent;
+		public unowned GLib.List fields;
+		public unowned string name;
+		public unowned Purple.RoomlistRoom parent;
 		public Purple.RoomlistRoomType type;
 		[CCode (has_construct_function = false)]
 		public RoomlistRoom (Purple.RoomlistRoomType type, string name, Purple.RoomlistRoom parent);
@@ -1768,12 +1768,12 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class RoomlistUiOps {
-		public weak GLib.Callback add_room;
-		public weak GLib.Callback create;
-		public weak GLib.Callback destroy;
-		public weak GLib.Callback in_progress;
-		public weak GLib.Callback set_fields;
-		public weak GLib.Callback show_with_account;
+		public unowned GLib.Callback add_room;
+		public unowned GLib.Callback create;
+		public unowned GLib.Callback destroy;
+		public unowned GLib.Callback in_progress;
+		public unowned GLib.Callback set_fields;
+		public unowned GLib.Callback show_with_account;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
@@ -1861,7 +1861,7 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class SoundTheme {
-		public weak Purple.Theme parent;
+		public unowned Purple.Theme parent;
 		public void* priv;
 		public unowned string get_file (string event);
 		public unowned string get_file_full (string event);
@@ -1870,25 +1870,25 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class SoundThemeClass {
-		public weak Purple.ThemeClass parent_class;
+		public unowned Purple.ThemeClass parent_class;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class SoundThemeLoader {
-		public weak Purple.ThemeLoader parent;
+		public unowned Purple.ThemeLoader parent;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class SoundThemeLoaderClass {
-		public weak Purple.ThemeLoaderClass parent_class;
+		public unowned Purple.ThemeLoaderClass parent_class;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class SoundUiOps {
-		public weak GLib.Callback init;
-		public weak GLib.Callback play_event;
-		public weak GLib.Callback play_file;
-		public weak GLib.Callback uninit;
+		public unowned GLib.Callback init;
+		public unowned GLib.Callback play_event;
+		public unowned GLib.Callback play_file;
+		public unowned GLib.Callback uninit;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
@@ -1898,7 +1898,7 @@ namespace Purple {
 	[Compact]
 	public class SrvResponse {
 		[CCode (array_length = false)]
-		public weak GLib.ObjectPath[] hostname;
+		public unowned GLib.ObjectPath[] hostname;
 		public int port;
 		public int pref;
 		public int weight;
@@ -1910,35 +1910,35 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class SrvTxtQueryUiOps {
-		public weak GLib.Callback destroy;
-		public weak GLib.Callback resolve;
+		public unowned GLib.Callback destroy;
+		public unowned GLib.Callback resolve;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class SslConnection {
-		public weak Purple.SslInputFunction connect_cb;
+		public unowned Purple.SslInputFunction connect_cb;
 		public void* connect_cb_data;
-		public weak Purple.ProxyConnectData connect_data;
-		public weak Purple.SslErrorFunction error_cb;
+		public unowned Purple.ProxyConnectData connect_data;
+		public unowned Purple.SslErrorFunction error_cb;
 		public int fd;
-		public weak string host;
+		public unowned string host;
 		public uint inpa;
 		public int port;
 		public void* private_data;
-		public weak Purple.SslInputFunction recv_cb;
+		public unowned Purple.SslInputFunction recv_cb;
 		public void* recv_cb_data;
-		public weak Purple.CertificateVerifier verifier;
+		public unowned Purple.CertificateVerifier verifier;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class SslOps {
-		public weak GLib.Callback close;
-		public weak GLib.Callback connectfunc;
-		public weak GLib.Callback get_peer_certificates;
-		public weak GLib.Callback init;
-		public weak GLib.Callback read;
-		public weak GLib.Callback uninit;
-		public weak GLib.Callback write;
+		public unowned GLib.Callback close;
+		public unowned GLib.Callback connectfunc;
+		public unowned GLib.Callback get_peer_certificates;
+		public unowned GLib.Callback init;
+		public unowned GLib.Callback read;
+		public unowned GLib.Callback uninit;
+		public unowned GLib.Callback write;
 	}
 	[CCode (cheader_filename = "purple.h", free_function = "purple_status_destroy")]
 	[Compact]
@@ -2024,15 +2024,15 @@ namespace Purple {
 	public class StunNatDiscovery {
 		public time_t lookup_time;
 		[CCode (array_length = false)]
-		public weak GLib.ObjectPath[] publicip;
-		public weak string servername;
+		public unowned GLib.ObjectPath[] publicip;
+		public unowned string servername;
 		public Purple.StunStatus status;
 		public Purple.StunNatType type;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class Theme {
-		public weak GLib.Object parent;
+		public unowned GLib.Object parent;
 		public void* priv;
 		public unowned string get_author ();
 		public unowned string get_description ();
@@ -2050,12 +2050,12 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ThemeClass {
-		public weak GLib.ObjectClass parent_class;
+		public unowned GLib.ObjectClass parent_class;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ThemeLoader {
-		public weak GLib.Object parent;
+		public unowned GLib.Object parent;
 		public void* priv;
 		public unowned Purple.Theme build (string dir);
 		public unowned string get_type_string ();
@@ -2063,13 +2063,13 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ThemeLoaderClass {
-		public weak GLib.ObjectClass parent_class;
-		public weak GLib.Callback purple_theme_loader_build;
+		public unowned GLib.ObjectClass parent_class;
+		public unowned GLib.Callback purple_theme_loader_build;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ThemeManager {
-		public weak GLib.Object parent;
+		public unowned GLib.Object parent;
 		public static void add_theme (Purple.Theme theme);
 		public static unowned Purple.Theme find_theme (string name, string type);
 		public static void for_each_theme (Purple.PTFunc func);
@@ -2084,7 +2084,7 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class ThemeManagerClass {
-		public weak GLib.ObjectClass parent_class;
+		public unowned GLib.ObjectClass parent_class;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
@@ -2093,7 +2093,7 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h", free_function = "purple_txt_response_destroy")]
 	[Compact]
 	public class TxtResponse {
-		public weak string content;
+		public unowned string content;
 		public unowned string get_content ();
 	}
 	[CCode (cheader_filename = "purple.h")]
@@ -2155,13 +2155,13 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h", free_function = "purple_whiteboard_destroy")]
 	[Compact]
 	public class Whiteboard {
-		public weak Purple.Account account;
-		public weak GLib.List draw_list;
+		public unowned Purple.Account account;
+		public unowned GLib.List draw_list;
 		public void* proto_data;
-		public weak Purple.WhiteboardPrplOps prpl_ops;
+		public unowned Purple.WhiteboardPrplOps prpl_ops;
 		public int state;
 		public void* ui_data;
-		public weak string who;
+		public unowned string who;
 		public void clear ();
 		public static unowned Purple.Whiteboard create (Purple.Account account, string who, int state);
 		public void draw_line (int x1, int y1, int x2, int y2, int color, int size);
@@ -2182,53 +2182,53 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class WhiteboardPrplOps {
-		public weak GLib.Callback clear;
-		public weak GLib.Callback end;
-		public weak GLib.Callback get_brush;
-		public weak GLib.Callback get_dimensions;
-		public weak GLib.Callback send_draw_list;
-		public weak GLib.Callback set_brush;
-		public weak GLib.Callback set_dimensions;
-		public weak GLib.Callback start;
+		public unowned GLib.Callback clear;
+		public unowned GLib.Callback end;
+		public unowned GLib.Callback get_brush;
+		public unowned GLib.Callback get_dimensions;
+		public unowned GLib.Callback send_draw_list;
+		public unowned GLib.Callback set_brush;
+		public unowned GLib.Callback set_dimensions;
+		public unowned GLib.Callback start;
 	}
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class WhiteboardUiOps {
-		public weak GLib.Callback clear;
-		public weak GLib.Callback create;
-		public weak GLib.Callback destroy;
-		public weak GLib.Callback draw_line;
-		public weak GLib.Callback draw_point;
-		public weak GLib.Callback set_brush;
-		public weak GLib.Callback set_dimensions;
+		public unowned GLib.Callback clear;
+		public unowned GLib.Callback create;
+		public unowned GLib.Callback destroy;
+		public unowned GLib.Callback draw_line;
+		public unowned GLib.Callback draw_point;
+		public unowned GLib.Callback set_brush;
+		public unowned GLib.Callback set_dimensions;
 	}
 	[CCode (cheader_filename = "purple.h", ref_function = "purple_xfer_ref", ref_function_void = true, unref_function = "purple_xfer_unref")]
 	[Compact]
 	public class Xfer {
-		public weak Purple.Account account;
+		public unowned Purple.Account account;
 		public size_t bytes_remaining;
 		public size_t bytes_sent;
 		public size_t current_buffer_size;
 		public void* data;
-		public weak GLib.FileStream dest_fp;
+		public unowned GLib.FileStream dest_fp;
 		public time_t end_time;
 		public int fd;
-		public weak string filename;
-		public weak string local_filename;
+		public unowned string filename;
+		public unowned string local_filename;
 		public int local_port;
-		public weak string message;
+		public unowned string message;
 		public void* ops;
 		public uint @ref;
-		public weak string remote_ip;
+		public unowned string remote_ip;
 		public int remote_port;
 		public size_t size;
 		public time_t start_time;
 		public Purple.XferStatusType status;
 		public Purple.XferType type;
 		public void* ui_data;
-		public weak Purple.XferUiOps ui_ops;
+		public unowned Purple.XferUiOps ui_ops;
 		public int watcher;
-		public weak string who;
+		public unowned string who;
 		[CCode (has_construct_function = false)]
 		public Xfer (Purple.Account account, Purple.XferType type, string who);
 		public void add ();
@@ -2288,30 +2288,30 @@ namespace Purple {
 	[CCode (cheader_filename = "purple.h")]
 	[Compact]
 	public class XferUiOps {
-		public weak GLib.Callback add_thumbnail;
-		public weak GLib.Callback add_xfer;
-		public weak GLib.Callback cancel_local;
-		public weak GLib.Callback cancel_remote;
-		public weak GLib.Callback data_not_sent;
-		public weak GLib.Callback destroy;
-		public weak GLib.Callback new_xfer;
-		public weak GLib.Callback ui_read;
-		public weak GLib.Callback ui_write;
-		public weak GLib.Callback update_progress;
+		public unowned GLib.Callback add_thumbnail;
+		public unowned GLib.Callback add_xfer;
+		public unowned GLib.Callback cancel_local;
+		public unowned GLib.Callback cancel_remote;
+		public unowned GLib.Callback data_not_sent;
+		public unowned GLib.Callback destroy;
+		public unowned GLib.Callback new_xfer;
+		public unowned GLib.Callback ui_read;
+		public unowned GLib.Callback ui_write;
+		public unowned GLib.Callback update_progress;
 	}
 	[CCode (cheader_filename = "purple.h", copy_function = "xmlnode_copy", free_function = "xmlnode_free")]
 	[Compact]
 	public class xmlnode {
-		public weak string data;
+		public unowned string data;
 		public size_t data_sz;
-		public weak Purple.xmlnode lastchild;
-		public weak string name;
-		public weak GLib.HashTable namespace_map;
-		public weak Purple.xmlnode next;
-		public weak Purple.xmlnode parent;
-		public weak string prefix;
+		public unowned Purple.xmlnode lastchild;
+		public unowned string name;
+		public unowned GLib.HashTable namespace_map;
+		public unowned Purple.xmlnode next;
+		public unowned Purple.xmlnode parent;
+		public unowned string prefix;
 		public Purple.XMLNodeType type;
-		public weak string xmlns;
+		public unowned string xmlns;
 		[CCode (cname = "xmlnode_new", has_construct_function = false, type = "xmlnode*")]
 		public xmlnode (string name);
 		[CCode (cname = "xmlnode_new_child", has_construct_function = false, type = "xmlnode*")]

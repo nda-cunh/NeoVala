@@ -312,10 +312,10 @@ namespace Gsf {
 	public abstract class Output : GLib.Object {
 		public Gsf.off_t cur_offset;
 		public Gsf.off_t cur_size;
-		public weak GLib.Error err;
-		public weak string printf_buf;
+		public unowned GLib.Error err;
+		public unowned string printf_buf;
 		public int printf_buf_size;
-		public weak GLib.Object wrapped_by;
+		public unowned GLib.Object wrapped_by;
 		[CCode (has_construct_function = false)]
 		protected Output ();
 		[CCode (vfunc_name = "Close")]
@@ -357,7 +357,7 @@ namespace Gsf {
 	}
 	[CCode (cheader_filename = "gsf/gsf.h", type_id = "gsf_output_csv_get_type ()")]
 	public class OutputCsv : Gsf.Output {
-		public weak GLib.StringBuilder buf;
+		public unowned GLib.StringBuilder buf;
 		public size_t eol_len;
 		public bool fields_on_line;
 		public size_t quote_len;
@@ -462,7 +462,7 @@ namespace Gsf {
 	public class Timestamp {
 		public GLib.Date date;
 		public long seconds;
-		public weak GLib.StringBuilder time_zone;
+		public unowned GLib.StringBuilder time_zone;
 		public uint32 timet;
 		[CCode (has_construct_function = false)]
 		public Timestamp ();
@@ -485,10 +485,10 @@ namespace Gsf {
 	[CCode (cheader_filename = "gsf/gsf.h", has_type_id = false)]
 	[Compact]
 	public class XMLIn {
-		public weak GLib.StringBuilder content;
-		public weak Gsf.XMLInDoc doc;
-		public weak Gsf.XMLInNode node;
-		public weak GLib.SList<void*> node_stack;
+		public unowned GLib.StringBuilder content;
+		public unowned Gsf.XMLInDoc doc;
+		public unowned Gsf.XMLInNode node;
+		public unowned GLib.SList<void*> node_stack;
 		public void* user_state;
 		public unowned string? check_ns (string str, uint ns_id);
 		public unowned Gsf.Input get_input ();
@@ -511,7 +511,7 @@ namespace Gsf {
 	[Compact]
 	public class XMLInNS {
 		public uint ns_id;
-		public weak string uri;
+		public unowned string uri;
 	}
 	[CCode (cheader_filename = "gsf/gsf.h", has_type_id = false)]
 	[Compact]
@@ -519,10 +519,10 @@ namespace Gsf {
 		public uint check_children_for_ns;
 		public GLib.Callback end;
 		public Gsf.XMLContent has_content;
-		public weak string id;
-		public weak string name;
+		public unowned string id;
+		public unowned string name;
 		public int ns_id;
-		public weak string parent_id;
+		public unowned string parent_id;
 		public uint share_children_with_parent;
 		public GLib.Callback start;
 		[CCode (cname = "user_data.v_blob")]
@@ -532,11 +532,11 @@ namespace Gsf {
 		[CCode (cname = "user_data.v_int")]
 		public int user_data_v_int;
 		[CCode (cname = "user_data.v_str")]
-		public weak string user_data_v_str;
+		public unowned string user_data_v_str;
 	}
 	[CCode (cheader_filename = "gsf/gsf.h", type_id = "gsf_xml_out_get_type ()")]
 	public class XMLOut : GLib.Object {
-		public weak Gsf.Output output;
+		public unowned Gsf.Output output;
 		[CCode (has_construct_function = false)]
 		public XMLOut (Gsf.Output output);
 		public void add_base64 (string? id, [CCode (array_length_cname = "len", array_length_pos = 2.1, array_length_type = "guint")] uint8[] data);

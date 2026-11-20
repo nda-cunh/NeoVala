@@ -6,7 +6,7 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/rtp/rtp.h", has_type_id = false)]
 		[GIR (name = "RTCPBuffer")]
 		public struct Buffer {
-			public weak Gst.Buffer buffer;
+			public unowned Gst.Buffer buffer;
 			public bool add_packet (Gst.RTCP.Type type, Gst.RTCP.Packet packet);
 			public bool get_first_packet (Gst.RTCP.Packet packet);
 			public uint get_packet_count ();
@@ -25,7 +25,7 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/rtp/rtp.h", has_type_id = false)]
 		[GIR (name = "RTCPPacket")]
 		public struct Packet {
-			public weak Gst.RTCP.Buffer? rtcp;
+			public unowned Gst.RTCP.Buffer? rtcp;
 			public uint offset;
 			[Version (since = "1.10")]
 			public bool add_profile_specific_ext ([CCode (array_length_cname = "len", array_length_pos = 1.1, array_length_type = "guint")] uint8[] data);
@@ -287,9 +287,9 @@ namespace Gst {
 		public abstract class BaseDepayload : Gst.Element {
 			public uint clock_rate;
 			public bool need_newsegment;
-			public weak Gst.Segment segment;
-			public weak Gst.Pad sinkpad;
-			public weak Gst.Pad srcpad;
+			public unowned Gst.Segment segment;
+			public unowned Gst.Pad sinkpad;
+			public unowned Gst.Pad srcpad;
 			[CCode (has_construct_function = false)]
 			protected BaseDepayload ();
 			[NoWrapper]
@@ -432,12 +432,12 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/rtp/rtp.h", has_type_id = false)]
 		[GIR (name = "RTPBuffer")]
 		public struct Buffer {
-			public weak Gst.Buffer buffer;
+			public unowned Gst.Buffer buffer;
 			public uint state;
 			[CCode (array_length = false)]
-			public weak void* data[4];
+			public unowned void* data[4];
 			[CCode (array_length = false)]
-			public weak size_t size[4];
+			public unowned size_t size[4];
 			public bool add_extension_onebyte_header (uint8 id, [CCode (array_length_cname = "size", array_length_pos = 2.1, array_length_type = "guint")] uint8[] data);
 			public bool add_extension_twobytes_header (uint8 appbits, uint8 id, [CCode (array_length_cname = "size", array_length_pos = 3.1, array_length_type = "guint")] uint8[] data);
 			public static void allocate_data (Gst.Buffer buffer, uint payload_len, uint8 pad_len, uint8 csrc_count);
@@ -498,10 +498,10 @@ namespace Gst {
 		[GIR (name = "RTPPayloadInfo")]
 		public struct PayloadInfo {
 			public uint8 payload_type;
-			public weak string media;
-			public weak string encoding_name;
+			public unowned string media;
+			public unowned string encoding_name;
 			public uint clock_rate;
-			public weak string encoding_parameters;
+			public unowned string encoding_parameters;
 			public uint bitrate;
 			public static unowned Gst.RTP.PayloadInfo? for_name (string media, string encoding_name);
 			public static unowned Gst.RTP.PayloadInfo? for_pt (uint8 payload_type);
@@ -514,7 +514,7 @@ namespace Gst {
 			public uint32 ssrc;
 			public bool ssrc_valid;
 			[CCode (array_length = false)]
-			public weak uint32 csrc[15];
+			public unowned uint32 csrc[15];
 			public uint csrc_count;
 			public bool append_csrc ([CCode (array_length_cname = "csrc_count", array_length_pos = 1.1, array_length_type = "guint")] uint32[] csrc);
 			public static unowned Gst.MetaInfo? get_info ();

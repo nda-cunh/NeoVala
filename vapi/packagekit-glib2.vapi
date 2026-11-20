@@ -360,11 +360,11 @@ namespace Pk {
 		[Version (since = "0.5.3")]
 		public Desktop ();
 		[Version (since = "0.5.3")]
-		public GLib.GenericArray<weak string> get_files_for_package (string package) throws GLib.Error;
+		public GLib.GenericArray<unowned string> get_files_for_package (string package) throws GLib.Error;
 		[Version (since = "0.5.3")]
 		public string get_package_for_file (string filename) throws GLib.Error;
 		[Version (since = "0.5.3")]
-		public GLib.GenericArray<weak string> get_shown_for_package (string package) throws GLib.Error;
+		public GLib.GenericArray<unowned string> get_shown_for_package (string package) throws GLib.Error;
 		[Version (since = "0.5.3")]
 		public bool open_database () throws GLib.Error;
 	}
@@ -682,7 +682,7 @@ namespace Pk {
 		[Version (since = "0.8.16")]
 		public Pk.Package find_by_id_name_arch (string package_id);
 		[Version (since = "0.6.1")]
-		public GLib.GenericArray<weak Pk.Package> get_array ();
+		public GLib.GenericArray<unowned Pk.Package> get_array ();
 		[Version (since = "0.6.0")]
 		public bool get_details (GLib.Cancellable? cancellable = null) throws GLib.Error;
 		[CCode (finish_name = "pk_package_sack_merge_generic_finish")]
@@ -914,41 +914,41 @@ namespace Pk {
 		[Version (since = "0.5.2")]
 		public bool add_update_detail (Pk.UpdateDetail item);
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.Category> get_category_array ();
+		public GLib.GenericArray<unowned Pk.Category> get_category_array ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.Details> get_details_array ();
+		public GLib.GenericArray<unowned Pk.Details> get_details_array ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.DistroUpgrade> get_distro_upgrade_array ();
+		public GLib.GenericArray<unowned Pk.DistroUpgrade> get_distro_upgrade_array ();
 		[Version (since = "0.5.2")]
 		public Pk.Error get_error_code ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.EulaRequired> get_eula_required_array ();
+		public GLib.GenericArray<unowned Pk.EulaRequired> get_eula_required_array ();
 		[Version (since = "0.5.2")]
 		public Pk.Exit get_exit_code ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.Files> get_files_array ();
+		public GLib.GenericArray<unowned Pk.Files> get_files_array ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.MediaChangeRequired> get_media_change_required_array ();
+		public GLib.GenericArray<unowned Pk.MediaChangeRequired> get_media_change_required_array ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.Package> get_package_array ();
+		public GLib.GenericArray<unowned Pk.Package> get_package_array ();
 		[Version (since = "0.5.2")]
 		public Pk.PackageSack get_package_sack ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.RepoDetail> get_repo_detail_array ();
+		public GLib.GenericArray<unowned Pk.RepoDetail> get_repo_detail_array ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.RepoSignatureRequired> get_repo_signature_required_array ();
+		public GLib.GenericArray<unowned Pk.RepoSignatureRequired> get_repo_signature_required_array ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.RequireRestart> get_require_restart_array ();
+		public GLib.GenericArray<unowned Pk.RequireRestart> get_require_restart_array ();
 		[Version (since = "0.5.2")]
 		public Pk.Restart get_require_restart_worst ();
 		[Version (since = "0.7.5")]
 		public Pk.Role get_role ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.TransactionPast> get_transaction_array ();
+		public GLib.GenericArray<unowned Pk.TransactionPast> get_transaction_array ();
 		[Version (since = "0.8.1")]
 		public Pk.Bitfield get_transaction_flags ();
 		[Version (since = "0.5.2")]
-		public GLib.GenericArray<weak Pk.UpdateDetail> get_update_detail_array ();
+		public GLib.GenericArray<unowned Pk.UpdateDetail> get_update_detail_array ();
 		[Version (since = "0.5.2")]
 		public bool set_error_code (Pk.Error item);
 		[Version (since = "0.5.2")]
@@ -1300,7 +1300,7 @@ namespace Pk {
 	[CCode (cheader_filename = "packagekit-glib2/packagekit.h", has_type_id = false)]
 	public struct EnumMatch {
 		public uint value;
-		public weak global::string string;
+		public unowned global::string string;
 	}
 	[CCode (cheader_filename = "packagekit-glib2/packagekit.h", cname = "PkAuthorizeEnum", cprefix = "PK_AUTHORIZE_ENUM_", type_id = "pk_authorize_enum_get_type ()")]
 	[GIR (name = "AuthorizeEnum")]

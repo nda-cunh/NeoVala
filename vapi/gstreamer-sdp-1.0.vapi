@@ -19,9 +19,9 @@ namespace Gst {
 		public class MIKEYMessage : Gst.MiniObject {
 			public uint32 CSB_id;
 			public bool V;
-			public weak GLib.Array<void*> map_info;
+			public unowned GLib.Array<void*> map_info;
 			public Gst.SDP.MIKEYMapType map_type;
-			public weak GLib.Array<void*> payloads;
+			public unowned GLib.Array<void*> payloads;
 			public Gst.SDP.MIKEYPRFFunc prf_func;
 			public Gst.SDP.MIKEYType type;
 			public uint8 version;
@@ -132,7 +132,7 @@ namespace Gst {
 		public class MIKEYPayloadKEMAC : Gst.SDP.MIKEYPayload {
 			public Gst.SDP.MIKEYEncAlg enc_alg;
 			public Gst.SDP.MIKEYMacAlg mac_alg;
-			public weak GLib.Array<void*> subpayloads;
+			public unowned GLib.Array<void*> subpayloads;
 		}
 		[CCode (cheader_filename = "gst/sdp/sdp.h", cname = "GstMIKEYPayloadKeyData", has_type_id = false)]
 		[Compact]
@@ -142,9 +142,9 @@ namespace Gst {
 			public uint16 key_len;
 			public Gst.SDP.MIKEYKeyDataType key_type;
 			[CCode (array_length = false)]
-			public weak uint8 kv_data[2];
+			public unowned uint8 kv_data[2];
 			[CCode (array_length = false)]
-			public weak uint8 kv_len[2];
+			public unowned uint8 kv_len[2];
 			public Gst.SDP.MIKEYKVType kv_type;
 			public uint8 salt_data;
 			public uint16 salt_len;
@@ -168,7 +168,7 @@ namespace Gst {
 		[Compact]
 		[GIR (name = "MIKEYPayloadSP")]
 		public class MIKEYPayloadSP : Gst.SDP.MIKEYPayload {
-			public weak GLib.Array<void*> @params;
+			public unowned GLib.Array<void*> @params;
 			public uint policy;
 			public Gst.SDP.MIKEYSecProto proto;
 		}
@@ -183,20 +183,20 @@ namespace Gst {
 		[Compact]
 		[GIR (name = "SDPMessage")]
 		public class Message {
-			public weak GLib.Array<void*> attributes;
-			public weak GLib.Array<void*> bandwidths;
+			public unowned GLib.Array<void*> attributes;
+			public unowned GLib.Array<void*> bandwidths;
 			public Gst.SDP.Connection connection;
-			public weak GLib.Array<void*> emails;
-			public weak string information;
+			public unowned GLib.Array<void*> emails;
+			public unowned string information;
 			public Gst.SDP.Key key;
-			public weak GLib.Array<void*> medias;
+			public unowned GLib.Array<void*> medias;
 			public Gst.SDP.Origin origin;
-			public weak GLib.Array<void*> phones;
-			public weak string session_name;
-			public weak GLib.Array<void*> times;
-			public weak string uri;
-			public weak string version;
-			public weak GLib.Array<void*> zones;
+			public unowned GLib.Array<void*> phones;
+			public unowned string session_name;
+			public unowned GLib.Array<void*> times;
+			public unowned string uri;
+			public unowned string version;
+			public unowned GLib.Array<void*> zones;
 			public Gst.SDP.Result add_attribute (string key, string? value);
 			public Gst.SDP.Result add_bandwidth (string bwtype, uint bandwidth);
 			public Gst.SDP.Result add_email (string email);
@@ -293,8 +293,8 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/sdp/sdp.h", has_type_id = false)]
 		[GIR (name = "SDPAttribute")]
 		public struct Attribute {
-			public weak string key;
-			public weak string value;
+			public unowned string key;
+			public unowned string value;
 			[Version (since = "1.2")]
 			public Gst.SDP.Result clear ();
 			[Version (since = "1.2")]
@@ -303,7 +303,7 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/sdp/sdp.h", has_type_id = false)]
 		[GIR (name = "SDPBandwidth")]
 		public struct Bandwidth {
-			public weak string bwtype;
+			public unowned string bwtype;
 			public uint bandwidth;
 			[Version (since = "1.2")]
 			public Gst.SDP.Result clear ();
@@ -313,9 +313,9 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/sdp/sdp.h", has_type_id = false)]
 		[GIR (name = "SDPConnection")]
 		public struct Connection {
-			public weak string nettype;
-			public weak string addrtype;
-			public weak string address;
+			public unowned string nettype;
+			public unowned string addrtype;
+			public unowned string address;
 			public uint ttl;
 			public uint addr_number;
 			[Version (since = "1.2")]
@@ -326,8 +326,8 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/sdp/sdp.h", has_type_id = false)]
 		[GIR (name = "SDPKey")]
 		public struct Key {
-			public weak string type;
-			public weak string data;
+			public unowned string type;
+			public unowned string data;
 		}
 		[CCode (cheader_filename = "gst/sdp/sdp.h", cname = "GstMIKEYMapSRTP", has_type_id = false)]
 		[GIR (name = "MIKEYMapSRTP")]
@@ -346,16 +346,16 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/sdp/sdp.h", has_type_id = false)]
 		[GIR (name = "SDPMedia")]
 		public struct Media {
-			public weak string media;
+			public unowned string media;
 			public uint port;
 			public uint num_ports;
-			public weak string proto;
-			public weak GLib.Array<void*> fmts;
-			public weak string information;
-			public weak GLib.Array<void*> connections;
-			public weak GLib.Array<void*> bandwidths;
+			public unowned string proto;
+			public unowned GLib.Array<void*> fmts;
+			public unowned string information;
+			public unowned GLib.Array<void*> connections;
+			public unowned GLib.Array<void*> bandwidths;
 			public Gst.SDP.Key key;
-			public weak GLib.Array<void*> attributes;
+			public unowned GLib.Array<void*> attributes;
 			public Gst.SDP.Result add_attribute (string key, string? value);
 			public Gst.SDP.Result add_bandwidth (string bwtype, uint bandwidth);
 			public Gst.SDP.Result add_connection (string nettype, string addrtype, string address, uint ttl, uint addr_number);
@@ -424,19 +424,19 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/sdp/sdp.h", has_type_id = false)]
 		[GIR (name = "SDPOrigin")]
 		public struct Origin {
-			public weak string username;
-			public weak string sess_id;
-			public weak string sess_version;
-			public weak string nettype;
-			public weak string addrtype;
-			public weak string addr;
+			public unowned string username;
+			public unowned string sess_id;
+			public unowned string sess_version;
+			public unowned string nettype;
+			public unowned string addrtype;
+			public unowned string addr;
 		}
 		[CCode (cheader_filename = "gst/sdp/sdp.h", has_type_id = false)]
 		[GIR (name = "SDPTime")]
 		public struct Time {
-			public weak string start;
-			public weak string stop;
-			public weak GLib.Array<void*> repeat;
+			public unowned string start;
+			public unowned string stop;
+			public unowned GLib.Array<void*> repeat;
 			[Version (since = "1.2")]
 			public Gst.SDP.Result clear ();
 			[Version (since = "1.2")]
@@ -445,8 +445,8 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/sdp/sdp.h", has_type_id = false)]
 		[GIR (name = "SDPZone")]
 		public struct Zone {
-			public weak string time;
-			public weak string typed_time;
+			public unowned string time;
+			public unowned string typed_time;
 			[Version (since = "1.2")]
 			public Gst.SDP.Result clear ();
 			[Version (since = "1.2")]

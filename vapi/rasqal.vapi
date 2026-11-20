@@ -119,7 +119,7 @@ namespace Rasqal {
 	[Compact]
 	[CCode (cname = "rasqal_variable", free_function = "rasqal_free_variable")]
 	public class Variable {
-		public weak string? name;
+		public unowned string? name;
 		public Expression? expression;
 	}
 }

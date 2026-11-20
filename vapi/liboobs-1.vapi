@@ -259,10 +259,10 @@ namespace Oobs {
 	[CCode (cheader_filename = "oobs/oobs.h")]
 	[Compact]
 	public class Platform {
-		public weak string codename;
-		public weak string id;
-		public weak string name;
-		public weak string version;
+		public unowned string codename;
+		public unowned string id;
+		public unowned string name;
+		public unowned string version;
 	}
 	[CCode (cheader_filename = "oobs/oobs.h")]
 	public class SMBConfig : Oobs.Object {
@@ -315,7 +315,7 @@ namespace Oobs {
 	[CCode (cheader_filename = "oobs/oobs.h")]
 	[Compact]
 	public class ServicesRunlevel {
-		public weak string name;
+		public unowned string name;
 		public uint role;
 	}
 	[CCode (cheader_filename = "oobs/oobs.h")]
@@ -343,7 +343,7 @@ namespace Oobs {
 	[CCode (cheader_filename = "oobs/oobs.h")]
 	[Compact]
 	public class ShareAclElement {
-		public weak string element;
+		public unowned string element;
 		public bool read_only;
 	}
 	[CCode (cheader_filename = "oobs/oobs.h")]

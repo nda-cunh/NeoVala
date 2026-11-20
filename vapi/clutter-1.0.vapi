@@ -4745,7 +4745,7 @@ namespace Clutter {
 		[Version (since = "1.4")]
 		public unowned Clutter.Action get_action (string name);
 		[Version (since = "1.4")]
-		public GLib.List<weak Clutter.Action> get_actions ();
+		public GLib.List<unowned Clutter.Action> get_actions ();
 		[Version (since = "0.8")]
 		public Clutter.ActorBox get_allocation_box ();
 		[Version (deprecated = true, deprecated_since = "1.12", since = "0.8")]
@@ -4768,7 +4768,7 @@ namespace Clutter {
 		[Version (since = "1.12")]
 		public Clutter.Matrix get_child_transform ();
 		[Version (since = "1.10")]
-		public GLib.List<weak Clutter.Actor> get_children ();
+		public GLib.List<unowned Clutter.Actor> get_children ();
 		[Version (since = "0.6")]
 		public void get_clip (out float xoff, out float yoff, out float width, out float height);
 		[Version (since = "1.4")]
@@ -4776,7 +4776,7 @@ namespace Clutter {
 		[Version (since = "1.4")]
 		public unowned Clutter.Constraint get_constraint (string name);
 		[Version (since = "1.4")]
-		public GLib.List<weak Clutter.Constraint> get_constraints ();
+		public GLib.List<unowned Clutter.Constraint> get_constraints ();
 		[Version (since = "1.10")]
 		public unowned Clutter.Content get_content ();
 		[Version (since = "1.10")]
@@ -4800,7 +4800,7 @@ namespace Clutter {
 		[Version (since = "1.4")]
 		public unowned Clutter.Effect get_effect (string name);
 		[Version (since = "1.4")]
-		public GLib.List<weak Clutter.Effect> get_effects ();
+		public GLib.List<unowned Clutter.Effect> get_effects ();
 		[Version (since = "1.10")]
 		public unowned Clutter.Actor get_first_child ();
 		[Version (since = "0.8")]
@@ -5500,7 +5500,7 @@ namespace Clutter {
 		public Animator ();
 		public bool compute_value (GLib.Object object, string property_name, double progress, GLib.Value value);
 		public uint get_duration ();
-		public GLib.List<weak Clutter.AnimatorKey> get_keys (GLib.Object? object, string? property_name, double progress);
+		public GLib.List<unowned Clutter.AnimatorKey> get_keys (GLib.Object? object, string? property_name, double progress);
 		public unowned Clutter.Timeline get_timeline ();
 		public bool property_get_ease_in (GLib.Object object, string property_name);
 		public Clutter.Interpolation property_get_interpolation (GLib.Object object, string property_name);
@@ -5531,8 +5531,8 @@ namespace Clutter {
 	[Version (since = "0.2")]
 	public class AnyEvent : Clutter.Event {
 		public Clutter.EventFlags flags;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 	}
@@ -5598,7 +5598,7 @@ namespace Clutter {
 		[NoWrapper]
 		public virtual void alpha_notify (double alpha_value);
 		public void apply (Clutter.Actor actor);
-		public GLib.SList<weak Clutter.Actor> get_actors ();
+		public GLib.SList<unowned Clutter.Actor> get_actors ();
 		public unowned Clutter.Alpha get_alpha ();
 		public int get_n_actors ();
 		public unowned Clutter.Actor get_nth_actor (int index_);
@@ -5922,11 +5922,11 @@ namespace Clutter {
 		public double axes;
 		public uint32 button;
 		public uint click_count;
-		public weak Clutter.InputDevice device;
+		public unowned Clutter.InputDevice device;
 		public Clutter.EventFlags flags;
 		public Clutter.ModifierType modifier_state;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 		public float x;
@@ -6063,11 +6063,11 @@ namespace Clutter {
 	[Compact]
 	[Version (since = "0.2")]
 	public class CrossingEvent : Clutter.Event {
-		public weak Clutter.InputDevice device;
+		public unowned Clutter.InputDevice device;
 		public Clutter.EventFlags flags;
-		public weak Clutter.Actor related;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.Actor related;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 		public float x;
@@ -6109,7 +6109,7 @@ namespace Clutter {
 		public virtual unowned Clutter.InputDevice get_core_device (Clutter.InputDeviceType device_type);
 		public static unowned Clutter.DeviceManager get_default ();
 		public virtual unowned Clutter.InputDevice get_device (int device_id);
-		public GLib.SList<weak Clutter.InputDevice> list_devices ();
+		public GLib.SList<unowned Clutter.InputDevice> list_devices ();
 		public unowned GLib.SList<Clutter.InputDevice> peek_devices ();
 		[NoWrapper]
 		public virtual void remove_device (Clutter.InputDevice device);
@@ -6506,7 +6506,7 @@ namespace Clutter {
 		[Version (since = "1.22")]
 		public unowned string get_product_id ();
 		[Version (since = "1.6")]
-		public GLib.List<weak Clutter.InputDevice> get_slave_devices ();
+		public GLib.List<unowned Clutter.InputDevice> get_slave_devices ();
 		[Version (since = "1.22")]
 		public unowned string get_vendor_id ();
 		[Version (since = "1.10")]
@@ -6593,13 +6593,13 @@ namespace Clutter {
 	[Compact]
 	[Version (since = "0.2")]
 	public class KeyEvent : Clutter.Event {
-		public weak Clutter.InputDevice device;
+		public unowned Clutter.InputDevice device;
 		public Clutter.EventFlags flags;
 		public uint16 hardware_keycode;
 		public uint keyval;
 		public Clutter.ModifierType modifier_state;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 		public unichar unicode_value;
@@ -6735,11 +6735,11 @@ namespace Clutter {
 	[Version (since = "0.2")]
 	public class MotionEvent : Clutter.Event {
 		public double axes;
-		public weak Clutter.InputDevice device;
+		public unowned Clutter.InputDevice device;
 		public Clutter.EventFlags flags;
 		public Clutter.ModifierType modifier_state;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 		public float x;
@@ -6841,7 +6841,7 @@ namespace Clutter {
 		public uint get_length ();
 		public uint get_n_nodes ();
 		public Clutter.PathNode get_node (uint index_);
-		public GLib.SList<weak Clutter.PathNode?> get_nodes ();
+		public GLib.SList<unowned Clutter.PathNode?> get_nodes ();
 		public uint get_position (double progress, out Clutter.Knot position);
 		public void insert_node (int index_, Clutter.PathNode node);
 		public void remove_node (uint index_);
@@ -6932,7 +6932,7 @@ namespace Clutter {
 		[Version (deprecated = true, deprecated_since = "1.8", since = "0.6")]
 		public bool is_playing ();
 		[Version (deprecated = true, deprecated_since = "1.8", since = "0.6")]
-		public GLib.SList<weak Clutter.Timeline> list_timelines ();
+		public GLib.SList<unowned Clutter.Timeline> list_timelines ();
 		[Version (deprecated = true, deprecated_since = "1.8", since = "0.6")]
 		public void pause ();
 		[Version (deprecated = true, deprecated_since = "1.8", since = "0.6")]
@@ -6980,7 +6980,7 @@ namespace Clutter {
 		public unowned string get_translation_domain ();
 		public virtual GLib.Type get_type_from_name (string type_name);
 		[Version (since = "0.8")]
-		public GLib.List<weak GLib.Object> list_objects ();
+		public GLib.List<unowned GLib.Object> list_objects ();
 		public uint load_from_data (string data, ssize_t length) throws GLib.Error;
 		public uint load_from_file (string filename) throws GLib.Error;
 		[Version (since = "1.10")]
@@ -7013,14 +7013,14 @@ namespace Clutter {
 	[Version (since = "0.2")]
 	public class ScrollEvent : Clutter.Event {
 		public double axes;
-		public weak Clutter.InputDevice device;
+		public unowned Clutter.InputDevice device;
 		public Clutter.ScrollDirection direction;
 		public Clutter.ScrollFinishFlags finish_flags;
 		public Clutter.EventFlags flags;
 		public Clutter.ModifierType modifier_state;
 		public Clutter.ScrollSource scroll_source;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 		public float x;
@@ -7283,7 +7283,7 @@ namespace Clutter {
 		[Version (since = "0.8")]
 		public unowned Clutter.Stage get_default_stage ();
 		[Version (since = "0.8")]
-		public GLib.SList<weak Clutter.Stage> list_stages ();
+		public GLib.SList<unowned Clutter.Stage> list_stages ();
 		public unowned GLib.SList<Clutter.Stage> peek_stages ();
 		[Version (deprecated = true, deprecated_since = "1.2", since = "0.8")]
 		public void set_default_stage (Clutter.Stage stage);
@@ -7301,8 +7301,8 @@ namespace Clutter {
 		public Clutter.StageState changed_mask;
 		public Clutter.EventFlags flags;
 		public Clutter.StageState new_state;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 	}
@@ -7317,11 +7317,11 @@ namespace Clutter {
 		[Version (deprecated = true, deprecated_since = "1.12", since = "1.4")]
 		public uint get_duration (string? source_state_name, string? target_state_name);
 		[Version (deprecated = true, deprecated_since = "1.12", since = "1.4")]
-		public GLib.List<weak Clutter.StateKey> get_keys (string? source_state_name, string? target_state_name, GLib.Object? object, string? property_name);
+		public GLib.List<unowned Clutter.StateKey> get_keys (string? source_state_name, string? target_state_name, GLib.Object? object, string? property_name);
 		[Version (deprecated = true, deprecated_since = "1.12", since = "1.4")]
 		public unowned string get_state ();
 		[Version (deprecated = true, deprecated_since = "1.12", since = "1.4")]
-		public GLib.List<weak string> get_states ();
+		public GLib.List<unowned string> get_states ();
 		[Version (deprecated = true, deprecated_since = "1.12", since = "1.4")]
 		public unowned Clutter.Timeline get_timeline ();
 		[Version (deprecated = true, deprecated_since = "1.12", since = "1.4")]
@@ -7813,12 +7813,12 @@ namespace Clutter {
 	[Version (since = "1.10")]
 	public class TouchEvent : Clutter.Event {
 		public double axes;
-		public weak Clutter.InputDevice device;
+		public unowned Clutter.InputDevice device;
 		public Clutter.EventFlags flags;
 		public Clutter.ModifierType modifier_state;
-		public weak Clutter.EventSequence sequence;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.EventSequence sequence;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 		public float x;
@@ -7834,8 +7834,8 @@ namespace Clutter {
 		public Clutter.EventFlags flags;
 		public Clutter.TouchpadGesturePhase phase;
 		public float scale;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 		public float x;
@@ -7850,8 +7850,8 @@ namespace Clutter {
 		public Clutter.EventFlags flags;
 		public uint n_fingers;
 		public Clutter.TouchpadGesturePhase phase;
-		public weak Clutter.Actor source;
-		public weak Clutter.Stage stage;
+		public unowned Clutter.Actor source;
+		public unowned Clutter.Stage stage;
 		public uint32 time;
 		public Clutter.EventType type;
 		public float x;
@@ -7954,7 +7954,7 @@ namespace Clutter {
 		[Version (since = "0.8")]
 		public virtual unowned Clutter.ChildMeta get_child_meta (Clutter.Actor actor);
 		[Version (deprecated = true, deprecated_since = "1.10", since = "0.4")]
-		public GLib.List<weak Clutter.Actor> get_children ();
+		public GLib.List<unowned Clutter.Actor> get_children ();
 		[CCode (cname = "clutter_container_class_list_child_properties")]
 		public class unowned GLib.ParamSpec[] list_child_properties ();
 		[CCode (vfunc_name = "lower")]
@@ -8275,7 +8275,7 @@ namespace Clutter {
 	public struct PathNode {
 		public Clutter.PathNodeType type;
 		[CCode (array_length = false)]
-		public weak Clutter.Knot points[3];
+		public unowned Clutter.Knot points[3];
 		public Clutter.PathNode? copy ();
 		public bool equal (Clutter.PathNode node_b);
 		public void free ();

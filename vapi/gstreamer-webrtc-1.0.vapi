@@ -67,7 +67,7 @@ namespace Gst {
 	[Version (since = "1.22")]
 	public abstract class WebRTCICE : Gst.Object {
 		[CCode (array_length = false)]
-		public weak void* _gst_reserved[4];
+		public unowned void* _gst_reserved[4];
 		public Gst.WebRTCICEConnectionState ice_connection_state;
 		public Gst.WebRTCICEGatheringState ice_gathering_state;
 		[CCode (has_construct_function = false)]
@@ -108,15 +108,15 @@ namespace Gst {
 	[Version (since = "1.22")]
 	public class WebRTCICECandidateStats {
 		[CCode (array_length = false)]
-		public weak void* _gst_reserved[20];
-		public weak string ipaddr;
+		public unowned void* _gst_reserved[20];
+		public unowned string ipaddr;
 		public uint port;
 		public uint prio;
-		public weak string proto;
-		public weak string relay_proto;
+		public unowned string proto;
+		public unowned string relay_proto;
 		public uint stream_id;
-		public weak string type;
-		public weak string url;
+		public unowned string type;
+		public unowned string url;
 		public Gst.WebRTCICECandidateStats copy ();
 		public void free ();
 	}
@@ -133,10 +133,10 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/webrtc/webrtc.h", lower_case_csuffix = "webrtc_ice_transport", type_id = "gst_webrtc_ice_transport_get_type ()")]
 	public abstract class WebRTCICETransport : Gst.Object {
 		[CCode (array_length = false)]
-		public weak void* _padding[4];
+		public unowned void* _padding[4];
 		public Gst.WebRTCICERole role;
-		public weak Gst.Element sink;
-		public weak Gst.Element src;
+		public unowned Gst.Element sink;
+		public unowned Gst.Element src;
 		[CCode (has_construct_function = false)]
 		protected WebRTCICETransport ();
 		public void connection_state_change (Gst.WebRTCICEConnectionState new_state);
@@ -217,7 +217,7 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/webrtc/webrtc.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", lower_case_csuffix = "webrtc_session_description", type_id = "gst_webrtc_session_description_get_type ()")]
 	[Compact]
 	public class WebRTCSessionDescription {
-		public weak Gst.SDP.Message sdp;
+		public unowned Gst.SDP.Message sdp;
 		public Gst.WebRTCSDPType type;
 		[CCode (has_construct_function = false)]
 		public WebRTCSessionDescription (Gst.WebRTCSDPType type, owned Gst.SDP.Message sdp);

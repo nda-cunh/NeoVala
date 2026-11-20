@@ -4,10 +4,10 @@
 namespace Soup {
 	namespace Form {
 		[CCode (cheader_filename = "libsoup/soup.h")]
-		public static GLib.HashTable<weak string,weak string> decode (string encoded_form);
+		public static GLib.HashTable<unowned string,unowned string> decode (string encoded_form);
 		[CCode (cheader_filename = "libsoup/soup.h")]
 		[Version (since = "2.26")]
-		public static GLib.HashTable<weak string,weak string>? decode_multipart (Soup.Message msg, string? file_control_name, out string filename, out string content_type, out Soup.Buffer file);
+		public static GLib.HashTable<unowned string,unowned string>? decode_multipart (Soup.Message msg, string? file_control_name, out string filename, out string content_type, out Soup.Buffer file);
 		[CCode (cheader_filename = "libsoup/soup.h")]
 		public static string encode (...);
 		[CCode (cheader_filename = "libsoup/soup.h")]
@@ -355,13 +355,13 @@ namespace Soup {
 	[Compact]
 	[Version (since = "2.24")]
 	public class Cookie {
-		public weak string domain;
-		public weak Soup.Date expires;
+		public unowned string domain;
+		public unowned Soup.Date expires;
 		public bool http_only;
-		public weak string name;
-		public weak string path;
+		public unowned string name;
+		public unowned string path;
 		public bool secure;
-		public weak string value;
+		public unowned string value;
 		[CCode (has_construct_function = false)]
 		public Cookie (string name, string value, string domain, string path, int max_age);
 		public bool applies_to_uri (Soup.URI uri);
@@ -533,8 +533,8 @@ namespace Soup {
 	[Compact]
 	[Version (since = "2.68")]
 	public class HSTSPolicy {
-		public weak string domain;
-		public weak Soup.Date expires;
+		public unowned string domain;
+		public unowned Soup.Date expires;
 		public bool include_subdomains;
 		public ulong max_age;
 		[CCode (has_construct_function = false)]
@@ -570,10 +570,10 @@ namespace Soup {
 	}
 	[CCode (cheader_filename = "libsoup/soup.h", type_id = "soup_message_get_type ()")]
 	public class Message : GLib.Object {
-		public weak Soup.MessageBody request_body;
-		public weak Soup.MessageHeaders request_headers;
-		public weak Soup.MessageBody response_body;
-		public weak Soup.MessageHeaders response_headers;
+		public unowned Soup.MessageBody request_body;
+		public unowned Soup.MessageHeaders request_headers;
+		public unowned Soup.MessageBody response_body;
+		public unowned Soup.MessageHeaders response_headers;
 		[CCode (has_construct_function = false)]
 		public Message (string method, string uri_string);
 		public uint add_header_handler (string @signal, string header, GLib.Callback callback, void* user_data);
@@ -861,7 +861,7 @@ namespace Soup {
 		public unowned GLib.MainContext? get_async_context ();
 		[Version (deprecated = true)]
 		public unowned Soup.Socket get_listener ();
-		public GLib.SList<weak GLib.Socket> get_listeners ();
+		public GLib.SList<unowned GLib.Socket> get_listeners ();
 		[Version (deprecated = true)]
 		public uint get_port ();
 		[Version (since = "2.48")]
@@ -1134,14 +1134,14 @@ namespace Soup {
 	[CCode (cheader_filename = "libsoup/soup.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "soup_uri_get_type ()")]
 	[Compact]
 	public class URI {
-		public weak string fragment;
-		public weak string host;
-		public weak string password;
-		public weak string path;
+		public unowned string fragment;
+		public unowned string host;
+		public unowned string password;
+		public unowned string path;
 		public uint port;
-		public weak string query;
-		public weak string scheme;
-		public weak string user;
+		public unowned string query;
+		public unowned string scheme;
+		public unowned string user;
 		[CCode (has_construct_function = false)]
 		public URI (string? uri_string);
 		public Soup.URI copy ();

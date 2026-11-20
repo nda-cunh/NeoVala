@@ -101,19 +101,19 @@ namespace Gnome {
 		[Version (since = "3.6")]
 		public unowned string description_for_option (string group_id, string id);
 		[Version (since = "3.6")]
-		public GLib.List<weak string> get_all_layouts ();
+		public GLib.List<unowned string> get_all_layouts ();
 		[Version (since = "3.6")]
-		public GLib.List<weak string> get_all_option_groups ();
+		public GLib.List<unowned string> get_all_option_groups ();
 		[Version (since = "3.18")]
-		public GLib.List<weak string> get_languages_for_layout (string layout_id);
+		public GLib.List<unowned string> get_languages_for_layout (string layout_id);
 		[Version (since = "3.6")]
 		public bool get_layout_info (string id, out unowned string? display_name, out unowned string? short_name, out unowned string? xkb_layout, out unowned string? xkb_variant);
 		[Version (since = "3.8")]
-		public GLib.List<weak string> get_layouts_for_country (string country_code);
+		public GLib.List<unowned string> get_layouts_for_country (string country_code);
 		[Version (since = "3.8")]
-		public GLib.List<weak string> get_layouts_for_language (string language_code);
+		public GLib.List<unowned string> get_layouts_for_language (string language_code);
 		[Version (since = "3.6")]
-		public GLib.List<weak string> get_options_for_group (string group_id);
+		public GLib.List<unowned string> get_options_for_group (string group_id);
 		public signal void layouts_changed ();
 	}
 	[CCode (cheader_filename = "libgnome-desktop/gnome-desktop-thumbnail.h", cprefix = "GNOME_DESKTOP_THUMBNAIL_SIZE_", has_type_id = false)]

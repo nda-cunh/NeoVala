@@ -27,14 +27,14 @@ namespace GConf {
 	}
 	[CCode (cheader_filename = "gconf/gconf-client.h")]
 	public class Client : GLib.Object {
-		public weak GLib.HashTable cache_dirs;
-		public weak GLib.HashTable cache_hash;
-		public weak GLib.HashTable dir_hash;
-		public weak GConf.Engine engine;
+		public unowned GLib.HashTable cache_dirs;
+		public unowned GLib.HashTable cache_hash;
+		public unowned GLib.HashTable dir_hash;
+		public unowned GConf.Engine engine;
 		public GConf.ClientErrorHandlingMode error_mode;
-		public weak GConf.Listeners listeners;
+		public unowned GConf.Listeners listeners;
 		public uint notify_handler;
-		public weak GLib.SList notify_list;
+		public unowned GLib.SList notify_list;
 		public int pad2;
 		public int pending_notify_count;
 		[CCode (has_construct_function = false)]
@@ -133,8 +133,8 @@ namespace GConf {
 	[CCode (cheader_filename = "gconf/gconf.h", ref_function = "gconf_entry_ref", ref_function_void = true, unref_function = "gconf_entry_unref")]
 	[Compact]
 	public class Entry {
-		public weak string key;
-		public weak GConf.Value value;
+		public unowned string key;
+		public unowned GConf.Value value;
 		[CCode (has_construct_function = false)]
 		public Entry (string key, GConf.Value val);
 		public GConf.Entry copy ();
@@ -157,7 +157,7 @@ namespace GConf {
 	[Compact]
 	public class EnumStringPair {
 		public int enum_value;
-		public weak string str;
+		public unowned string str;
 	}
 	[CCode (cheader_filename = "gconf/gconf.h")]
 	[Compact]
@@ -176,8 +176,8 @@ namespace GConf {
 	[Compact]
 	public class MetaInfo {
 		public GLib.Time mod_time;
-		public weak string mod_user;
-		public weak string schema;
+		public unowned string mod_user;
+		public unowned string schema;
 		[CCode (has_construct_function = false)]
 		public MetaInfo ();
 		[CCode (cname = "gconf_meta_info_mod_time")]

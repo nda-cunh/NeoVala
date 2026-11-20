@@ -4687,7 +4687,7 @@ namespace Gdk {
 		public Gdk.GrabStatus grab (Gdk.Window window, Gdk.GrabOwnership grab_ownership, bool owner_events, Gdk.EventMask event_mask, Gdk.Cursor? cursor, uint32 time_);
 		[Version (since = "3.0")]
 		public GLib.List<Gdk.Atom> list_axes ();
-		public GLib.List<weak Gdk.Device>? list_slave_devices ();
+		public GLib.List<unowned Gdk.Device>? list_slave_devices ();
 		public void set_axis_use (uint index_, Gdk.AxisUse use);
 		public void set_key (uint index_, uint keyval, Gdk.ModifierType modifiers);
 		public bool set_mode (Gdk.InputMode mode);
@@ -4743,7 +4743,7 @@ namespace Gdk {
 		[Version (since = "3.0")]
 		public unowned Gdk.Display? get_display ();
 		[Version (deprecated = true, deprecated_since = "3.20", since = "3.0")]
-		public GLib.List<weak Gdk.Device> list_devices (Gdk.DeviceType type);
+		public GLib.List<unowned Gdk.Device> list_devices (Gdk.DeviceType type);
 		public Gdk.Display display { get; construct; }
 		public signal void device_added (Gdk.Device device);
 		public signal void device_changed (Gdk.Device device);
@@ -4823,7 +4823,7 @@ namespace Gdk {
 		[Version (deprecated = true, deprecated_since = "3.0", since = "2.2")]
 		public unowned GLib.List<Gdk.Device> list_devices ();
 		[Version (since = "3.20")]
-		public GLib.List<weak Gdk.Seat> list_seats ();
+		public GLib.List<unowned Gdk.Seat> list_seats ();
 		[Version (since = "3.0")]
 		public void notify_startup_complete (string startup_id);
 		[Version (since = "2.2")]
@@ -4885,7 +4885,7 @@ namespace Gdk {
 		[Version (since = "2.2")]
 		public unowned Gdk.Display? get_default_display ();
 		[Version (since = "2.2")]
-		public GLib.SList<weak Gdk.Display> list_displays ();
+		public GLib.SList<unowned Gdk.Display> list_displays ();
 		[Version (since = "3.0")]
 		public unowned Gdk.Display? open_display (string name);
 		[Version (since = "2.2")]
@@ -5040,20 +5040,20 @@ namespace Gdk {
 	public class EventAny : Gdk.Event {
 		public int8 send_event;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
 	public class EventButton : Gdk.Event {
 		[CCode (array_length = false)]
-		public weak double[] axes;
+		public unowned double[] axes;
 		public uint button;
-		public weak Gdk.Device device;
+		public unowned Gdk.Device device;
 		public int8 send_event;
 		public Gdk.ModifierType state;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 		public double x;
 		public double x_root;
 		public double y;
@@ -5066,7 +5066,7 @@ namespace Gdk {
 		public int8 send_event;
 		public Gdk.EventType type;
 		public int width;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 		public int x;
 		public int y;
 	}
@@ -5078,10 +5078,10 @@ namespace Gdk {
 		public Gdk.CrossingMode mode;
 		public int8 send_event;
 		public Gdk.ModifierType state;
-		public weak Gdk.Window subwindow;
+		public unowned Gdk.Window subwindow;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 		public double x;
 		public double x_root;
 		public double y;
@@ -5090,11 +5090,11 @@ namespace Gdk {
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
 	public class EventDND : Gdk.Event {
-		public weak Gdk.DragContext context;
+		public unowned Gdk.DragContext context;
 		public int8 send_event;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 		public short x_root;
 		public short y_root;
 	}
@@ -5103,10 +5103,10 @@ namespace Gdk {
 	public class EventExpose : Gdk.Event {
 		public Gdk.Rectangle area;
 		public int count;
-		public weak Cairo.Region region;
+		public unowned Cairo.Region region;
 		public int8 send_event;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
@@ -5114,18 +5114,18 @@ namespace Gdk {
 		public int16 @in;
 		public int8 send_event;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
 	[Version (since = "2.8")]
 	public class EventGrabBroken : Gdk.Event {
-		public weak Gdk.Window grab_window;
+		public unowned Gdk.Window grab_window;
 		public bool implicit;
 		public bool keyboard;
 		public int8 send_event;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
@@ -5141,20 +5141,20 @@ namespace Gdk {
 		public string str;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
 	public class EventMotion : Gdk.Event {
 		[CCode (array_length = false)]
-		public weak double[] axes;
-		public weak Gdk.Device device;
+		public unowned double[] axes;
+		public unowned Gdk.Device device;
 		public int16 is_hint;
 		public int8 send_event;
 		public Gdk.ModifierType state;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 		public double x;
 		public double x_root;
 		public double y;
@@ -5164,14 +5164,14 @@ namespace Gdk {
 	[Compact]
 	[Version (since = "2.6")]
 	public class EventOwnerChange : Gdk.Event {
-		public weak Gdk.Window owner;
+		public unowned Gdk.Window owner;
 		public Gdk.OwnerChange reason;
 		public Gdk.Atom selection;
 		public uint32 selection_time;
 		public int8 send_event;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
@@ -5184,7 +5184,7 @@ namespace Gdk {
 		public uint32 time;
 		public Gdk.EventType type;
 		public double value;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
@@ -5196,7 +5196,7 @@ namespace Gdk {
 		public int8 send_event;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
@@ -5207,7 +5207,7 @@ namespace Gdk {
 		public int8 send_event;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
@@ -5217,30 +5217,30 @@ namespace Gdk {
 		public Gdk.PropertyState state;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
 	public class EventProximity : Gdk.Event {
-		public weak Gdk.Device device;
+		public unowned Gdk.Device device;
 		public int8 send_event;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
 	public class EventScroll : Gdk.Event {
 		public double delta_x;
 		public double delta_y;
-		public weak Gdk.Device device;
+		public unowned Gdk.Device device;
 		public Gdk.ScrollDirection direction;
 		public uint is_stop;
 		public int8 send_event;
 		public Gdk.ModifierType state;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 		public double x;
 		public double x_root;
 		public double y;
@@ -5250,13 +5250,13 @@ namespace Gdk {
 	[Compact]
 	public class EventSelection : Gdk.Event {
 		public Gdk.Atom property;
-		public weak Gdk.Window requestor;
+		public unowned Gdk.Window requestor;
 		public Gdk.Atom selection;
 		public int8 send_event;
 		public Gdk.Atom target;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_sequence_get_type ()")]
 	[Compact]
@@ -5266,24 +5266,24 @@ namespace Gdk {
 	[Compact]
 	public class EventSetting : Gdk.Event {
 		public Gdk.SettingAction action;
-		public weak string name;
+		public unowned string name;
 		public int8 send_event;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
 	public class EventTouch : Gdk.Event {
 		[CCode (array_length = false)]
-		public weak double[] axes;
-		public weak Gdk.Device device;
+		public unowned double[] axes;
+		public unowned Gdk.Device device;
 		public bool emulating_pointer;
 		public int8 send_event;
-		public weak Gdk.EventSequence sequence;
+		public unowned Gdk.EventSequence sequence;
 		public Gdk.ModifierType state;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 		public double x;
 		public double x_root;
 		public double y;
@@ -5302,7 +5302,7 @@ namespace Gdk {
 		public Gdk.ModifierType state;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 		public double x;
 		public double x_root;
 		public double y;
@@ -5319,7 +5319,7 @@ namespace Gdk {
 		public Gdk.ModifierType state;
 		public uint32 time;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 		public double x;
 		public double x_root;
 		public double y;
@@ -5332,7 +5332,7 @@ namespace Gdk {
 		public int8 send_event;
 		public Gdk.VisibilityState state;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gdk_event_get_type ()")]
 	[Compact]
@@ -5341,7 +5341,7 @@ namespace Gdk {
 		public Gdk.WindowState new_window_state;
 		public int8 send_event;
 		public Gdk.EventType type;
-		public weak Gdk.Window window;
+		public unowned Gdk.Window window;
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", type_id = "gdk_frame_clock_get_type ()")]
 	public abstract class FrameClock : GLib.Object {
@@ -5558,7 +5558,7 @@ namespace Gdk {
 		[Version (since = "2.2")]
 		public unowned Gdk.Visual get_system_visual ();
 		[Version (since = "2.2")]
-		public GLib.List<weak Gdk.Window> get_toplevel_windows ();
+		public GLib.List<unowned Gdk.Window> get_toplevel_windows ();
 		[Version (deprecated = true, deprecated_since = "3.22", since = "2.2")]
 		public int get_width ();
 		[Version (deprecated = true, deprecated_since = "3.22", since = "2.2")]
@@ -5572,7 +5572,7 @@ namespace Gdk {
 		[Version (since = "2.10")]
 		public bool is_composited ();
 		[Version (since = "2.2")]
-		public GLib.List<weak Gdk.Visual> list_visuals ();
+		public GLib.List<unowned Gdk.Visual> list_visuals ();
 		[Version (deprecated = true, deprecated_since = "3.22", since = "2.2")]
 		public string make_display_name ();
 		[Version (since = "2.10")]
@@ -5604,7 +5604,7 @@ namespace Gdk {
 		[Version (since = "3.20")]
 		public unowned Gdk.Device? get_pointer ();
 		[Version (since = "3.20")]
-		public GLib.List<weak Gdk.Device> get_slaves (Gdk.SeatCapabilities capabilities);
+		public GLib.List<unowned Gdk.Device> get_slaves (Gdk.SeatCapabilities capabilities);
 		[Version (since = "3.20")]
 		public Gdk.GrabStatus grab (Gdk.Window window, Gdk.SeatCapabilities capabilities, bool owner_events, Gdk.Cursor? cursor, Gdk.Event? event, Gdk.SeatGrabPrepareFunc? prepare_func);
 		[Version (since = "3.20")]
@@ -5716,9 +5716,9 @@ namespace Gdk {
 		public bool get_accept_focus ();
 		[Version (deprecated = true, deprecated_since = "3.22", since = "2.22")]
 		public unowned Cairo.Pattern? get_background_pattern ();
-		public GLib.List<weak Gdk.Window> get_children ();
+		public GLib.List<unowned Gdk.Window> get_children ();
 		[Version (since = "3.10")]
-		public GLib.List<weak Gdk.Window> get_children_with_user_data (void* user_data);
+		public GLib.List<unowned Gdk.Window> get_children_with_user_data (void* user_data);
 		public Cairo.Region get_clip_region ();
 		[Version (deprecated = true, deprecated_since = "3.16", since = "2.22")]
 		public bool get_composited ();
@@ -6018,22 +6018,22 @@ namespace Gdk {
 	public struct TimeCoord {
 		public uint32 time;
 		[CCode (array_length = false)]
-		public weak double axes[128];
+		public unowned double axes[128];
 	}
 	[CCode (cheader_filename = "gdk/gdk.h", has_type_id = false)]
 	public struct WindowAttr {
-		public weak string title;
+		public unowned string title;
 		public int event_mask;
 		public int x;
 		public int y;
 		public int width;
 		public int height;
 		public Gdk.WindowWindowClass wclass;
-		public weak Gdk.Visual visual;
+		public unowned Gdk.Visual visual;
 		public Gdk.WindowType window_type;
-		public weak Gdk.Cursor cursor;
-		public weak string wmclass_name;
-		public weak string wmclass_class;
+		public unowned Gdk.Cursor cursor;
+		public unowned string wmclass_name;
+		public unowned string wmclass_class;
 		public bool override_redirect;
 		public Gdk.WindowTypeHint type_hint;
 	}
@@ -6834,7 +6834,7 @@ namespace Gdk {
 	public static uint keyval_to_upper (uint keyval);
 	[CCode (cheader_filename = "gdk/gdk.h")]
 	[Version (deprecated = true, deprecated_since = "3.22")]
-	public static GLib.List<weak Gdk.Visual> list_visuals ();
+	public static GLib.List<unowned Gdk.Visual> list_visuals ();
 	[CCode (cheader_filename = "gdk/gdk.h")]
 	[Version (since = "2.2")]
 	public static void notify_startup_complete ();

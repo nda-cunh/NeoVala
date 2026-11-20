@@ -37,8 +37,8 @@ namespace Goo {
 		public double get_default_line_width ();
 		public unowned Goo.CanvasItem? get_item (Goo.CanvasItemModel model);
 		public unowned Goo.CanvasItem? get_item_at (double x, double y, bool is_pointer_event);
-		public GLib.List<weak Goo.CanvasItem>? get_items_at (double x, double y, bool is_pointer_event);
-		public GLib.List<weak Goo.CanvasItem>? get_items_in_area (Goo.CanvasBounds area, bool inside_area, bool allow_overlaps, bool include_containers);
+		public GLib.List<unowned Goo.CanvasItem>? get_items_at (double x, double y, bool is_pointer_event);
+		public GLib.List<unowned Goo.CanvasItem>? get_items_in_area (Goo.CanvasBounds area, bool inside_area, bool allow_overlaps, bool include_containers);
 		public unowned Goo.CanvasItem? get_root_item ();
 		public unowned Goo.CanvasItemModel? get_root_item_model ();
 		public double get_scale ();
@@ -347,7 +347,7 @@ namespace Goo {
 	}
 	[CCode (cheader_filename = "goocanvas.h")]
 	public class CanvasItemModelSimple : GLib.Object, Goo.CanvasItemModel {
-		public weak Goo.CanvasItemModel parent;
+		public unowned Goo.CanvasItemModel parent;
 		public Goo.CanvasItemSimpleData simple_data;
 		[CCode (has_construct_function = false)]
 		protected CanvasItemModelSimple ();
@@ -397,11 +397,11 @@ namespace Goo {
 	[CCode (cheader_filename = "goocanvas.h")]
 	public class CanvasItemSimple : GLib.Object, Goo.CanvasItem {
 		public Goo.CanvasBounds bounds;
-		public weak Goo.Canvas canvas;
-		public weak Goo.CanvasItemModelSimple model;
+		public unowned Goo.Canvas canvas;
+		public unowned Goo.CanvasItemModelSimple model;
 		public uint need_entire_subtree_update;
 		public uint need_update;
-		public weak Goo.CanvasItem parent;
+		public unowned Goo.CanvasItem parent;
 		public Goo.CanvasItemSimpleData simple_data;
 		[CCode (has_construct_function = false)]
 		protected CanvasItemSimple ();
@@ -557,13 +557,13 @@ namespace Goo {
 		public double arrow_tip_length;
 		public double arrow_width;
 		[CCode (array_length = false)]
-		public weak double[] end_arrow_coords;
+		public unowned double[] end_arrow_coords;
 		[CCode (array_length = false)]
-		public weak double[] line_end;
+		public unowned double[] line_end;
 		[CCode (array_length = false)]
-		public weak double[] line_start;
+		public unowned double[] line_start;
 		[CCode (array_length = false)]
-		public weak double[] start_arrow_coords;
+		public unowned double[] start_arrow_coords;
 	}
 	[CCode (cheader_filename = "goocanvas.h")]
 	public class CanvasPolylineModel : Goo.CanvasItemModelSimple, Goo.CanvasItemModel {
@@ -636,8 +636,8 @@ namespace Goo {
 	}
 	[CCode (cheader_filename = "goocanvas.h")]
 	public class CanvasStyle : GLib.Object {
-		public weak Goo.CanvasStyle? parent;
-		public weak GLib.Array<Goo.CanvasStyleProperty?> properties;
+		public unowned Goo.CanvasStyle? parent;
+		public unowned GLib.Array<Goo.CanvasStyleProperty?> properties;
 		[CCode (has_construct_function = false)]
 		public CanvasStyle ();
 		public Goo.CanvasStyle copy ();
@@ -920,9 +920,9 @@ namespace Goo {
 	[CCode (cheader_filename = "goocanvas.h")]
 	public struct CanvasItemSimpleData {
 		public Cairo.Matrix? transform;
-		public weak GLib.Array<Goo.CanvasPathCommand?> clip_path_commands;
-		public weak Goo.CanvasStyle style;
-		public weak string tooltip;
+		public unowned GLib.Array<Goo.CanvasPathCommand?> clip_path_commands;
+		public unowned Goo.CanvasStyle style;
+		public unowned string tooltip;
 		public double visibility_threshold;
 		public uint visibility;
 		public uint pointer_events;

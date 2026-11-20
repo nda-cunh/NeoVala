@@ -3246,9 +3246,9 @@ namespace GLib {
 		[Version (since = "2.72")]
 		public TlsCertificate.from_pkcs12 ([CCode (array_length_cname = "length", array_length_pos = 1.5, array_length_type = "gsize")] uint8[] data, string? password) throws GLib.Error;
 		[Version (since = "2.70")]
-		public GLib.GenericArray<weak GLib.Bytes>? get_dns_names ();
+		public GLib.GenericArray<unowned GLib.Bytes>? get_dns_names ();
 		[Version (since = "2.70")]
-		public GLib.GenericArray<weak GLib.InetAddress>? get_ip_addresses ();
+		public GLib.GenericArray<unowned GLib.InetAddress>? get_ip_addresses ();
 		public unowned GLib.TlsCertificate? get_issuer ();
 		[Version (since = "2.70")]
 		public string? get_issuer_name ();
@@ -4401,43 +4401,43 @@ namespace GLib {
 	}
 	[CCode (cheader_filename = "gio/gio.h", has_type_id = false)]
 	public struct ActionEntry {
-		public weak string name;
+		public unowned string name;
 		[CCode (delegate_target = false)]
-		public weak GLib.SimpleActionActivateCallback? activate;
-		public weak string? parameter_type;
-		public weak string? state;
+		public unowned GLib.SimpleActionActivateCallback? activate;
+		public unowned string? parameter_type;
+		public unowned string? state;
 		[CCode (delegate_target = false)]
-		public weak GLib.SimpleActionChangeStateCallback? change_state;
+		public unowned GLib.SimpleActionChangeStateCallback? change_state;
 	}
 	[CCode (cheader_filename = "gio/gio.h", has_type_id = false)]
 	[Version (since = "2.26")]
 	public struct DBusErrorEntry {
 		public int error_code;
-		public weak string dbus_error_name;
+		public unowned string dbus_error_name;
 	}
 	[CCode (cheader_filename = "gio/gio.h", has_type_id = false)]
 	[Version (since = "2.26")]
 	public struct DBusInterfaceVTable {
 		[CCode (delegate_target = false)]
-		public weak GLib.DBusInterfaceMethodCallFunc method_call;
+		public unowned GLib.DBusInterfaceMethodCallFunc method_call;
 		[CCode (delegate_target = false)]
-		public weak GLib.DBusInterfaceGetPropertyFunc get_property;
+		public unowned GLib.DBusInterfaceGetPropertyFunc get_property;
 		[CCode (delegate_target = false)]
-		public weak GLib.DBusInterfaceSetPropertyFunc set_property;
+		public unowned GLib.DBusInterfaceSetPropertyFunc set_property;
 	}
 	[CCode (cheader_filename = "gio/gio.h", has_type_id = false)]
 	[Version (since = "2.26")]
 	public struct DBusSubtreeVTable {
 		[CCode (delegate_target = false)]
-		public weak GLib.DBusSubtreeEnumerateFunc enumerate;
+		public unowned GLib.DBusSubtreeEnumerateFunc enumerate;
 		[CCode (delegate_target = false)]
-		public weak GLib.DBusSubtreeIntrospectFunc introspect;
+		public unowned GLib.DBusSubtreeIntrospectFunc introspect;
 		[CCode (delegate_target = false)]
-		public weak GLib.DBusSubtreeDispatchFunc dispatch;
+		public unowned GLib.DBusSubtreeDispatchFunc dispatch;
 	}
 	[CCode (cheader_filename = "gio/gio.h", has_type_id = false)]
 	public struct FileAttributeInfo {
-		public weak string name;
+		public unowned string name;
 		public GLib.FileAttributeType type;
 		public GLib.FileAttributeInfoFlags flags;
 	}
@@ -4446,7 +4446,7 @@ namespace GLib {
 	public struct InputMessage {
 		public GLib.SocketAddress** address;
 		[CCode (array_length_cname = "num_vectors", array_length_type = "guint")]
-		public weak GLib.InputVector[] vectors;
+		public unowned GLib.InputVector[] vectors;
 		public uint num_vectors;
 		public size_t bytes_received;
 		public int flags;
@@ -4462,13 +4462,13 @@ namespace GLib {
 	[CCode (cheader_filename = "gio/gio.h", has_type_id = false)]
 	[Version (since = "2.44")]
 	public struct OutputMessage {
-		public weak GLib.SocketAddress address;
+		public unowned GLib.SocketAddress address;
 		[CCode (array_length_cname = "num_vectors", array_length_type = "guint")]
-		public weak GLib.OutputVector[] vectors;
+		public unowned GLib.OutputVector[] vectors;
 		public uint num_vectors;
 		public uint bytes_sent;
 		[CCode (array_length_cname = "num_control_messages", array_length_type = "guint")]
-		public weak GLib.SocketControlMessage[]? control_messages;
+		public unowned GLib.SocketControlMessage[]? control_messages;
 		public uint num_control_messages;
 	}
 	[CCode (cheader_filename = "gio/gio.h", has_type_id = false)]

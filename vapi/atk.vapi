@@ -60,10 +60,10 @@ namespace Atk {
 	}
 	[CCode (cheader_filename = "atk/atk.h", type_id = "atk_object_get_type ()")]
 	public class Object : GLib.Object {
-		public weak string description;
+		public unowned string description;
 		public Atk.Layer layer;
-		public weak string name;
-		public weak Atk.RelationSet relation_set;
+		public unowned string name;
+		public unowned Atk.RelationSet relation_set;
 		public Atk.Role role;
 		[CCode (has_construct_function = false)]
 		protected Object ();
@@ -187,9 +187,9 @@ namespace Atk {
 	[CCode (cheader_filename = "atk/atk.h", type_id = "atk_registry_get_type ()")]
 	public class Registry : GLib.Object {
 		[Version (deprecated = true)]
-		public weak GLib.HashTable<GLib.Type,Atk.ObjectFactory> factory_singleton_cache;
+		public unowned GLib.HashTable<GLib.Type,Atk.ObjectFactory> factory_singleton_cache;
 		[Version (deprecated = true)]
-		public weak GLib.HashTable<GLib.Type,GLib.Type> factory_type_registry;
+		public unowned GLib.HashTable<GLib.Type,GLib.Type> factory_type_registry;
 		[CCode (has_construct_function = false)]
 		protected Registry ();
 		[CCode (cheader_filename = "atk/atk.h", cname = "atk_get_default_registry")]
@@ -216,7 +216,7 @@ namespace Atk {
 	[CCode (cheader_filename = "atk/atk.h", type_id = "atk_relation_set_get_type ()")]
 	public class RelationSet : GLib.Object {
 		[Version (deprecated = true)]
-		public weak GLib.GenericArray<Atk.Relation> relations;
+		public unowned GLib.GenericArray<Atk.Relation> relations;
 		[CCode (has_construct_function = false)]
 		public RelationSet ();
 		public void add (Atk.Relation relation);
@@ -232,7 +232,7 @@ namespace Atk {
 	[CCode (cheader_filename = "atk/atk.h", type_id = "atk_socket_get_type ()")]
 	public class Socket : Atk.Object, Atk.Component {
 		[Version (deprecated = true)]
-		public weak string embedded_plug_id;
+		public unowned string embedded_plug_id;
 		[CCode (has_construct_function = false, type = "AtkObject*")]
 		public Socket ();
 		[Version (since = "1.30")]
@@ -580,13 +580,13 @@ namespace Atk {
 		public uint keyval;
 		public int length;
 		[CCode (cname = "string")]
-		public weak string str;
+		public unowned string str;
 		public uint16 keycode;
 		public uint32 timestamp;
 	}
 	[CCode (cheader_filename = "atk/atk.h", has_type_id = false)]
 	public struct PropertyValues {
-		public weak string property_name;
+		public unowned string property_name;
 		public GLib.Value old_value;
 		public GLib.Value new_value;
 	}

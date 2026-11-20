@@ -7,7 +7,7 @@ namespace Gst {
 		[GIR (name = "VideoAggregator")]
 		[Version (since = "1.16")]
 		public abstract class Aggregator : Gst.Base.Aggregator {
-			public weak Gst.Video.Info info;
+			public unowned Gst.Video.Info info;
 			[CCode (has_construct_function = false)]
 			protected Aggregator ();
 			[NoWrapper]
@@ -40,7 +40,7 @@ namespace Gst {
 		[GIR (name = "VideoAggregatorPad")]
 		[Version (since = "1.16")]
 		public class AggregatorPad : Gst.Base.AggregatorPad {
-			public weak Gst.Video.Info info;
+			public unowned Gst.Video.Info info;
 			[CCode (has_construct_function = false)]
 			protected AggregatorPad ();
 			[NoWrapper]
@@ -99,8 +99,8 @@ namespace Gst {
 			public int distance_from_sync;
 			public Gst.ClockTime dts;
 			public Gst.ClockTime duration;
-			public weak Gst.Buffer input_buffer;
-			public weak Gst.Buffer output_buffer;
+			public unowned Gst.Buffer input_buffer;
+			public unowned Gst.Buffer output_buffer;
 			public Gst.ClockTime pts;
 			public uint32 system_frame_number;
 			[CCode (simple_generics = true)]
@@ -114,12 +114,12 @@ namespace Gst {
 		[Compact]
 		[GIR (name = "VideoCodecState")]
 		public class CodecState {
-			public weak Gst.Caps allocation_caps;
-			public weak Gst.Caps caps;
-			public weak Gst.Buffer codec_data;
+			public unowned Gst.Caps allocation_caps;
+			public unowned Gst.Caps caps;
+			public unowned Gst.Buffer codec_data;
 			[Version (since = "1.20")]
 			public Gst.Video.ContentLightLevel content_light_level;
-			public weak Gst.Video.Info info;
+			public unowned Gst.Video.Info info;
 			[Version (since = "1.20")]
 			public Gst.Video.MasteringDisplayInfo mastering_display_info;
 			public unowned Gst.Video.CodecState @ref ();
@@ -128,7 +128,7 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/video/video.h", cname = "GstColorBalanceChannel", lower_case_cprefix = "gst_color_balance_channel_", type_id = "gst_color_balance_channel_get_type ()")]
 		[GIR (name = "ColorBalanceChannel")]
 		public class ColorBalanceChannel : GLib.Object {
-			public weak string label;
+			public unowned string label;
 			public int max_value;
 			public int min_value;
 			[CCode (has_construct_function = false)]
@@ -364,9 +364,9 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/video/video.h", type_id = "gst_video_filter_get_type ()")]
 		[GIR (name = "VideoFilter")]
 		public abstract class Filter : Gst.Base.Transform {
-			public weak Gst.Video.Info in_info;
+			public unowned Gst.Video.Info in_info;
 			public bool negotiated;
-			public weak Gst.Video.Info out_info;
+			public unowned Gst.Video.Info out_info;
 			[CCode (has_construct_function = false)]
 			protected Filter ();
 			[NoWrapper]
@@ -388,19 +388,19 @@ namespace Gst {
 			public Gst.Video.MultiviewMode ABI_abi_multiview_mode;
 			public Gst.Video.ChromaSite chroma_site;
 			public Gst.Video.Colorimetry colorimetry;
-			public weak Gst.Video.FormatInfo? finfo;
+			public unowned Gst.Video.FormatInfo? finfo;
 			public Gst.Video.Flags flags;
 			public int fps_d;
 			public int fps_n;
 			public int height;
 			public Gst.Video.InterlaceMode interlace_mode;
 			[CCode (array_length = false)]
-			public weak size_t offset[4];
+			public unowned size_t offset[4];
 			public int par_d;
 			public int par_n;
 			public size_t size;
 			[CCode (array_length = false)]
-			public weak int stride[4];
+			public unowned int stride[4];
 			public int views;
 			public int width;
 			[CCode (has_construct_function = false)]
@@ -432,7 +432,7 @@ namespace Gst {
 		public class InfoDmaDrm {
 			public uint32 drm_fourcc;
 			public uint64 drm_modifier;
-			public weak Gst.Video.Info vinfo;
+			public unowned Gst.Video.Info vinfo;
 			[CCode (has_construct_function = false)]
 			public InfoDmaDrm ();
 			public void free ();
@@ -733,7 +733,7 @@ namespace Gst {
 		public struct AffineTransformationMeta {
 			public Gst.Meta meta;
 			[CCode (array_length = false)]
-			public weak float matrix[16];
+			public unowned float matrix[16];
 			public void apply_matrix ([CCode (array_length = false)] float matrix[16]);
 			public static unowned Gst.MetaInfo? get_info ();
 		}
@@ -745,7 +745,7 @@ namespace Gst {
 			public uint padding_left;
 			public uint padding_right;
 			[CCode (array_length = false)]
-			public weak uint stride_align[4];
+			public unowned uint stride_align[4];
 			public void reset ();
 		}
 		[CCode (cheader_filename = "gst/video/video.h", has_type_id = false)]
@@ -756,7 +756,7 @@ namespace Gst {
 			public uint8 SDID_block_number;
 			public uint8 data_count;
 			[CCode (array_length_cname = "data_count", array_length_type = "guint8")]
-			public weak uint8[] data;
+			public unowned uint8[] data;
 		}
 		[CCode (cheader_filename = "gst/video/video.h", has_type_id = false)]
 		[GIR (name = "VideoBarMeta")]
@@ -776,7 +776,7 @@ namespace Gst {
 			public Gst.Meta meta;
 			public Gst.Video.CaptionType caption_type;
 			[CCode (array_length_cname = "size", array_length_type = "gsize")]
-			public weak uint8[] data;
+			public unowned uint8[] data;
 			public size_t size;
 			public static unowned Gst.MetaInfo? get_info ();
 		}
@@ -785,7 +785,7 @@ namespace Gst {
 		[Version (since = "1.20")]
 		public struct CodecAlphaMeta {
 			public Gst.Meta meta;
-			public weak Gst.Buffer buffer;
+			public unowned Gst.Buffer buffer;
 			public static unowned Gst.MetaInfo? get_info ();
 		}
 		[CCode (cheader_filename = "gst/video/video.h", has_type_id = false)]
@@ -845,36 +845,36 @@ namespace Gst {
 		[GIR (name = "VideoFormatInfo")]
 		public struct FormatInfo {
 			public Gst.Video.Format format;
-			public weak string name;
-			public weak string description;
+			public unowned string name;
+			public unowned string description;
 			public Gst.Video.FormatFlags flags;
 			public uint bits;
 			public uint n_components;
 			[CCode (array_length = false)]
-			public weak uint shift[4];
+			public unowned uint shift[4];
 			[CCode (array_length = false)]
-			public weak uint depth[4];
+			public unowned uint depth[4];
 			[CCode (array_length = false)]
-			public weak int pixel_stride[4];
+			public unowned int pixel_stride[4];
 			public uint n_planes;
 			[CCode (array_length = false)]
-			public weak uint plane[4];
+			public unowned uint plane[4];
 			[CCode (array_length = false)]
-			public weak uint poffset[4];
+			public unowned uint poffset[4];
 			[CCode (array_length = false)]
-			public weak uint w_sub[4];
+			public unowned uint w_sub[4];
 			[CCode (array_length = false)]
-			public weak uint h_sub[4];
+			public unowned uint h_sub[4];
 			public Gst.Video.Format unpack_format;
-			public weak Gst.Video.FormatUnpack unpack_func;
+			public unowned Gst.Video.FormatUnpack unpack_func;
 			public int pack_lines;
-			public weak Gst.Video.FormatPack pack_func;
+			public unowned Gst.Video.FormatPack pack_func;
 			public Gst.Video.TileMode tile_mode;
 			public uint tile_ws;
 			public uint tile_hs;
 			[CCode (array_length = false)]
 			[Version (since = "1.22")]
-			public weak Gst.Video.TileInfo tile_info[4];
+			public unowned Gst.Video.TileInfo tile_info[4];
 			[Version (since = "1.18")]
 			public void component (uint plane, out int components);
 			[Version (since = "1.22")]
@@ -883,9 +883,9 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/video/video.h", has_type_id = false)]
 		[GIR (name = "VideoFrame")]
 		public struct Frame {
-			public weak Gst.Video.Info info;
+			public unowned Gst.Video.Info info;
 			public Gst.Video.FrameFlags flags;
-			public weak Gst.Buffer buffer;
+			public unowned Gst.Buffer buffer;
 			public void* meta;
 			public int id;
 			[CCode (array_length = false)]
@@ -905,7 +905,7 @@ namespace Gst {
 			public Gst.Video.GLTextureOrientation texture_orientation;
 			public uint n_textures;
 			[CCode (array_length = false)]
-			public weak Gst.Video.GLTextureType texture_type[4];
+			public unowned Gst.Video.GLTextureType texture_type[4];
 			public static unowned Gst.MetaInfo? get_info ();
 			public bool upload (uint texture_id);
 		}
@@ -914,7 +914,7 @@ namespace Gst {
 		[Version (since = "1.18")]
 		public struct MasteringDisplayInfo {
 			[CCode (array_length = false)]
-			public weak Gst.Video.MasteringDisplayInfoCoordinates display_primaries[3];
+			public unowned Gst.Video.MasteringDisplayInfoCoordinates display_primaries[3];
 			public Gst.Video.MasteringDisplayInfoCoordinates white_point;
 			public uint32 max_display_mastering_luminance;
 			public uint32 min_display_mastering_luminance;
@@ -936,7 +936,7 @@ namespace Gst {
 		[GIR (name = "VideoMeta")]
 		public struct Meta {
 			public Gst.Meta meta;
-			public weak Gst.Buffer buffer;
+			public unowned Gst.Buffer buffer;
 			public Gst.Video.FrameFlags flags;
 			public Gst.Video.Format format;
 			public int id;
@@ -944,13 +944,13 @@ namespace Gst {
 			public uint height;
 			public uint n_planes;
 			[CCode (array_length = false)]
-			public weak size_t offset[4];
+			public unowned size_t offset[4];
 			[CCode (array_length = false)]
-			public weak int stride[4];
+			public unowned int stride[4];
 			[CCode (cname = "map")]
-			public weak Gst.Video.MetaMapVFunc map_v;
+			public unowned Gst.Video.MetaMapVFunc map_v;
 			[CCode (cname = "unmap")]
-			public weak Gst.Video.MetaUnmapVFunc unmap_v;
+			public unowned Gst.Video.MetaUnmapVFunc unmap_v;
 			public Gst.Video.Alignment alignment;
 			public static unowned Gst.MetaInfo? get_info ();
 			[Version (since = "1.18")]
@@ -965,15 +965,15 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/video/video.h", has_type_id = false)]
 		[GIR (name = "VideoMetaTransform")]
 		public struct MetaTransform {
-			public weak Gst.Video.Info in_info;
-			public weak Gst.Video.Info out_info;
+			public unowned Gst.Video.Info in_info;
+			public unowned Gst.Video.Info out_info;
 			public static GLib.Quark scale_get_quark ();
 		}
 		[CCode (cheader_filename = "gst/video/video.h", has_type_id = false)]
 		[GIR (name = "VideoOverlayCompositionMeta")]
 		public struct OverlayCompositionMeta {
 			public Gst.Meta meta;
-			public weak Gst.Video.OverlayComposition overlay;
+			public unowned Gst.Video.OverlayComposition overlay;
 			public static unowned Gst.MetaInfo? get_info ();
 		}
 		[CCode (cheader_filename = "gst/video/video.h", has_type_id = false)]
@@ -995,7 +995,7 @@ namespace Gst {
 			public uint y;
 			public uint w;
 			public uint h;
-			public weak GLib.List<void*> @params;
+			public unowned GLib.List<void*> @params;
 			[Version (since = "1.14")]
 			public void add_param (owned Gst.Structure s);
 			public static unowned Gst.MetaInfo? get_info ();
@@ -1023,7 +1023,7 @@ namespace Gst {
 		public struct SEIUserDataUnregisteredMeta {
 			public Gst.Meta meta;
 			[CCode (array_length = false)]
-			public weak uint8 uuid[16];
+			public unowned uint8 uuid[16];
 			public uint8 data;
 			public size_t size;
 			public static unowned Gst.MetaInfo? get_info ();
@@ -1044,14 +1044,14 @@ namespace Gst {
 			public uint fps_n;
 			public uint fps_d;
 			public Gst.Video.TimeCodeFlags flags;
-			public weak GLib.DateTime latest_daily_jam;
+			public unowned GLib.DateTime latest_daily_jam;
 		}
 		[CCode (cheader_filename = "gst/video/video.h", has_type_id = false)]
 		[GIR (name = "VideoTimeCodeMeta")]
 		[Version (since = "1.10")]
 		public struct TimeCodeMeta {
 			public Gst.Meta meta;
-			public weak Gst.Video.TimeCode tc;
+			public unowned Gst.Video.TimeCode tc;
 			public static unowned Gst.MetaInfo? get_info ();
 		}
 		[CCode (cheader_filename = "gst/video/video.h", cprefix = "GST_VIDEO_AFD_SPEC_", type_id = "gst_video_afd_spec_get_type ()")]

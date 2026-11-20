@@ -205,8 +205,8 @@ namespace Gst {
 		[GIR (name = "PlayVisualization")]
 		[Version (since = "1.20")]
 		public class Visualization {
-			public weak string description;
-			public weak string name;
+			public unowned string description;
+			public unowned string name;
 			public Gst.Play.Visualization copy ();
 			public void free ();
 		}

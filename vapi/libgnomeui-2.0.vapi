@@ -3,14 +3,14 @@
 namespace Gnome {
 	[CCode (cheader_filename = "libgnomeui/libgnomeui.h")]
 	public class App : Gtk.Window, Gtk.Buildable, Atk.Implementor {
-		public weak Gtk.AccelGroup accel_group;
-		public weak Gtk.Widget contents;
-		public weak Gtk.Widget dock;
-		public weak Gtk.Widget menubar;
-		public weak string name;
-		public weak string prefix;
-		public weak Gtk.Widget statusbar;
-		public weak Gtk.Widget vbox;
+		public unowned Gtk.AccelGroup accel_group;
+		public unowned Gtk.Widget contents;
+		public unowned Gtk.Widget dock;
+		public unowned Gtk.Widget menubar;
+		public unowned string name;
+		public unowned string prefix;
+		public unowned Gtk.Widget statusbar;
+		public unowned Gtk.Widget vbox;
 		[CCode (has_construct_function = false, type = "GtkWidget*")]
 		public App (string appname, string title);
 		public void @construct (string appname, string title);
@@ -91,34 +91,34 @@ namespace Gnome {
 	}
 	[CCode (cheader_filename = "libgnomeui/libgnomeui.h")]
 	public class Client : Gtk.Object {
-		public weak string client_id;
-		public weak string clone_command;
-		public weak string config_prefix;
-		public weak string current_directory;
-		public weak string discard_command;
-		public weak GLib.HashTable environment;
+		public unowned string client_id;
+		public unowned string clone_command;
+		public unowned string config_prefix;
+		public unowned string current_directory;
+		public unowned string discard_command;
+		public unowned GLib.HashTable environment;
 		public uint fast;
-		public weak string global_config_prefix;
+		public unowned string global_config_prefix;
 		public int input_id;
 		public uint interact_style;
-		public weak GLib.SList interaction_keys;
-		public weak string previous_id;
+		public unowned GLib.SList interaction_keys;
+		public unowned string previous_id;
 		public int process_id;
-		public weak string program;
+		public unowned string program;
 		public void* reserved;
-		public weak string resign_command;
-		public weak string restart_command;
+		public unowned string resign_command;
+		public unowned string restart_command;
 		public Gnome.RestartStyle restart_style;
 		public uint save_phase_2_requested;
 		public uint save_style;
 		public uint save_successfull;
 		public uint save_yourself_emitted;
 		public uint shutdown;
-		public weak string shutdown_command;
+		public unowned string shutdown_command;
 		public void* smc_conn;
 		public uint state;
-		public weak GLib.List static_args;
-		public weak string user_id;
+		public unowned GLib.List static_args;
+		public unowned string user_id;
 		[CCode (has_construct_function = false)]
 		public Client ();
 		public void add_static_arg ();
@@ -235,7 +235,7 @@ namespace Gnome {
 	}
 	[CCode (cheader_filename = "libgnomeui/libgnomeui.h")]
 	public class PasswordDialog : Gtk.Dialog, Gtk.Buildable, Atk.Implementor {
-		public weak Gnome.PasswordDialogDetails details;
+		public unowned Gnome.PasswordDialogDetails details;
 		[CCode (has_construct_function = false, type = "GtkWidget*")]
 		public PasswordDialog (string dialog_title, string message, string username, string password, bool readonly_username);
 		public bool anon_selected ();
@@ -309,26 +309,26 @@ namespace Gnome {
 	[CCode (cheader_filename = "libgnomeui/libgnomeui.h")]
 	[Compact]
 	public class UIBuilderData {
-		public weak Gnome.UISignalConnectFunc connect_func;
+		public unowned Gnome.UISignalConnectFunc connect_func;
 		public void* data;
-		public weak GLib.DestroyNotify destroy_func;
+		public unowned GLib.DestroyNotify destroy_func;
 		public bool is_interp;
-		public weak Gtk.CallbackMarshal relay_func;
+		public unowned Gtk.CallbackMarshal relay_func;
 	}
 	[CCode (cheader_filename = "libgnomeui/libgnomeui.h")]
 	[Compact]
 	public class UIInfo {
 		public Gdk.ModifierType ac_mods;
 		public uint accelerator_key;
-		public weak string hint;
-		public weak string label;
+		public unowned string hint;
+		public unowned string label;
 		public void* moreinfo;
 		public void* pixmap_info;
 		public Gnome.UIPixmapType pixmap_type;
 		public Gnome.UIInfoType type;
 		public void* unused_data;
 		public void* user_data;
-		public weak Gtk.Widget widget;
+		public unowned Gtk.Widget widget;
 	}
 	[CCode (cheader_filename = "libgnomeui/libgnomeui.h", cprefix = "GNOME_CLIENT_")]
 	[Flags]

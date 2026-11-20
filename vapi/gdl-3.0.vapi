@@ -9,7 +9,7 @@ namespace Gdl {
 		public void add_floating_item (Gdl.DockItem item, int x, int y, int width, int height);
 		public void add_item (Gdl.DockItem item, Gdl.DockPlacement placement);
 		public unowned Gdl.DockItem get_item_by_name (string name);
-		public GLib.List<weak Gdl.DockObject> get_named_items ();
+		public GLib.List<unowned Gdl.DockObject> get_named_items ();
 		[Version (deprecated = true, deprecated_since = "3.6")]
 		public unowned Gdl.DockPlaceholder get_placeholder_by_name (string name);
 		public unowned Gdl.DockObject? get_root ();
@@ -204,7 +204,7 @@ namespace Gdl {
 	[CCode (cheader_filename = "gdl/gdl.h", type_id = "gdl_dock_object_get_type ()")]
 	public class DockObject : Gtk.Container, Atk.Implementor, Gtk.Buildable {
 		public Gdl.DockObjectFlags deprecated_flags;
-		public weak GLib.Object deprecated_master;
+		public unowned GLib.Object deprecated_master;
 		[CCode (has_construct_function = false)]
 		protected DockObject ();
 		public void bind (GLib.Object master);
@@ -305,8 +305,8 @@ namespace Gdl {
 	public class DockTablabel : Gtk.Bin, Atk.Implementor, Gtk.Buildable {
 		public bool active;
 		public uint drag_handle_size;
-		public weak Gdk.EventButton drag_start_event;
-		public weak Gdk.Window event_window;
+		public unowned Gdk.EventButton drag_start_event;
+		public unowned Gdk.Window event_window;
 		public bool pre_drag;
 		[CCode (has_construct_function = false, type = "GtkWidget*")]
 		[Version (deprecated = true, deprecated_since = "3.6")]
@@ -339,8 +339,8 @@ namespace Gdl {
 	}
 	[CCode (cheader_filename = "gdl/gdl.h", has_type_id = false)]
 	public struct DockRequest {
-		public weak Gdl.DockObject applicant;
-		public weak Gdl.DockObject target;
+		public unowned Gdl.DockObject applicant;
+		public unowned Gdl.DockObject target;
 		public Gdl.DockPlacement position;
 		public Cairo.RectangleInt rect;
 		public GLib.Value extra;

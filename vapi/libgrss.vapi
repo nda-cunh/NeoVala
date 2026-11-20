@@ -142,14 +142,14 @@ namespace Grss {
 		[CCode (has_construct_function = false)]
 		public FeedsGroup ();
 		public bool export_file (GLib.List<Grss.FeedChannel> channels, string format, string uri) throws GLib.Error;
-		public GLib.List<weak string> get_formats ();
+		public GLib.List<unowned string> get_formats ();
 		public GLib.List<Grss.FeedChannel> parse_file (string path) throws GLib.Error;
 	}
 	[CCode (cheader_filename = "libgrss/libgrss.h", type_id = "grss_feeds_pool_get_type ()")]
 	public class FeedsPool : GLib.Object {
 		[CCode (has_construct_function = false)]
 		public FeedsPool ();
-		public GLib.List<weak Grss.FeedChannel> get_listened ();
+		public GLib.List<unowned Grss.FeedChannel> get_listened ();
 		public int get_listened_num ();
 		public unowned Soup.Session get_session ();
 		public void listen (GLib.List<Grss.FeedChannel> feeds);
@@ -187,7 +187,7 @@ namespace Grss {
 		[CCode (has_construct_function = false)]
 		public FeedsSubscriber ();
 		public unowned GLib.InetAddress get_address ();
-		public GLib.List<weak Grss.FeedChannel> get_listened ();
+		public GLib.List<unowned Grss.FeedChannel> get_listened ();
 		public int get_port ();
 		public unowned Soup.Session get_session ();
 		public bool listen (GLib.List<Grss.FeedChannel> feeds);

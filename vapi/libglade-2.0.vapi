@@ -7,61 +7,61 @@ namespace Glade {
 	public class AccelInfo {
 		public uint key;
 		public Gdk.ModifierType modifiers;
-		public weak string @signal;
+		public unowned string @signal;
 	}
 	[CCode (cheader_filename = "glade/glade.h")]
 	[Compact]
 	public class AtkActionInfo {
-		public weak string action_name;
-		public weak string description;
+		public unowned string action_name;
+		public unowned string description;
 	}
 	[CCode (cheader_filename = "glade/glade.h")]
 	[Compact]
 	public class AtkRelationInfo {
-		public weak string target;
-		public weak string type;
+		public unowned string target;
+		public unowned string type;
 	}
 	[CCode (cheader_filename = "glade/glade.h")]
 	[Compact]
 	public class ChildInfo {
-		public weak Glade.WidgetInfo child;
-		public weak string internal_child;
+		public unowned Glade.WidgetInfo child;
+		public unowned string internal_child;
 		public uint n_properties;
-		public weak Glade.Property properties;
+		public unowned Glade.Property properties;
 	}
 	[CCode (cheader_filename = "glade/glade.h", free_function = "glade_interface_destroy")]
 	[Compact]
 	public class Interface {
 		public uint n_requires;
 		public uint n_toplevels;
-		public weak GLib.HashTable names;
-		public weak string @requires;
-		public weak GLib.HashTable strings;
-		public weak Glade.WidgetInfo toplevels;
+		public unowned GLib.HashTable names;
+		public unowned string @requires;
+		public unowned GLib.HashTable strings;
+		public unowned Glade.WidgetInfo toplevels;
 		public void dump (string filename);
 	}
 	[CCode (cheader_filename = "glade/glade.h")]
 	[Compact]
 	public class Property {
-		public weak string name;
-		public weak string value;
+		public unowned string name;
+		public unowned string value;
 	}
 	[CCode (cheader_filename = "glade/glade.h")]
 	[Compact]
 	public class SignalInfo {
 		public uint after;
-		public weak string handler;
-		public weak string name;
-		public weak string object;
+		public unowned string handler;
+		public unowned string name;
+		public unowned string object;
 	}
 	[CCode (cheader_filename = "glade/glade.h")]
 	[Compact]
 	public class WidgetInfo {
-		public weak Glade.AccelInfo accels;
-		public weak Glade.AtkActionInfo atk_actions;
-		public weak Glade.Property atk_props;
-		public weak Glade.ChildInfo children;
-		public weak string classname;
+		public unowned Glade.AccelInfo accels;
+		public unowned Glade.AtkActionInfo atk_actions;
+		public unowned Glade.Property atk_props;
+		public unowned Glade.ChildInfo children;
+		public unowned string classname;
 		public uint n_accels;
 		public uint n_atk_actions;
 		public uint n_atk_props;
@@ -69,15 +69,15 @@ namespace Glade {
 		public uint n_properties;
 		public uint n_relations;
 		public uint n_signals;
-		public weak string name;
-		public weak Glade.WidgetInfo parent;
-		public weak Glade.Property properties;
-		public weak Glade.AtkRelationInfo relations;
-		public weak Glade.SignalInfo signals;
+		public unowned string name;
+		public unowned Glade.WidgetInfo parent;
+		public unowned Glade.Property properties;
+		public unowned Glade.AtkRelationInfo relations;
+		public unowned Glade.SignalInfo signals;
 	}
 	[CCode (cheader_filename = "glade/glade.h")]
 	public class XML : GLib.Object {
-		public weak string filename;
+		public unowned string filename;
 		[CCode (has_construct_function = false)]
 		public XML (string fname, string? root, string? domain);
 		public unowned Gtk.Widget build_widget (Glade.WidgetInfo info);

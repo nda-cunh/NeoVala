@@ -838,21 +838,21 @@ namespace Gst {
 		[CCode (cheader_filename = "gst/rtsp-server/rtsp-server.h", cname = "GstRTSPContext", has_type_id = false)]
 		[GIR (name = "RTSPContext")]
 		public struct Context {
-			public weak Gst.RTSPServer.Server server;
-			public weak Gst.RTSP.Connection conn;
-			public weak Gst.RTSPServer.Client client;
-			public weak Gst.RTSP.Message request;
-			public weak Gst.RTSP.Url uri;
+			public unowned Gst.RTSPServer.Server server;
+			public unowned Gst.RTSP.Connection conn;
+			public unowned Gst.RTSPServer.Client client;
+			public unowned Gst.RTSP.Message request;
+			public unowned Gst.RTSP.Url uri;
 			public Gst.RTSP.Method method;
-			public weak Gst.RTSPServer.Auth auth;
-			public weak Gst.RTSPServer.Token token;
-			public weak Gst.RTSPServer.Session session;
-			public weak Gst.RTSPServer.SessionMedia sessmedia;
-			public weak Gst.RTSPServer.MediaFactory factory;
-			public weak Gst.RTSPServer.Media media;
-			public weak Gst.RTSPServer.Stream stream;
-			public weak Gst.RTSP.Message response;
-			public weak Gst.RTSPServer.StreamTransport trans;
+			public unowned Gst.RTSPServer.Auth auth;
+			public unowned Gst.RTSPServer.Token token;
+			public unowned Gst.RTSPServer.Session session;
+			public unowned Gst.RTSPServer.SessionMedia sessmedia;
+			public unowned Gst.RTSPServer.MediaFactory factory;
+			public unowned Gst.RTSPServer.Media media;
+			public unowned Gst.RTSPServer.Stream stream;
+			public unowned Gst.RTSP.Message response;
+			public unowned Gst.RTSPServer.StreamTransport trans;
 			[CCode (cname = "gst_rtsp_context_get_current")]
 			public static unowned Gst.RTSPServer.Context? get_current ();
 			[CCode (cname = "gst_rtsp_context_pop_current")]
@@ -867,7 +867,7 @@ namespace Gst {
 		[GIR (name = "SDPInfo")]
 		public struct SDPInfo {
 			public bool is_ipv6;
-			public weak string server_ip;
+			public unowned string server_ip;
 		}
 		[CCode (cheader_filename = "gst/rtsp-server/rtsp-server.h", cname = "GstRTSPAddressFlags", cprefix = "GST_RTSP_ADDRESS_FLAG_", has_type_id = false)]
 		[Flags]

@@ -4,15 +4,15 @@
 namespace Atspi {
 	[CCode (cheader_filename = "atspi/atspi.h", type_id = "atspi_accessible_get_type ()")]
 	public class Accessible : Atspi.Object, Atspi.Action, Atspi.Collection, Atspi.Component, Atspi.Document, Atspi.EditableText, Atspi.Hypertext, Atspi.Image, Atspi.Selection, Atspi.Table, Atspi.TableCell, Atspi.Text, Atspi.Value {
-		public weak Atspi.Accessible accessible_parent;
-		public weak GLib.HashTable<void*,void*> attributes;
+		public unowned Atspi.Accessible accessible_parent;
+		public unowned GLib.HashTable<void*,void*> attributes;
 		public uint cached_properties;
-		public weak GLib.GenericArray<void*> children;
-		public weak string description;
+		public unowned GLib.GenericArray<void*> children;
+		public unowned string description;
 		public int interfaces;
-		public weak string name;
+		public unowned string name;
 		public Atspi.Role role;
-		public weak Atspi.StateSet states;
+		public unowned Atspi.StateSet states;
 		[CCode (has_construct_function = false)]
 		protected Accessible ();
 		public void clear_cache ();
@@ -80,14 +80,14 @@ namespace Atspi {
 	}
 	[CCode (cheader_filename = "atspi/atspi.h", type_id = "atspi_application_get_type ()")]
 	public class Application : GLib.Object {
-		public weak string atspi_version;
-		public weak string bus_name;
+		public unowned string atspi_version;
+		public unowned string bus_name;
 		public Atspi.Cache cache;
-		public weak GLib.HashTable<void*,void*> hash;
+		public unowned GLib.HashTable<void*,void*> hash;
 		public void* root;
 		public void* time_added;
-		public weak string toolkit_name;
-		public weak string toolkit_version;
+		public unowned string toolkit_name;
+		public unowned string toolkit_version;
 		[CCode (has_construct_function = false)]
 		protected Application ();
 	}
@@ -115,7 +115,7 @@ namespace Atspi {
 	}
 	[CCode (cheader_filename = "atspi/atspi.h", type_id = "atspi_device_listener_get_type ()")]
 	public class DeviceListener : GLib.Object {
-		public weak GLib.List<void*> callbacks;
+		public unowned GLib.List<void*> callbacks;
 		public uint id;
 		[CCode (has_construct_function = false)]
 		public DeviceListener (owned Atspi.DeviceListenerCB callback);
@@ -137,9 +137,9 @@ namespace Atspi {
 		public GLib.Value any_data;
 		public int detail1;
 		public int detail2;
-		public weak Atspi.Accessible sender;
-		public weak Atspi.Accessible source;
-		public weak string type;
+		public unowned Atspi.Accessible sender;
+		public unowned Atspi.Accessible source;
+		public unowned string type;
 		public static void main ();
 		public static void quit ();
 	}
@@ -178,29 +178,29 @@ namespace Atspi {
 	[Compact]
 	public class KeyDefinition {
 		public int keycode;
-		public weak string keystring;
+		public unowned string keystring;
 		public int keysym;
 		public uint modifiers;
 	}
 	[CCode (cheader_filename = "atspi/atspi.h", type_id = "atspi_match_rule_get_type ()")]
 	public class MatchRule : GLib.Object {
 		public Atspi.CollectionMatchType attributematchtype;
-		public weak GLib.HashTable<void*,void*> attributes;
+		public unowned GLib.HashTable<void*,void*> attributes;
 		public Atspi.CollectionMatchType interfacematchtype;
-		public weak GLib.Array<void*> interfaces;
+		public unowned GLib.Array<void*> interfaces;
 		public bool invert;
 		public Atspi.CollectionMatchType rolematchtype;
 		[CCode (array_length = false)]
-		public weak int roles[4];
+		public unowned int roles[4];
 		public Atspi.CollectionMatchType statematchtype;
-		public weak Atspi.StateSet states;
+		public unowned Atspi.StateSet states;
 		[CCode (has_construct_function = false)]
 		public MatchRule (Atspi.StateSet states, Atspi.CollectionMatchType statematchtype, GLib.HashTable<string,string> attributes, Atspi.CollectionMatchType attributematchtype, GLib.Array<Atspi.Role> roles, Atspi.CollectionMatchType rolematchtype, GLib.Array<string> interfaces, Atspi.CollectionMatchType interfacematchtype, bool invert);
 	}
 	[CCode (cheader_filename = "atspi/atspi.h", type_id = "atspi_object_get_type ()")]
 	public class Object : GLib.Object {
-		public weak Atspi.Application app;
-		public weak string path;
+		public unowned Atspi.Application app;
+		public unowned string path;
 		[CCode (has_construct_function = false)]
 		protected Object ();
 	}
@@ -230,7 +230,7 @@ namespace Atspi {
 	[CCode (cheader_filename = "atspi/atspi.h", type_id = "atspi_relation_get_type ()")]
 	public class Relation : GLib.Object {
 		public Atspi.RelationType relation_type;
-		public weak GLib.Array<void*> targets;
+		public unowned GLib.Array<void*> targets;
 		[CCode (has_construct_function = false)]
 		protected Relation ();
 		public int get_n_targets ();
@@ -255,7 +255,7 @@ namespace Atspi {
 	[CCode (cheader_filename = "atspi/atspi.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "atspi_text_range_get_type ()")]
 	[Compact]
 	public class TextRange {
-		public weak string content;
+		public unowned string content;
 		public int end_offset;
 		public int start_offset;
 	}
@@ -437,7 +437,7 @@ namespace Atspi {
 		public ushort hw_code;
 		public ushort modifiers;
 		public uint timestamp;
-		public weak string event_string;
+		public unowned string event_string;
 		public bool is_text;
 	}
 	[CCode (cheader_filename = "atspi/atspi.h")]
@@ -461,11 +461,11 @@ namespace Atspi {
 	[CCode (cheader_filename = "atspi/atspi.h", has_type_id = false)]
 	public struct KeySet {
 		[CCode (array_length_cname = "len", array_length_type = "gshort")]
-		public weak uint[] keysyms;
+		public unowned uint[] keysyms;
 		[CCode (array_length_cname = "len", array_length_type = "gshort")]
-		public weak ushort[] keycodes;
+		public unowned ushort[] keycodes;
 		[CCode (array_length_cname = "len", array_length_type = "gshort")]
-		public weak string[] keystrings;
+		public unowned string[] keystrings;
 		public short len;
 	}
 	[CCode (cheader_filename = "atspi/atspi.h", cprefix = "ATSPI_CACHE_", type_id = "atspi_cache_get_type ()")]

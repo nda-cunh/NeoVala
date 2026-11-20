@@ -227,11 +227,11 @@ namespace JSC {
 	}
 	[CCode (cheader_filename = "jsc/jsc.h", has_type_id = false)]
 	public struct ClassVTable {
-		public weak JSC.ClassGetPropertyFunction get_property;
-		public weak JSC.ClassSetPropertyFunction set_property;
-		public weak JSC.ClassHasPropertyFunction has_property;
-		public weak JSC.ClassDeletePropertyFunction delete_property;
-		public weak JSC.ClassEnumeratePropertiesFunction enumerate_properties;
+		public unowned JSC.ClassGetPropertyFunction get_property;
+		public unowned JSC.ClassSetPropertyFunction set_property;
+		public unowned JSC.ClassHasPropertyFunction has_property;
+		public unowned JSC.ClassDeletePropertyFunction delete_property;
+		public unowned JSC.ClassEnumeratePropertiesFunction enumerate_properties;
 	}
 	[CCode (cheader_filename = "jsc/jsc.h", cprefix = "JSC_CHECK_SYNTAX_MODE_", has_type_id = false)]
 	public enum CheckSyntaxMode {

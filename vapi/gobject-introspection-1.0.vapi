@@ -320,7 +320,7 @@ namespace GI {
 		public ulong v_ulong;
 		public ssize_t v_ssize;
 		public size_t v_size;
-		public weak string v_string;
+		public unowned string v_string;
 		public void* v_pointer;
 	}
 	[CCode (cheader_filename = "girepository.h", has_type_id = false)]

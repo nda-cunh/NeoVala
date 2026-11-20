@@ -35,7 +35,7 @@ namespace Json {
 		[Version (since = "0.8")]
 		public double get_double_element (uint index_);
 		public unowned Json.Node get_element (uint index_);
-		public GLib.List<weak Json.Node>? get_elements ();
+		public GLib.List<unowned Json.Node>? get_elements ();
 		[Version (since = "0.8")]
 		public int64 get_int_element (uint index_);
 		public uint get_length ();
@@ -205,7 +205,7 @@ namespace Json {
 		[Version (since = "1.6")]
 		public int64 get_int_member_with_default (string member_name, int64 default_value);
 		public unowned Json.Node? get_member (string member_name);
-		public GLib.List<weak string>? get_members ();
+		public GLib.List<unowned string>? get_members ();
 		[Version (since = "0.8")]
 		public bool get_null_member (string member_name);
 		[Version (since = "0.8")]
@@ -215,7 +215,7 @@ namespace Json {
 		public unowned string get_string_member (string member_name);
 		[Version (since = "1.6")]
 		public unowned string get_string_member_with_default (string member_name, string default_value);
-		public GLib.List<weak Json.Node>? get_values ();
+		public GLib.List<unowned Json.Node>? get_values ();
 		public bool has_member (string member_name);
 		[Version (since = "1.2")]
 		public uint hash ();

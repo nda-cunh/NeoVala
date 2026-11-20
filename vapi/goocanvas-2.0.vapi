@@ -22,8 +22,8 @@ namespace Goo {
 		public double get_default_line_width ();
 		public unowned Goo.CanvasItem get_item (Goo.CanvasItemModel model);
 		public unowned Goo.CanvasItem get_item_at (double x, double y, bool is_pointer_event);
-		public GLib.List<weak Goo.CanvasItem> get_items_at (double x, double y, bool is_pointer_event);
-		public GLib.List<weak Goo.CanvasItem> get_items_in_area (Goo.CanvasBounds area, bool inside_area, bool allow_overlaps, bool include_containers);
+		public GLib.List<unowned Goo.CanvasItem> get_items_at (double x, double y, bool is_pointer_event);
+		public GLib.List<unowned Goo.CanvasItem> get_items_in_area (Goo.CanvasBounds area, bool inside_area, bool allow_overlaps, bool include_containers);
 		public unowned Goo.CanvasItem get_root_item ();
 		public unowned Goo.CanvasItemModel get_root_item_model ();
 		public double get_scale ();
@@ -274,7 +274,7 @@ namespace Goo {
 	}
 	[CCode (cheader_filename = "goocanvas.h", type_id = "goo_canvas_group_get_type ()")]
 	public class CanvasGroup : Goo.CanvasItemSimple, Goo.CanvasItem {
-		public weak GLib.GenericArray<void*> items;
+		public unowned GLib.GenericArray<void*> items;
 		[CCode (has_construct_function = false, type = "GooCanvasItem*")]
 		public CanvasGroup (Goo.CanvasItem? parent, ...);
 		[NoAccessorMethod]
@@ -288,7 +288,7 @@ namespace Goo {
 	}
 	[CCode (cheader_filename = "goocanvas.h", type_id = "goo_canvas_group_model_get_type ()")]
 	public class CanvasGroupModel : Goo.CanvasItemModelSimple, Goo.CanvasItemModel {
-		public weak GLib.GenericArray<void*> children;
+		public unowned GLib.GenericArray<void*> children;
 		[CCode (has_construct_function = false, type = "GooCanvasItemModel*")]
 		public CanvasGroupModel (Goo.CanvasItemModel? parent, ...);
 		[NoAccessorMethod]
@@ -351,10 +351,10 @@ namespace Goo {
 	}
 	[CCode (cheader_filename = "goocanvas.h", type_id = "goo_canvas_item_model_simple_get_type ()")]
 	public class CanvasItemModelSimple : GLib.Object, Goo.CanvasItemModel {
-		public weak string description;
-		public weak Goo.CanvasItemModel parent;
+		public unowned string description;
+		public unowned Goo.CanvasItemModel parent;
 		public Goo.CanvasItemSimpleData simple_data;
-		public weak string title;
+		public unowned string title;
 		[CCode (has_construct_function = false)]
 		protected CanvasItemModelSimple ();
 		[NoAccessorMethod]
@@ -407,11 +407,11 @@ namespace Goo {
 	[CCode (cheader_filename = "goocanvas.h", type_id = "goo_canvas_item_simple_get_type ()")]
 	public class CanvasItemSimple : GLib.Object, Goo.CanvasItem {
 		public Goo.CanvasBounds bounds;
-		public weak Goo.Canvas canvas;
-		public weak Goo.CanvasItemModelSimple model;
+		public unowned Goo.Canvas canvas;
+		public unowned Goo.CanvasItemModelSimple model;
 		public uint need_entire_subtree_update;
 		public uint need_update;
-		public weak Goo.CanvasItem parent;
+		public unowned Goo.CanvasItem parent;
 		public Goo.CanvasItemSimpleData? simple_data;
 		[CCode (has_construct_function = false)]
 		protected CanvasItemSimple ();
@@ -643,8 +643,8 @@ namespace Goo {
 	}
 	[CCode (cheader_filename = "goocanvas.h", type_id = "goo_canvas_style_get_type ()")]
 	public class CanvasStyle : GLib.Object {
-		public weak Goo.CanvasStyle parent;
-		public weak GLib.Array<void*> properties;
+		public unowned Goo.CanvasStyle parent;
+		public unowned GLib.Array<void*> properties;
 		[CCode (has_construct_function = false)]
 		public CanvasStyle ();
 		public Goo.CanvasStyle copy ();

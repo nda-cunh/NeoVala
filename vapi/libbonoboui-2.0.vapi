@@ -7,8 +7,8 @@
 [Version (deprecated = true)]
 namespace BonoboUI {
 	public struct Verb {
-		public weak string cname;
-		public weak VerbFn cb;
+		public unowned string cname;
+		public unowned VerbFn cb;
 		public void* user_data;
 	}
 

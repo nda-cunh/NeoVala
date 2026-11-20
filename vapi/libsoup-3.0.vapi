@@ -4,9 +4,9 @@
 namespace Soup {
 	namespace Form {
 		[CCode (cheader_filename = "libsoup/soup.h")]
-		public static GLib.HashTable<weak string,weak string> decode (string encoded_form);
+		public static GLib.HashTable<unowned string,unowned string> decode (string encoded_form);
 		[CCode (cheader_filename = "libsoup/soup.h")]
-		public static GLib.HashTable<weak string,weak string>? decode_multipart (Soup.Multipart multipart, string? file_control_name, out string filename, out string content_type, out GLib.Bytes file);
+		public static GLib.HashTable<unowned string,unowned string>? decode_multipart (Soup.Multipart multipart, string? file_control_name, out string filename, out string content_type, out GLib.Bytes file);
 		[CCode (cheader_filename = "libsoup/soup.h")]
 		public static string encode (...);
 		[CCode (cheader_filename = "libsoup/soup.h")]
@@ -368,7 +368,7 @@ namespace Soup {
 	[Compact]
 	public class MessageBody {
 		[CCode (array_length_cname = "length", array_length_type = "gint64")]
-		public weak uint8[] data;
+		public unowned uint8[] data;
 		public int64 length;
 		[CCode (has_construct_function = false)]
 		public MessageBody ();
@@ -479,7 +479,7 @@ namespace Soup {
 		public void add_websocket_extension (GLib.Type extension_type);
 		public void add_websocket_handler (string? path, string? origin, [CCode (array_length = false, array_null_terminated = true)] string[]? protocols, owned Soup.ServerWebsocketCallback callback);
 		public void disconnect ();
-		public GLib.SList<weak GLib.Socket> get_listeners ();
+		public GLib.SList<unowned GLib.Socket> get_listeners ();
 		public GLib.TlsAuthenticationMode get_tls_auth_mode ();
 		public unowned GLib.TlsCertificate? get_tls_certificate ();
 		public unowned GLib.TlsDatabase? get_tls_database ();

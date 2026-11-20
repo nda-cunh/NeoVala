@@ -203,8 +203,8 @@ namespace Gst {
 	[CCode (cheader_filename = "gst/player/player.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "gst_player_visualization_get_type ()")]
 	[Compact]
 	public class PlayerVisualization {
-		public weak string description;
-		public weak string name;
+		public unowned string description;
+		public unowned string name;
 		public Gst.PlayerVisualization copy ();
 		public void free ();
 	}

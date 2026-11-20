@@ -39,7 +39,7 @@ namespace Pango {
 	[CCode (cheader_filename = "pango/pango.h", has_type_id = false)]
 	[Compact]
 	public class AttrFontDesc : Pango.Attribute {
-		public weak Pango.FontDescription desc;
+		public unowned Pango.FontDescription desc;
 		[CCode (has_construct_function = false, type = "PangoAttribute*")]
 		public AttrFontDesc (Pango.FontDescription desc);
 		public static Pango.Attribute @new (Pango.FontDescription desc);
@@ -48,7 +48,7 @@ namespace Pango {
 	[Compact]
 	[Version (since = "1.38")]
 	public class AttrFontFeatures : Pango.Attribute {
-		public weak string features;
+		public unowned string features;
 		[CCode (has_construct_function = false, type = "PangoAttribute*")]
 		public AttrFontFeatures (string features);
 		public static Pango.Attribute @new (string features);
@@ -74,7 +74,7 @@ namespace Pango {
 	[CCode (cheader_filename = "pango/pango.h", has_type_id = false)]
 	[Compact]
 	public class AttrLanguage : Pango.Attribute {
-		public weak Pango.Language value;
+		public unowned Pango.Language value;
 		[CCode (has_construct_function = false, type = "PangoAttribute*")]
 		public AttrLanguage (Pango.Language language);
 		public static Pango.Attribute @new (Pango.Language language);
@@ -109,9 +109,9 @@ namespace Pango {
 	[CCode (cheader_filename = "pango/pango.h", has_type_id = false)]
 	[Compact]
 	public class AttrShape<T> : Pango.Attribute {
-		public weak Pango.AttrDataCopyFunc<T> copy_func;
+		public unowned Pango.AttrDataCopyFunc<T> copy_func;
 		public T data;
-		public weak GLib.DestroyNotify destroy_func;
+		public unowned GLib.DestroyNotify destroy_func;
 		public Pango.Rectangle ink_rect;
 		public Pango.Rectangle logical_rect;
 		[CCode (has_construct_function = false, type = "PangoAttribute*")]
@@ -140,13 +140,13 @@ namespace Pango {
 	[CCode (cheader_filename = "pango/pango.h", has_type_id = false)]
 	[Compact]
 	public class AttrString : Pango.Attribute {
-		public weak string value;
+		public unowned string value;
 	}
 	[CCode (cheader_filename = "pango/pango.h", free_function = "pango_attribute_destroy", type_id = "pango_attribute_get_type ()")]
 	[Compact]
 	public class Attribute {
 		public uint end_index;
-		public weak Pango.AttrClass klass;
+		public unowned Pango.AttrClass klass;
 		public uint start_index;
 		[Version (since = "1.50")]
 		public unowned Pango.AttrColor? as_color ();
@@ -400,8 +400,8 @@ namespace Pango {
 	[Compact]
 	public class GlyphItem {
 		public int end_x_offset;
-		public weak Pango.GlyphString glyphs;
-		public weak Pango.Item item;
+		public unowned Pango.GlyphString glyphs;
+		public unowned Pango.Item item;
 		public int start_x_offset;
 		public int y_offset;
 		[Version (since = "1.2")]
@@ -603,10 +603,10 @@ namespace Pango {
 	[CCode (cheader_filename = "pango/pango.h", ref_function = "pango_layout_line_ref", type_id = "pango_layout_line_get_type ()", unref_function = "pango_layout_line_unref")]
 	[Compact]
 	public class LayoutLine {
-		public weak Pango.Layout layout;
+		public unowned Pango.Layout layout;
 		public int length;
 		public uint resolved_dir;
-		public weak GLib.SList<Pango.LayoutRun> runs;
+		public unowned GLib.SList<Pango.LayoutRun> runs;
 		public int start_index;
 		public void get_extents (out Pango.Rectangle ink_rect, out Pango.Rectangle logical_rect);
 		[Version (since = "1.44")]
@@ -714,13 +714,13 @@ namespace Pango {
 	public struct Analysis {
 		public void* shape_engine;
 		public void* lang_engine;
-		public weak Pango.Font font;
+		public unowned Pango.Font font;
 		public uint8 level;
 		public uint8 gravity;
 		public uint8 flags;
 		public uint8 script;
-		public weak Pango.Language language;
-		public weak GLib.SList<void*> extra_attrs;
+		public unowned Pango.Language language;
+		public unowned GLib.SList<void*> extra_attrs;
 	}
 	[CCode (cheader_filename = "pango/pango.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "pango_color_get_type ()")]
 	public struct Color {
@@ -754,8 +754,8 @@ namespace Pango {
 	[CCode (cheader_filename = "pango/pango.h", copy_function = "g_boxed_copy", free_function = "g_boxed_free", type_id = "pango_glyph_item_iter_get_type ()")]
 	[Version (since = "1.22")]
 	public struct GlyphItemIter {
-		public weak Pango.GlyphItem glyph_item;
-		public weak string text;
+		public unowned Pango.GlyphItem glyph_item;
+		public unowned string text;
 		public int start_glyph;
 		public int start_index;
 		public int start_char;

@@ -360,7 +360,7 @@ namespace Cogl {
 		public float zw;
 		public float ww;
 		[CCode (array_length = false)]
-		public weak float[] inv;
+		public unowned float[] inv;
 		public uint type;
 		public uint flags;
 		public static bool equal (void* v1, void* v2);

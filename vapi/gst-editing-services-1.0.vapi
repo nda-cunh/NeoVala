@@ -16,7 +16,7 @@ namespace GES {
 		[NoWrapper]
 		public virtual void inform_proxy (string proxy_id);
 		[CCode (cname = "ges_list_assets")]
-		public static GLib.List<weak GES.Asset> list_assets (GLib.Type filter);
+		public static GLib.List<unowned GES.Asset> list_assets (GLib.Type filter);
 		public unowned GLib.List<GES.Asset> list_proxies ();
 		public static bool needs_reload (GLib.Type extractable_type, string? id);
 		[NoWrapper]
@@ -106,7 +106,7 @@ namespace GES {
 		[NoWrapper]
 		public virtual unowned GES.TrackElement? create_track_element (GES.TrackType type);
 		[NoWrapper]
-		public virtual GLib.List<weak GES.TrackElement> create_track_elements (GES.TrackType type);
+		public virtual GLib.List<unowned GES.TrackElement> create_track_elements (GES.TrackType type);
 		public GES.TrackElement? find_track_element (GES.Track? track, GLib.Type type);
 		public GLib.List<GES.TrackElement> find_track_elements (GES.Track? track, GES.TrackType track_type, GLib.Type type);
 		[Version (since = "1.18")]
@@ -163,9 +163,9 @@ namespace GES {
 	}
 	[CCode (cheader_filename = "ges/ges.h", type_id = "ges_container_get_type ()")]
 	public abstract class Container : GES.TimelineElement, GES.Extractable, GES.MetaContainer {
-		public weak GLib.List<GES.TimelineElement> children;
+		public unowned GLib.List<GES.TimelineElement> children;
 		public GES.ChildrenControlMode children_control_mode;
-		public weak GES.TimelineElement initiated_move;
+		public unowned GES.TimelineElement initiated_move;
 		[CCode (has_construct_function = false)]
 		protected Container ();
 		public bool add (GES.TimelineElement child);
@@ -265,7 +265,7 @@ namespace GES {
 	public class Layer : GLib.InitiallyUnowned, GES.Extractable, GES.MetaContainer {
 		public uint32 max_nle_priority;
 		public uint32 min_nle_priority;
-		public weak GES.Timeline timeline;
+		public unowned GES.Timeline timeline;
 		[CCode (has_construct_function = false)]
 		public Layer ();
 		public unowned GES.Clip? add_asset (GES.Asset asset, Gst.ClockTime start, Gst.ClockTime inpoint, Gst.ClockTime duration, GES.TrackType track_types);
@@ -514,8 +514,8 @@ namespace GES {
 	}
 	[CCode (cheader_filename = "ges/ges.h", type_id = "ges_timeline_get_type ()")]
 	public class Timeline : Gst.Bin, GES.Extractable, GES.MetaContainer, Gst.ChildProxy {
-		public weak GLib.List<GES.Layer> layers;
-		public weak GLib.List<GES.Track> tracks;
+		public unowned GLib.List<GES.Layer> layers;
+		public unowned GLib.List<GES.Track> tracks;
 		[CCode (has_construct_function = false)]
 		public Timeline ();
 		[Version (deprecated = true, deprecated_since = "1.18")]
@@ -578,7 +578,7 @@ namespace GES {
 	}
 	[CCode (cheader_filename = "ges/ges.h", type_id = "ges_timeline_element_get_type ()")]
 	public abstract class TimelineElement : GLib.InitiallyUnowned, GES.Extractable, GES.MetaContainer {
-		public weak GES.Asset asset;
+		public unowned GES.Asset asset;
 		public Gst.ClockTime inpoint;
 		public Gst.ClockTime maxduration;
 		[CCode (has_construct_function = false)]
@@ -1246,7 +1246,7 @@ namespace GES {
 	[CCode (cheader_filename = "ges/ges.h", has_target = false)]
 	public delegate unowned GES.TrackElement? CreateTrackElementFunc (GES.Clip clip, GES.TrackType type);
 	[CCode (cheader_filename = "ges/ges.h", has_target = false)]
-	public delegate GLib.List<weak GES.TrackElement> CreateTrackElementsFunc (GES.Clip clip, GES.TrackType type);
+	public delegate GLib.List<unowned GES.TrackElement> CreateTrackElementsFunc (GES.Clip clip, GES.TrackType type);
 	[CCode (cheader_filename = "ges/ges.h", has_target = false)]
 	public delegate string ExtractableCheckId (GLib.Type type, string id) throws GLib.Error;
 	[CCode (cheader_filename = "ges/ges.h", has_target = false)]

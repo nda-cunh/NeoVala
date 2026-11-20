@@ -970,7 +970,7 @@ namespace Poppler {
 	[CCode (cheader_filename = "poppler.h", has_type_id = false)]
 	public struct ActionLayer {
 		public Poppler.ActionLayerAction action;
-		public weak GLib.List<Poppler.ActionLayer?> layers;
+		public unowned GLib.List<Poppler.ActionLayer?> layers;
 	}
 	[CCode (cheader_filename = "poppler.h", has_type_id = false)]
 	[Version (since = "0.14")]
